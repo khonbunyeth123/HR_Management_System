@@ -23,7 +23,13 @@ session_start();
 include(__DIR__ . "/../../action/db/cn.php");
 include(__DIR__ . "/../../utils/response.php");
 
-// Check database connection
+// Set timezone for Phnom Penh
+date_default_timezone_set("Asia/Phnom_Penh");
+
+// Ensure MySQL also uses Phnom Penh timezone
+$cn->query("SET time_zone = '+07:00'");
+
+// Check DB connection
 if (!isset($cn) || $cn->connect_error) {
     jsonErrorResponse("Database connection failed", [], 500);
     exit;
@@ -38,7 +44,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-if (!isset($input['id']) || empty($input['id'])) {
+if (empty($input['id'])) {
     jsonErrorResponse("Employee ID is required");
     exit;
 }
@@ -46,8 +52,12 @@ if (!isset($input['id']) || empty($input['id'])) {
 $employeeId = (int)$input['id'];
 
 try {
-    // First, check if employee exists and is not already deleted
-    $checkStmt = $cn->prepare("SELECT id, CONCAT(first_name, ' ', last_name) as full_name FROM tbl_employees WHERE id = ? AND deleted_at IS NULL");
+    // Check employee exists
+    $checkStmt = $cn->prepare("
+        SELECT id, CONCAT(first_name, ' ', last_name) AS full_name
+        FROM tbl_employees
+        WHERE id = ? AND deleted_at IS NULL
+    ");
     $checkStmt->bind_param("i", $employeeId);
     $checkStmt->execute();
     $result = $checkStmt->get_result();
@@ -60,22 +70,27 @@ try {
     }
 
     // Perform soft delete
-    $deleteStmt = $cn->prepare("UPDATE tbl_employees SET deleted_at = NOW() WHERE id = ?");
-    $deleteStmt->bind_param("i", $employeeId);
+    $deleteStmt = $cn->prepare("
+        UPDATE tbl_employees
+        SET deleted_at = ?
+        WHERE id = ?
+    ");
     
+    $deletedAt = date("Y-m-d H:i:s"); // Phnom Penh time
+    $deleteStmt->bind_param("si", $deletedAt, $employeeId);
+
     if ($deleteStmt->execute()) {
         $deleteStmt->close();
-        
-        // Success response
         echo json_encode([
             "success" => true,
             "message" => "Employee '{$employee['full_name']}' has been deleted successfully",
+            "deleted_at" => $deletedAt,
             "deleted_id" => $employeeId
         ]);
     } else {
         throw new Exception("Failed to delete employee: " . $deleteStmt->error);
     }
-    
+
 } catch (Exception $e) {
     error_log("Delete employee error: " . $e->getMessage());
     jsonErrorResponse("Failed to delete employee: " . $e->getMessage());
