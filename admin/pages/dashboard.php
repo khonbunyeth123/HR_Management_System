@@ -47,75 +47,95 @@
 </div>
 
 <script>
-    // Data
-    const stats = [
-        { icon: 'mdi:account-multiple', value: '245', label: 'Total Employees', color: 'blue' },
-        { icon: 'mdi:check-circle', value: '192', label: 'Active Users', color: 'green' },
-        { icon: 'mdi:clock-outline', value: '12', label: 'Pending Leaves', color: 'orange' },
-        { icon: 'mdi:calendar-blank', value: '8', label: 'On Leave Today', color: 'purple' }
-    ];
+    fetch("api/dashboard/show.php?action=dashboard_stats")
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                console.error("API Error:", result.message);
+                return;
+            }
 
-    const leaveRequests = [
-        { name: 'John Doe', type: 'Sick Leave', days: '3 days', status: 'Pending', color: 'blue', statusColor: 'yellow' },
-        { name: 'Sarah Smith', type: 'Annual Leave', days: '12 days', status: 'Approved', color: 'green', statusColor: 'green' },
-        { name: 'Mike Johnson', type: 'Casual Leave', days: '2 days', status: 'Rejected', color: 'purple', statusColor: 'red' },
-        { name: 'Emily Wilson', type: 'Maternity Leave', days: '61 days', status: 'Pending', color: 'orange', statusColor: 'yellow' }
-    ];
+            const data = result.data;
 
-    const departments = [
-        { name: 'Engineering', count: 65, percentage: 65, color: 'blue' },
-        { name: 'Sales', count: 45, percentage: 45, color: 'green' },
-        { name: 'Support', count: 35, percentage: 35, color: 'purple' },
-        { name: 'Finance', count: 30, percentage: 30, color: 'orange' },
-        { name: 'HR', count: 25, percentage: 25, color: 'pink' }
-    ];
+        // Render Stats
+        const statsGrid = document.getElementById('statsGrid');
+        statsGrid.innerHTML = `
+            ${createStat("mdi:account-multiple", data.total_employees, "Total Employees", "blue")}
+            ${createStat("mdi:check-circle", data.active_employees, "Active Users", "green")}
+            ${createStat("mdi:clock-outline", data.pending_leaves, "Pending Leaves", "orange")}
+            ${createStat("mdi:calendar-blank", data.on_leave_today, "On Leave Today", "purple")}
+        `;
 
-    // Render Stats
-    const statsGrid = document.getElementById('statsGrid');
-    stats.forEach(stat => {
-        statsGrid.innerHTML += `
-        <div class="bg-white rounded-lg shadow-sm p-4">
-            <div class="flex items-center justify-between mb-2">
-                <iconify-icon icon="${stat.icon}" width="24" class="text-${stat.color}-600"></iconify-icon>
-            </div>
-            <p class="text-2xl font-bold text-gray-900">${stat.value}</p>
-            <p class="text-xs text-gray-600">${stat.label}</p>
-        </div>
-    `;
-    });
+        // Render Leave Requests
+        const leaveRequestsDiv = document.getElementById('leaveRequests');
+        leaveRequestsDiv.innerHTML = "";
+        data.recent_leave_requests.forEach(req => {
+            leaveRequestsDiv.innerHTML += createLeaveRequest(req);
+        });
 
-    // Render Leave Requests
-    const leaveRequestsDiv = document.getElementById('leaveRequests');
-    leaveRequests.forEach(req => {
-        leaveRequestsDiv.innerHTML += `
-        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-${req.color}-100 rounded-full flex items-center justify-center">
-                    <iconify-icon icon="mdi:account" width="18" class="text-${req.color}-600"></iconify-icon>
+        // Render Departments
+        const departmentsDiv = document.getElementById('departments');
+        departmentsDiv.innerHTML = "";
+        data.departments.forEach(dept => {
+            departmentsDiv.innerHTML += createDepartment(dept);
+        });
+
+    })
+    .catch(error => console.error("Fetch Error:", error));
+
+
+    // --- Helper Functions ---
+
+    function createStat(icon, value, label, color) {
+        return `
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <iconify-icon icon="${icon}" width="24" class="text-${color}-600"></iconify-icon>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-900">${req.name}</p>
-                    <p class="text-xs text-gray-500">${req.type} • ${req.days}</p>
+                <p class="text-2xl font-bold text-gray-900">${value}</p>
+                <p class="text-xs text-gray-600">${label}</p>
+            </div>
+        `;
+    }
+
+    function createLeaveRequest(req) {
+        const statusColor = getStatusColor(req.status);
+        return `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center">
+                        <iconify-icon icon="mdi:account" width="18" class="text-blue-600"></iconify-icon>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">${req.name}</p>
+                        <p class="text-xs text-gray-500">${req.type} • ${req.days}</p>
+                    </div>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 bg-${statusColor}-100 text-${statusColor}-800 rounded-full">${req.status}</span>
+            </div>
+        `;
+    }
+
+    function getStatusColor(status) {
+        switch(status.toLowerCase()) {
+            case "approved": return "green";
+            case "pending": return "yellow";
+            case "rejected": return "red";
+            default: return "gray";
+        }
+    }
+
+    function createDepartment(dept) {
+        return `
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm text-gray-700 font-medium">${dept.name}</span>
+                    <span class="text-sm font-bold text-gray-900">${dept.count}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: ${dept.percentage}%"></div>
                 </div>
             </div>
-            <span class="text-xs font-semibold px-2 py-1 bg-${req.statusColor}-100 text-${req.statusColor}-800 rounded-full">${req.status}</span>
-        </div>
-    `;
-    });
-
-    // Render Departments
-    const departmentsDiv = document.getElementById('departments');
-    departments.forEach(dept => {
-        departmentsDiv.innerHTML += `
-        <div>
-            <div class="flex items-center justify-between mb-1">
-                <span class="text-sm text-gray-700 font-medium">${dept.name}</span>
-                <span class="text-sm font-bold text-gray-900">${dept.count}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-${dept.color}-600 h-2 rounded-full" style="width: ${dept.percentage}%"></div>
-            </div>
-        </div>
-    `;
-    });
+        `;
+    }
 </script>
