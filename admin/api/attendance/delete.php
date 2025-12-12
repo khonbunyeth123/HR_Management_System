@@ -37,7 +37,7 @@ if ($check_result->num_rows === 0) {
     jsonErrorResponse("Attendance record not found or already deleted", [], 404);
 }
 
-// Soft delete (update deleted_at and deleted_by)
+// Soft delete
 $sql = "UPDATE tbl_attendance_records 
         SET deleted_at = NOW(), 
             deleted_by = ? 

@@ -26,9 +26,12 @@ $today = date('Y-m-d');
 $sql = "SELECT 
     ar.*,
     ct.name as check_type_name,
-    ct.standard_time
+    ct.standard_time,
+    e.name as employee_name,
+    e.employee_code
     FROM tbl_attendance_records ar
     LEFT JOIN tbl_check_types ct ON ar.check_type_id = ct.id
+    LEFT JOIN tbl_employees e ON ar.employee_id = e.id
     WHERE ar.date = ? 
     AND ar.deleted_at IS NULL
     ORDER BY ar.check_time DESC";
@@ -41,8 +44,9 @@ $records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Get summary
 $summary_sql = "SELECT 
     COUNT(*) as total_today,
-    SUM(CASE WHEN check_type_id = 1 THEN 1 ELSE 0 END) as check_ins_today,
-    SUM(CASE WHEN check_type_id = 2 THEN 1 ELSE 0 END) as check_outs_today
+    SUM(CASE WHEN check_type_id IN (1,3) THEN 1 ELSE 0 END) as check_ins_today,
+    SUM(CASE WHEN check_type_id IN (2,4) THEN 1 ELSE 0 END) as check_outs_today,
+    COUNT(DISTINCT employee_id) as employees_today
     FROM tbl_attendance_records 
     WHERE date = ? 
     AND deleted_at IS NULL";

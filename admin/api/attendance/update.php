@@ -6,9 +6,9 @@ include(__DIR__ . "/../../action/db/cn.php");
 include(__DIR__ . "/../../utils/response.php");
 include(__DIR__ . "/../../utils/sql_helper.php");
 
-// Allow PUT, PATCH, and POST (for testing)
-if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'PATCH', 'POST'])) {
-    jsonErrorResponse("Method not allowed. Use PUT, PATCH or POST.", [], 405);
+// Allow both PUT and PATCH methods
+if ($_SERVER['REQUEST_METHOD'] !== 'PUT' && $_SERVER['REQUEST_METHOD'] !== 'PATCH') {
+    jsonErrorResponse("Method not allowed. Use PUT or PATCH.", [], 405);
 }
 
 if (!isset($cn)) {
@@ -43,7 +43,7 @@ if ($check_result->num_rows === 0) {
     jsonErrorResponse("Attendance record not found", [], 404);
 }
 
-// Build update query dynamically
+// Build update query
 $allowed_fields = ['employee_id', 'date', 'check_time', 'check_type_id', 'status_id'];
 $update_fields = [];
 $params = [];
@@ -53,7 +53,7 @@ foreach ($allowed_fields as $field) {
     if (isset($input[$field])) {
         $update_fields[] = "$field = ?";
         $params[] = $input[$field];
-        $types .= in_array($field, ['employee_id', 'check_type_id', 'status_id']) ? "i" : "s";
+        $types .= (in_array($field, ['employee_id', 'check_type_id', 'status_id'])) ? "i" : "s";
     }
 }
 
@@ -61,29 +61,32 @@ if (empty($update_fields)) {
     jsonErrorResponse("No fields to update", [], 400);
 }
 
-// Add updated_at and updated_by
+// Add updated info
 $update_fields[] = "updated_at = NOW()";
 $update_fields[] = "updated_by = ?";
-$params[] = $_SESSION['user_id'] ?? 0;
+$params[] = $_SESSION['user_id'] ?? null;
 $types .= "i";
 
-// Add ID as last parameter
+// Add ID
 $params[] = $id;
 $types .= "i";
 
-// Build and execute update query
+// Execute update
 $sql = "UPDATE tbl_attendance_records SET " . implode(", ", $update_fields) . " WHERE id = ?";
 $stmt = $cn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 
 if ($stmt->execute()) {
     // Fetch updated record
-    $fetch_sql = "SELECT * FROM tbl_attendance_records WHERE id = ?";
+    $fetch_sql = "SELECT ar.*, ct.name as check_type_name 
+                  FROM tbl_attendance_records ar
+                  LEFT JOIN tbl_check_types ct ON ar.check_type_id = ct.id
+                  WHERE ar.id = ?";
     $fetch_stmt = $cn->prepare($fetch_sql);
     $fetch_stmt->bind_param("i", $id);
     $fetch_stmt->execute();
     $record = $fetch_stmt->get_result()->fetch_assoc();
-
+    
     jsonResponse("Attendance record updated successfully", $record);
 } else {
     jsonErrorResponse("Failed to update record: " . $stmt->error, [], 500);

@@ -21,8 +21,8 @@ if ($cn->connect_error) {
 }
 
 // Get parameters
-$start_date = $_GET['start_date'] ?? date('Y-m-01'); // First day of current month
-$end_date = $_GET['end_date'] ?? date('Y-m-t'); // Last day of current month
+$start_date = $_GET['start_date'] ?? date('Y-m-01');
+$end_date = $_GET['end_date'] ?? date('Y-m-t');
 $employee_id = $_GET['employee_id'] ?? null;
 
 // Validate dates
@@ -33,8 +33,8 @@ if (!strtotime($start_date) || !strtotime($end_date)) {
 // Build SQL for summary statistics
 $summary_sql = "SELECT 
     COUNT(*) as total_records,
-    SUM(CASE WHEN check_type_id = 1 THEN 1 ELSE 0 END) as total_check_ins,
-    SUM(CASE WHEN check_type_id = 2 THEN 1 ELSE 0 END) as total_check_outs,
+    SUM(CASE WHEN check_type_id IN (1,3) THEN 1 ELSE 0 END) as total_check_ins,
+    SUM(CASE WHEN check_type_id IN (2,4) THEN 1 ELSE 0 END) as total_check_outs,
     COUNT(DISTINCT employee_id) as unique_employees,
     MIN(date) as earliest_date,
     MAX(date) as latest_date
@@ -45,7 +45,6 @@ $summary_sql = "SELECT
 $summary_params = [$start_date, $end_date];
 $summary_types = "ss";
 
-// Add employee filter if provided
 if ($employee_id) {
     $summary_sql .= " AND employee_id = ?";
     $summary_params[] = $employee_id;
@@ -62,8 +61,8 @@ $summary = $summary_stmt->get_result()->fetch_assoc();
 $daily_sql = "SELECT 
     date,
     COUNT(*) as daily_records,
-    SUM(CASE WHEN check_type_id = 1 THEN 1 ELSE 0 END) as daily_check_ins,
-    SUM(CASE WHEN check_type_id = 2 THEN 1 ELSE 0 END) as daily_check_outs
+    SUM(CASE WHEN check_type_id IN (1,3) THEN 1 ELSE 0 END) as daily_check_ins,
+    SUM(CASE WHEN check_type_id IN (2,4) THEN 1 ELSE 0 END) as daily_check_outs
     FROM tbl_attendance_records 
     WHERE date BETWEEN ? AND ? 
     AND deleted_at IS NULL";
@@ -87,12 +86,14 @@ $daily_stats = $daily_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 // Get employee statistics
 $employee_sql = "SELECT 
     employee_id,
+    e.name as employee_name,
     COUNT(*) as employee_records,
-    SUM(CASE WHEN check_type_id = 1 THEN 1 ELSE 0 END) as employee_check_ins,
-    SUM(CASE WHEN check_type_id = 2 THEN 1 ELSE 0 END) as employee_check_outs
-    FROM tbl_attendance_records 
+    SUM(CASE WHEN check_type_id IN (1,3) THEN 1 ELSE 0 END) as employee_check_ins,
+    SUM(CASE WHEN check_type_id IN (2,4) THEN 1 ELSE 0 END) as employee_check_outs
+    FROM tbl_attendance_records ar
+    LEFT JOIN tbl_employees e ON ar.employee_id = e.id
     WHERE date BETWEEN ? AND ? 
-    AND deleted_at IS NULL";
+    AND ar.deleted_at IS NULL";
 
 $employee_params = [$start_date, $end_date];
 $employee_types = "ss";
@@ -116,7 +117,6 @@ $report_data = [
     "report_generated_at" => date('Y-m-d H:i:s')
 ];
 
-// If employee_id was specified, add to report
 if ($employee_id) {
     $report_data["employee_id"] = $employee_id;
 }
