@@ -41,10 +41,7 @@ $stmtCount->execute();
 $total = $stmtCount->get_result()->fetch_assoc()['total'] ?? 0;
 
 // --- Fetch data ---
-$sql = "SELECT ar.*, ct.name as check_type_name 
-        FROM tbl_attendance_records ar
-        LEFT JOIN tbl_check_types ct ON ar.check_type_id = ct.id
-        WHERE $whereSQL $orderSQL LIMIT ? OFFSET ?";
+$sql = "SELECT * FROM tbl_attendance_records WHERE $whereSQL $orderSQL LIMIT ? OFFSET ?";
 $params[] = $per_page;
 $params[] = $offset;
 $types .= "ii";
@@ -69,4 +66,3 @@ $pagination = [
 jsonResponseWithPagination("Attendance records fetched successfully", $attendance_data, $pagination);
 
 $cn->close();
-?>
