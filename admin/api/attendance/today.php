@@ -6,11 +6,7 @@ include(__DIR__ . "/../../action/db/cn.php");
 include(__DIR__ . "/../../utils/response.php");
 include(__DIR__ . "/../../utils/sql_helper.php");
 
-// Only allow GET method
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    jsonErrorResponse("Method not allowed. Use GET.", [], 405);
-}
-
+// --- Check DB connection ---
 if (!isset($cn)) {
     jsonErrorResponse("Database connection not initialized", [], 500);
 }
@@ -20,51 +16,70 @@ if ($cn->connect_error) {
     jsonErrorResponse("Connection failed: " . $cn->connect_error, [], 500);
 }
 
-$today = date('Y-m-d');
+// --- Read input from GET ---
+$input = $_GET;
 
-// Build SQL
-$sql = "SELECT 
-    ar.*,
-    ct.name as check_type_name,
-    ct.standard_time,
-    e.name as employee_name,
-    e.employee_code
-    FROM tbl_attendance_records ar
-    LEFT JOIN tbl_check_types ct ON ar.check_type_id = ct.id
-    LEFT JOIN tbl_employees e ON ar.employee_id = e.id
-    WHERE ar.date = ? 
-    AND ar.deleted_at IS NULL
-    ORDER BY ar.check_time DESC";
+// Paging options
+$page = isset($input['paging_options']['page']) ? (int)$input['paging_options']['page'] : 1;
+$per_page = isset($input['paging_options']['per_page']) ? (int)$input['paging_options']['per_page'] : 10;
+$offset = ($page - 1) * $per_page;
+
+// Filters
+$filters = $input['filters'] ?? [];
+
+// --- Force today date filter ---
+$filters['date'] = date("Y-m-d");
+
+// --- Build WHERE & SORT ---
+list($whereSQL, $params, $types) = buildSQLFilter($filters);
+
+// If no filter returned → avoid SQL error
+if (trim($whereSQL) === "" || $whereSQL === null) {
+    $whereSQL = "1"; // always true
+}
+
+$orderSQL = "ORDER BY check_time DESC"; // default order for today
+
+// --- Count total ---
+$countSQL = "SELECT COUNT(*) AS total FROM tbl_attendance_records WHERE $whereSQL";
+$stmtCount = $cn->prepare($countSQL);
+
+if (!empty($params)) {
+    $stmtCount->bind_param($types, ...$params);
+}
+
+$stmtCount->execute();
+$total = $stmtCount->get_result()->fetch_assoc()['total'] ?? 0;
+
+// --- Fetch data ---
+$sql = "SELECT * FROM tbl_attendance_records 
+        WHERE $whereSQL 
+        $orderSQL 
+        LIMIT ? OFFSET ?";
+
+$params2 = $params; // clone params
+$params2[] = $per_page;
+$params2[] = $offset;
+$types2 = $types . "ii";
 
 $stmt = $cn->prepare($sql);
-$stmt->bind_param("s", $today);
+$stmt->bind_param($types2, ...$params2);
 $stmt->execute();
-$records = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Get summary
-$summary_sql = "SELECT 
-    COUNT(*) as total_today,
-    SUM(CASE WHEN check_type_id IN (1,3) THEN 1 ELSE 0 END) as check_ins_today,
-    SUM(CASE WHEN check_type_id IN (2,4) THEN 1 ELSE 0 END) as check_outs_today,
-    COUNT(DISTINCT employee_id) as employees_today
-    FROM tbl_attendance_records 
-    WHERE date = ? 
-    AND deleted_at IS NULL";
-
-$summary_stmt = $cn->prepare($summary_sql);
-$summary_stmt->bind_param("s", $today);
-$summary_stmt->execute();
-$summary = $summary_stmt->get_result()->fetch_assoc();
-
-$data = [
-    "today_date" => $today,
-    "summary" => $summary,
-    "records" => $records
+// --- Pagination info ---
+$attendance_data = [
+    "attendance_records" => $data
 ];
 
-jsonResponse("Today's attendance records fetched successfully", $data);
+$pagination = [
+    "total" => (int)$total,
+    "page" => $page,
+    "per_page" => $per_page,
+    "total_pages" => ceil($total / $per_page)
+];
 
-$stmt->close();
-$summary_stmt->close();
+// --- Return response ---
+jsonResponseWithPagination("Today's attendance fetched successfully", $attendance_data, $pagination);
+
 $cn->close();
-?>

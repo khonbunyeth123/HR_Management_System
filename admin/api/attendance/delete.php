@@ -2,59 +2,51 @@
 header('Content-Type: application/json');
 session_start();
 
-include(__DIR__ . "/../../action/db/cn.php");
-include(__DIR__ . "/../../utils/response.php");
-include(__DIR__ . "/../../utils/sql_helper.php");
+require_once(__DIR__ . "/../../action/db/cn.php");
+require_once(__DIR__ . "/../../utils/response.php");
 
-// Only allow DELETE method
+// Allow DELETE only
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
-    jsonErrorResponse("Method not allowed. Use DELETE.", [], 405);
+    jsonErrorResponse("Only DELETE method allowed.", [], 405);
 }
 
-if (!isset($cn)) {
-    jsonErrorResponse("Database connection not initialized", [], 500);
+// Check database connection
+if (!$cn || $cn->connect_errno) {
+    jsonErrorResponse("Database not connected.", [], 500);
 }
 
 $cn->set_charset("utf8");
-if ($cn->connect_error) {
-    jsonErrorResponse("Connection failed: " . $cn->connect_error, [], 500);
+
+// Validate ID
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id <= 0) {
+    jsonErrorResponse("Invalid or missing attendance ID.", [], 400);
 }
 
-// Get ID from query parameter
-$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
-if (!$id) {
-    jsonErrorResponse("Attendance record ID is required", [], 400);
-}
+// Check if record exists and not deleted
+$sql = "SELECT id FROM tbl_attendance_records WHERE id = ? AND deleted_at IS NULL LIMIT 1";
+$stmt = $cn->prepare($sql);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
 
-// Check if record exists and is not already deleted
-$check_sql = "SELECT id FROM tbl_attendance_records WHERE id = ? AND deleted_at IS NULL";
-$check_stmt = $cn->prepare($check_sql);
-$check_stmt->bind_param("i", $id);
-$check_stmt->execute();
-$check_result = $check_stmt->get_result();
-
-if ($check_result->num_rows === 0) {
-    jsonErrorResponse("Attendance record not found or already deleted", [], 404);
+if ($result->num_rows === 0) {
+    jsonErrorResponse("Record not found or already deleted.", [], 404);
 }
 
 // Soft delete
-$sql = "UPDATE tbl_attendance_records 
-        SET deleted_at = NOW(), 
-            deleted_by = ? 
-        WHERE id = ?";
-
-$stmt = $cn->prepare($sql);
 $deleted_by = $_SESSION['user_id'] ?? null;
 
-$stmt->bind_param("ii", $deleted_by, $id);
+$delete_sql = "UPDATE tbl_attendance_records SET deleted_at = NOW(), deleted_by = ? WHERE id = ? LIMIT 1";
+$delete_stmt = $cn->prepare($delete_sql);
+$delete_stmt->bind_param("ii", $deleted_by, $id);
 
-if ($stmt->execute()) {
-    jsonResponse("Attendance record deleted successfully");
+if ($delete_stmt->execute()) {
+    jsonResponse("Record deleted successfully.");
 } else {
-    jsonErrorResponse("Failed to delete record: " . $stmt->error, [], 500);
+    jsonErrorResponse("Delete failed: " . $delete_stmt->error, [], 500);
 }
 
+$delete_stmt->close();
 $stmt->close();
-$check_stmt->close();
 $cn->close();
-?>
