@@ -91,14 +91,13 @@
     function loadLeaveApplications(page) {
         const params = new URLSearchParams({
             "paging_options[page]": page,
-            "paging_options[per_page]": 5,
-            "filters[0][property]": "l.status_id",
-            "filters[0][value]": 1
+            "paging_options[per_page]": 5
         });
 
         fetch("api/leave_application/show.php?" + params.toString())
             .then(res => res.json())
             .then(result => {
+                console.log("API result:", result);
                 if (result.success && result.data) {
                     allRecords = result.data.leave_applications;
                     populateFilterOptions();
@@ -128,6 +127,7 @@
                 console.error("Error:", err);
             });
     }
+
 
     function renderTable(records) {
         const tbody = document.getElementById("leaveTableBody");

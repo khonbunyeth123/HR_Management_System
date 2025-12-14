@@ -27,16 +27,15 @@ $offset = ($page - 1) * $per_page;
 $filters = $input['filters'] ?? [];
 $sorts = $input['sorts'] ?? [];
 
-
-
 list($whereSQL, $params, $types) = buildSQLFilter($filters);
+if (empty($whereSQL)) $whereSQL = "1=1"; // Ensure SQL is valid if no filters
 $orderSQL = buildSQLSort($sorts, "l.start_date");
 
 // Count total
 $countSQL = "SELECT COUNT(*) AS total 
              FROM tbl_leave_applications l
              INNER JOIN tbl_employees e ON l.employee_id = e.id
-             INNER JOIN tbl_leave_types t ON l.leave_type = t.name
+             INNER JOIN tbl_leave_types t ON l.leave_type_id = t.id
              WHERE $whereSQL";
 
 $stmtCount = $cn->prepare($countSQL);
@@ -59,7 +58,7 @@ $sql = "SELECT
             l.created_by
         FROM tbl_leave_applications l
         INNER JOIN tbl_employees e ON l.employee_id = e.id
-        INNER JOIN tbl_leave_types t ON l.leave_type = t.name
+        INNER JOIN tbl_leave_types t ON l.leave_type_id = t.id
         WHERE $whereSQL
         $orderSQL
         LIMIT ? OFFSET ?";
@@ -67,25 +66,12 @@ $sql = "SELECT
 $params[] = $per_page;
 $params[] = $offset;
 $types .= "ii";
+
 $stmt = $cn->prepare($sql);
-$stmt->bind_param($types, ...$params);
+if (!empty($params)) $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-
-// 🔹 Helper to show SQL for debugging
-function debugSQL($sql, $types, $params)
-{
-    $combined = $sql;
-    if (!empty($params)) {
-        $displayParams = [];
-        foreach ($params as $p) {
-            $displayParams[] = "'" . str_replace("'", "\\'", (string) $p) . "'";
-        }
-        $combined .= "\n-- Params (" . $types . "): " . implode(", ", $displayParams);
-    }
-    return $combined;
-}
 // Pagination info
 $response_data = [
     "leave_applications" => $data,
@@ -96,19 +82,6 @@ $pagination = [
     "per_page" => $per_page,
     "total_pages" => ceil($total / $per_page)
 ];
-
-// 🔹 If debug mode enabled, show SQLs in JSON
-if (isset($_GET['debug']) && $_GET['debug'] === 'true') {
-    echo json_encode([
-        "debug" => [
-            "count_query" => debugSQL($countSQL, $types, $params),
-            "main_query" => debugSQL($sql, $types, $params)
-        ],
-        "data_preview" => array_slice($data, 0, 3),
-        "pagination" => $pagination
-    ], JSON_PRETTY_PRINT);
-    exit;
-}
 
 jsonResponseWithPagination("Leave applications fetched successfully", $response_data, $pagination);
 $cn->close();

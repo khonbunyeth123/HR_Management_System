@@ -16,9 +16,10 @@ final class CreateLeaveApplicationsTable extends AbstractMigration
             ->addColumn('start_date', 'date')
             ->addColumn('end_date', 'date')
             ->addColumn('reason', 'text')
-            ->addColumn('status', 'string', [
-                'limit' => 20,
-                'default' => 'pending'
+            ->addColumn('status_id', 'integer', [
+                'limit' => 1,
+                'default' => 0,
+                'comment' => '0=pending, 1=approved, 2=rejected'
             ])
             ->addColumn('approved_by', 'integer', ['null' => true])
             ->addColumn('approved_at', 'datetime', ['null' => true])
@@ -29,6 +30,9 @@ final class CreateLeaveApplicationsTable extends AbstractMigration
             ->addColumn('deleted_at', 'datetime', ['null' => true])
             ->addColumn('deleted_by', 'integer', ['null' => true])
             ->addIndex(['uuid'], ['unique' => true])
+            ->addIndex(['employee_id'])
+            ->addIndex(['leave_type_id'])
+            ->addIndex(['status_id'])
             ->create();
     }
 
