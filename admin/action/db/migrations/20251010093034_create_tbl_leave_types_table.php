@@ -8,7 +8,6 @@ final class CreateTblLeaveTypesTable extends AbstractMigration
 {
     public function up(): void
     {
-        // 1️⃣ Create the table
         $table = $this->table('tbl_leave_types');
         $table
             ->addColumn('uuid', 'char', ['length' => 36])
@@ -24,43 +23,33 @@ final class CreateTblLeaveTypesTable extends AbstractMigration
             ->addIndex(['uuid'], ['unique' => true])
             ->create();
 
-        // 2️⃣ Insert default leave types
-        $leaveTypes = [
+        // Default leave types
+        $this->table('tbl_leave_types')->insert([
             [
                 'uuid' => bin2hex(random_bytes(16)),
                 'name' => 'Sick Leave',
-                'description' => 'Leave for illness or medical reasons',
-                'status_id' => 1,
+                'description' => 'Leave for illness',
                 'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => null,
             ],
             [
                 'uuid' => bin2hex(random_bytes(16)),
                 'name' => 'Casual Leave',
-                'description' => 'Short-term leave for personal reasons',
-                'status_id' => 1,
+                'description' => 'Personal reasons',
                 'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => null,
             ],
             [
                 'uuid' => bin2hex(random_bytes(16)),
                 'name' => 'Annual Leave',
-                'description' => 'Paid leave granted yearly',
-                'status_id' => 1,
+                'description' => 'Yearly paid leave',
                 'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => null,
             ],
             [
                 'uuid' => bin2hex(random_bytes(16)),
                 'name' => 'Other',
-                'description' => 'Other types of leave',
-                'status_id' => 1,
+                'description' => 'Other leave types',
                 'created_at' => date('Y-m-d H:i:s'),
-                'created_by' => null,
             ],
-        ];
-
-        $this->table('tbl_leave_types')->insert($leaveTypes)->saveData();
+        ])->saveData();
     }
 
     public function down(): void

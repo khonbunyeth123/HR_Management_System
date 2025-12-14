@@ -12,19 +12,22 @@ final class CreateLeaveApplicationsTable extends AbstractMigration
         $table
             ->addColumn('uuid', 'char', ['length' => 36])
             ->addColumn('employee_id', 'integer')
-            ->addColumn('leave_type', 'enum', ['values' => ['sick','casual','annual','other']])
+            ->addColumn('leave_type_id', 'integer')
             ->addColumn('start_date', 'date')
             ->addColumn('end_date', 'date')
             ->addColumn('reason', 'text')
-            ->addColumn('status_id', 'integer', ['limit' => 1, 'default' => 0])
+            ->addColumn('status', 'string', [
+                'limit' => 20,
+                'default' => 'pending'
+            ])
             ->addColumn('approved_by', 'integer', ['null' => true])
+            ->addColumn('approved_at', 'datetime', ['null' => true])
             ->addColumn('created_at', 'datetime')
             ->addColumn('created_by', 'integer', ['null' => true])
             ->addColumn('updated_at', 'datetime', ['null' => true])
             ->addColumn('updated_by', 'integer', ['null' => true])
             ->addColumn('deleted_at', 'datetime', ['null' => true])
             ->addColumn('deleted_by', 'integer', ['null' => true])
-            // ->addForeignKey('employee_id', 'tbl_employees', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO_ACTION'])
             ->addIndex(['uuid'], ['unique' => true])
             ->create();
     }
