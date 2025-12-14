@@ -93,11 +93,16 @@
     }
 
     function closeLogoutModal() {
+      logoutModal.classList.remove('opacity-100');
       logoutModal.classList.add('opacity-0');
-      logoutModalContent.classList.add('scale-90');
       logoutModalContent.classList.remove('scale-100');
-      setTimeout(() => logoutModal.classList.add('pointer-events-none'), 300);
+      logoutModalContent.classList.add('scale-90');
+
+      setTimeout(() => {
+        logoutModal.classList.add('pointer-events-none');
+      }, 300);
     }
+
 
     // Open modal when logout button is clicked
     logoutBtn.addEventListener('click', openLogoutModal);
