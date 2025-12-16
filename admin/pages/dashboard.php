@@ -9,10 +9,10 @@
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">HR Management Dashboard</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
 
         <!-- Stats Grid -->
-        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <!-- Stats will be loaded here -->
         </div>
 
