@@ -14,28 +14,26 @@
         ['page' => 'employee', 'label' => 'Employees', 'icon' => 'mdi:account-group', 'mid' => 3],
         ['page' => 'leave', 'label' => 'Leave Requests', 'icon' => 'mdi:calendar-month', 'mid' => 4],
         [
-          'page' => 'report', 
-          'label' => 'Reports', 
-          'icon' => 'mdi:chart-box', 
+          'page' => 'report',
+          'label' => 'Reports',
+          'icon' => 'mdi:chart-box',
           'mid' => 5,
           'submenu' => [
-              ['page' => 'report_daily', 'label' => 'Daily Report', 'icon' => 'mdi:calendar-today', 'mid' => 51],
-              ['page' => 'report_summary', 'label' => 'Summary Report', 'icon' => 'mdi:chart-line', 'mid' => 52],
-              ['page' => 'report_detail', 'label' => 'Detailed Report', 'icon' => 'mdi:file-document-outline', 'mid' => 53],
-              ['page' => 'report_top_employee', 'label' => 'Top Employees', 'icon' => 'mdi:star-circle', 'mid' => 54]
+            ['page' => 'report_daily', 'label' => 'Daily Report', 'icon' => 'mdi:calendar-today', 'mid' => 51],
+            ['page' => 'report_summary', 'label' => 'Summary Report', 'icon' => 'mdi:chart-line', 'mid' => 52],
+            ['page' => 'report_detail', 'label' => 'Detailed Report', 'icon' => 'mdi:file-document-outline', 'mid' => 53],
+            ['page' => 'report_top_employee', 'label' => 'Top Employees', 'icon' => 'mdi:star-circle', 'mid' => 54]
           ]
         ],
         ['page' => 'user', 'label' => 'User Management', 'icon' => 'mdi:shield-account', 'mid' => 6],
         ['page' => 'audits', 'label' => 'Audits', 'icon' => 'mdi:cellphone-link', 'mid' => 7]
       ];
 
-      // Function to render menu
       function render_menu($menu_items, $current_page, $conn = null) {
           foreach ($menu_items as $index => $item) {
               $is_active = strtolower($current_page) === strtolower($item['page']);
               $has_active_submenu = false;
 
-              // Check submenu active
               if (isset($item['submenu'])) {
                   foreach ($item['submenu'] as $subitem) {
                       if (strtolower($current_page) === strtolower($subitem['page'])) {
@@ -51,7 +49,7 @@
                 : 'hover:bg-slate-700/50 text-slate-300 hover:text-white';
 
               echo '<li data-opt="' . $index . '" class="rounded-xl ' . $active_class . ' transition-all duration-300 transform hover:scale-[1.02]">';
-              
+
               if (isset($item['submenu'])) {
                   echo '
                     <button type="button" class="nav-toggle w-full flex items-center px-4 py-3 gap-3 group" data-menu="' . $item['page'] . '">
@@ -60,11 +58,11 @@
                       <span class="iconify ml-auto text-lg transition-transform duration-300 dropdown-arrow ' . ($has_active_submenu ? 'rotate-180' : '') . '" data-icon="mdi:chevron-down"></span>
                     </button>
                     <ul class="submenu pl-8 pr-4 pb-2 pt-1 space-y-1 ' . ($has_active_submenu ? 'active' : '') . '" data-submenu="' . $item['page'] . '">';
-                  
+
                   foreach ($item['submenu'] as $subitem) {
                       $is_sub_active = strtolower($current_page) === strtolower($subitem['page']);
-                      $sub_active_class = $is_sub_active 
-                        ? 'bg-slate-700/70 text-white font-semibold border-l-2 border-indigo-400' 
+                      $sub_active_class = $is_sub_active
+                        ? 'bg-slate-700/70 text-white font-semibold border-l-2 border-indigo-400'
                         : 'text-slate-400 hover:text-white hover:bg-slate-700/30';
                       $sub_icon = $subitem['icon'] ?? 'mdi:circle-small';
 
@@ -123,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const arrow = btn.querySelector('.dropdown-arrow');
             const isActive = submenu.classList.contains('active');
 
-            // Close other submenus
             document.querySelectorAll('.submenu').forEach(sub => {
                 if (sub !== submenu) {
                     sub.classList.remove('active');
@@ -132,21 +129,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Toggle current submenu
             submenu.classList.toggle('active', !isActive);
             if (arrow) arrow.classList.toggle('rotate-180', !isActive);
         });
     });
 
-    // Auto-expand submenu for current page
+    // Auto-expand and mark active submenu items on page load
     document.querySelectorAll('.submenu').forEach(sub => {
+        let hasActive = false;
         sub.querySelectorAll('.nav-link').forEach(link => {
             if (link.dataset.page === currentPage) {
-                sub.classList.add('active');
-                const arrow = sub.previousElementSibling?.querySelector('.dropdown-arrow');
-                if (arrow) arrow.classList.add('rotate-180');
+                hasActive = true;
+
+                link.classList.add('bg-slate-700/70', 'text-white', 'font-semibold', 'border-l-2', 'border-indigo-400');
+                const pulseSpan = document.createElement('span');
+                pulseSpan.className = 'ml-auto w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse';
+                link.appendChild(pulseSpan);
+
+                const icon = link.querySelector('.iconify');
+                if (icon) {
+                    icon.classList.remove('text-slate-500', 'group-hover:text-slate-300');
+                    icon.classList.add('text-indigo-400');
+                }
             }
         });
+
+        if (hasActive) {
+            sub.classList.add('active');
+            const arrow = sub.previousElementSibling?.querySelector('.dropdown-arrow');
+            if (arrow) arrow.classList.add('rotate-180');
+
+            const parentLi = sub.closest('li[data-opt]');
+            if (parentLi) {
+                parentLi.classList.add('bg-gradient-to-r', 'from-indigo-500', 'to-purple-600', 'text-white', 'shadow-lg', 'shadow-indigo-500/50');
+                parentLi.classList.remove('hover:bg-slate-700/50', 'text-slate-300', 'hover:text-white');
+            }
+        }
     });
 
     // Nav link click
@@ -159,8 +177,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const page = link.dataset.page;
         if (!page || page === currentPage) return;
-
         currentPage = page;
+
+        // Remove previous active
         document.querySelectorAll('.nav-link').forEach(l => {
             l.classList.remove('bg-slate-700/70', 'text-white', 'font-semibold', 'border-l-2', 'border-indigo-400');
             l.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-700/30');
@@ -174,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         link.appendChild(pulseSpan);
 
         window.history.pushState({ page }, '', '?page=' + page);
-        // Load page content
+
         const contentArea = document.getElementById('content-area');
         if (contentArea) {
             fetch('pages/' + page + '.php')
@@ -189,20 +208,16 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
-/* Scrollbar */
 .scrollbar-thin::-webkit-scrollbar { width: 6px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius:3px; }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background:#64748b; }
 
-/* Dropdown arrow */
 .dropdown-arrow { transition: transform 0.3s ease; }
 .dropdown-arrow.rotate-180 { transform: rotate(180deg); }
 
-/* Submenu animation */
 .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
 .submenu.active { max-height: 500px; }
 
-/* Prevent text selection */
 .nav-toggle { user-select: none; -webkit-user-select: none; -moz-user-select: none; }
 </style>
