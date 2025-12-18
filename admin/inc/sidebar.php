@@ -214,20 +214,37 @@
     const pageCache = {};
     let currentPage = null;
 
-    // Dropdown toggle functionality
+    // Dropdown toggle functionality - FIXED
     document.querySelectorAll('.nav-toggle').forEach(toggle => {
       toggle.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation(); // Extra safety to prevent any propagation
         
         const menuName = this.dataset.menu;
         const submenu = document.querySelector(`[data-submenu="${menuName}"]`);
         const arrow = this.querySelector('.dropdown-arrow');
         
         if (submenu) {
+          const isHidden = submenu.classList.contains('hidden');
+          
+          // Close all other submenus
+          document.querySelectorAll('.submenu').forEach(sub => {
+            if (sub !== submenu) {
+              sub.classList.add('hidden');
+              const otherArrow = sub.previousElementSibling?.querySelector('.dropdown-arrow');
+              if (otherArrow) otherArrow.classList.remove('rotate-180');
+            }
+          });
+          
+          // Toggle current submenu
           submenu.classList.toggle('hidden');
-          arrow.classList.toggle('rotate-180');
+          if (arrow) {
+            arrow.classList.toggle('rotate-180');
+          }
         }
+        
+        return false; // Extra safety
       });
     });
 
@@ -246,8 +263,13 @@
       });
     });
 
-    // Event delegation for nav links
+    // Event delegation for nav links - FIXED to ignore button clicks
     document.addEventListener('click', function (e) {
+      // Ignore clicks on buttons (dropdown toggles)
+      if (e.target.closest('.nav-toggle')) {
+        return;
+      }
+      
       const link = e.target.closest('.nav-link');
       if (!link) return;
 
@@ -322,6 +344,7 @@
             <div class="text-red-500 text-5xl mb-4">⚠️</div>
             <h3 class="text-xl font-semibold text-slate-700 mb-2">Error Loading Page</h3>
             <p class="text-slate-500">Could not load ${page}.php</p>
+            <p class="text-slate-400 text-sm mt-2">Make sure the file exists in the pages/ directory</p>
           </div>
         `;
         });
@@ -342,10 +365,17 @@
         // Remove pulse indicator from all submenu items
         const pulse = link.querySelector('.animate-pulse');
         if (pulse) pulse.remove();
+        
+        // Reset icon colors
+        const icon = link.querySelector('.iconify');
+        if (icon) {
+          icon.classList.remove('text-indigo-400');
+          icon.classList.add('text-slate-500', 'group-hover:text-slate-300');
+        }
       });
 
       // Remove pulse indicators from top-level items
-      document.querySelectorAll('li[data-opt] > a .animate-pulse').forEach(pulse => pulse.remove());
+      document.querySelectorAll('li[data-opt] > a .animate-pulse, li[data-opt] > .nav-link .animate-pulse').forEach(pulse => pulse.remove());
 
       // Find the parent li and activate it
       const parentLi = clickedLink.closest('li[data-opt]');
@@ -434,5 +464,12 @@
   .submenu {
     overflow: hidden;
     transition: all 0.3s ease;
+  }
+  
+  /* Prevent text selection on buttons */
+  .nav-toggle {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
   }
 </style>
