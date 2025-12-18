@@ -1,166 +1,194 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Attendance Detail Report</title>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+$current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
+?>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
+<div
+  class="navigation max-h-[calc(100vh-56px)] bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white h-screen flex flex-col shadow-2xl border-r border-slate-700/50">
 
-<body class="bg-slate-100">
+  <!-- Menu Section -->
+  <div class="menu flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+    <ul class="p-3 space-y-1.5">
 
-    <div class="mx-auto p-6 ">
+<?php
+$menu_items = [
+  ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard','mid'=>1],
+  ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline','mid'=>2],
+  ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group','mid'=>3],
+  ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month','mid'=>4],
+  [
+    'page'=>'report','label'=>'Reports','icon'=>'mdi:chart-box','mid'=>5,
+    'submenu'=>[
+      ['page'=>'report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today','mid'=>51],
+      ['page'=>'report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line','mid'=>52],
+      ['page'=>'report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline','mid'=>53],
+      ['page'=>'report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle','mid'=>54],
+    ]
+  ],
+  ['page'=>'user','label'=>'User Management','icon'=>'mdi:shield-account','mid'=>6],
+  ['page'=>'audits','label'=>'Audits','icon'=>'mdi:cellphone-link','mid'=>7],
+];
 
-        <!-- HEADER -->
-        <div class="flex justify-between items-center mb-4 bg-white p-4 rounded-lg shadow">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Attendance Detail Report</h1>
-                <p class="text-gray-600">Employee: <span class="font-semibold">Sophep Chan</span></p>
-            </div>
+// Admin sees all
+foreach ($menu_items as $index => $item):
+  $is_active = $current_page === $item['page'];
+  $has_active_sub = false;
 
-            <div class="flex gap-2">
-                <button onclick="window.print()"
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
-                    Print
-                </button>
-                <button
-                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                    Export
-                </button>
-            </div>
-        </div>
+  if (isset($item['submenu'])) {
+    foreach ($item['submenu'] as $s) {
+      if ($current_page === $s['page']) $has_active_sub = true;
+    }
+  }
 
-        <!-- TABLE -->
-        <div class="bg-white rounded-lg shadow overflow-x-auto">
-            <table class="min-w-full border border-gray-300 text-sm">
-                <thead class="bg-gray-100">
-                    <tr>
-                        <th class="border px-3 py-2">DAY</th>
-                        <th class="border px-3 py-2">DATE</th>
-                        <th class="border px-3 py-2">TYPE</th>
-                        <th class="border px-3 py-2">CHECK-IN</th>
-                        <th class="border px-3 py-2">CHECK-OUT</th>
-                        <th class="border px-3 py-2">CHECK-IN 2</th>
-                        <th class="border px-3 py-2">CHECK-OUT 2</th>
-                        <th class="border px-3 py-2">NOTE</th>
-                    </tr>
-                </thead>
+  $is_parent_active = $is_active || $has_active_sub;
+?>
 
-                <tbody id="reportBody"></tbody>
-            </table>
-        </div>
+<li data-opt="<?= $index ?>" class="rounded-xl transition-all duration-300 <?= $is_parent_active ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/50' : 'hover:bg-slate-700/50 text-slate-300 hover:text-white' ?>">
 
+<?php if (isset($item['submenu'])): ?>
+  <button type="button" class="nav-toggle w-full flex items-center px-4 py-3 gap-3 group" data-menu="<?= $item['page'] ?>">
+    <span class="iconify text-xl <?= $is_parent_active?'text-white':'text-slate-400 group-hover:text-white' ?>" data-icon="<?= $item['icon'] ?>"></span>
+    <span class="text-sm font-semibold tracking-wide"><?= $item['label'] ?></span>
+    <span class="iconify ml-auto text-lg dropdown-arrow <?= $has_active_sub?'rotate-180':'' ?>" data-icon="mdi:chevron-down"></span>
+  </button>
+
+  <ul class="submenu <?= $has_active_sub?'':'hidden' ?> pl-8 pr-4 pb-2 pt-1 space-y-1" data-submenu="<?= $item['page'] ?>" data-parent-li="<?= $index ?>">
+    <?php foreach ($item['submenu'] as $sub):
+      $sub_active = $current_page === $sub['page'];
+    ?>
+    <li>
+      <a href="?page=<?= $sub['page'] ?>" data-page="<?= $sub['page'] ?>" class="nav-link flex items-center gap-2 py-2.5 px-3 rounded-lg text-sm <?= $sub_active?'bg-slate-700/70 text-white font-semibold border-l-2 border-indigo-400':'text-slate-400 hover:text-white hover:bg-slate-700/30' ?>">
+        <span class="iconify text-base <?= $sub_active?'text-indigo-400':'text-slate-500' ?>" data-icon="<?= $sub['icon'] ?>"></span>
+        <span><?= $sub['label'] ?></span>
+        <?php if ($sub_active): ?>
+          <span class="ml-auto w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
+        <?php endif; ?>
+      </a>
+    </li>
+    <?php endforeach; ?>
+  </ul>
+
+<?php else: ?>
+  <a href="?page=<?= $item['page'] ?>" data-page="<?= $item['page'] ?>" class="nav-link flex items-center px-4 py-3 gap-3 group">
+    <span class="iconify text-xl <?= $is_active?'text-white':'text-slate-400 group-hover:text-white' ?>" data-icon="<?= $item['icon'] ?>"></span>
+    <span class="text-sm font-semibold tracking-wide"><?= $item['label'] ?></span>
+    <?php if ($is_active): ?>
+      <span class="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+    <?php endif; ?>
+  </a>
+<?php endif; ?>
+</li>
+
+<?php endforeach; ?>
+
+    </ul>
+  </div>
+
+  <!-- Footer Section -->
+  <div class="p-4 border-t border-slate-700/50 backdrop-blur-sm bg-slate-800/50">
+    <div class="flex items-center gap-3 text-slate-400 text-xs">
+      <span class="iconify text-lg" data-icon="mdi:copyright"></span>
+      <div class="flex flex-col">
+        <span class="font-semibold text-slate-300"><?= date('Y') ?> Doorstep Technology</span>
+        <span class="text-[10px] text-slate-500">All rights reserved</span>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        /* =========================
-        MOCK DATA (API READY)
-        ========================= */
-        const attendanceData = [
-            {
-                day: "Sat",
-                date: "01-03-2025",
-                type: "Attend",
-                checkin: "",
-                checkout: "",
-                checkin2: "12:37 PM",
-                checkout2: "",
-                status: "early",
-                note: ""
-            },
-            {
-                day: "Sun",
-                date: "02-03-2025",
-                type: "Attend (Absent 0.5)",
-                checkin: "05:05 PM",
-                checkout: "05:05 PM",
-                checkin2: "",
-                checkout2: "",
-                status: "late",
-                note: "Checkin2: Sorry I am late"
-            },
-            {
-                day: "Mon",
-                date: "03-03-2025",
-                type: "Attend",
-                checkin: "08:08 AM",
-                checkout: "12:00 PM",
-                checkin2: "01:00 PM",
-                checkout2: "05:16 PM",
-                status: "normal",
-                note: ""
-            },
-            {
-                day: "Tue",
-                date: "04-03-2025",
-                type: "Attend",
-                checkin: "08:17 AM",
-                checkout: "12:00 PM",
-                checkin2: "01:00 PM",
-                checkout2: "05:25 PM",
-                status: "late",
-                note: "Checkin: Sorry I am late"
-            },
-            {
-                day: "Thu",
-                date: "06-03-2025",
-                type: "Attend",
-                checkin: "08:21 AM",
-                checkout: "12:00 PM",
-                checkin2: "01:00 PM",
-                checkout2: "05:09 PM",
-                status: "late",
-                note: "Checkin: Sorry I am late"
-            }
-        ];
+<script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
 
-        /* =========================
-        HELPERS
-        ========================= */
-        function badge(type) {
-            if (type.includes("Absent")) {
-                return `<span class="text-red-600 font-semibold">${type}</span>`;
-            }
-            return `<span class="text-green-600 font-semibold">${type}</span>`;
-        }
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let currentPage = new URLSearchParams(location.search).get('page') || 'dashboard';
 
-        function timeStyle(time, status) {
-            if (!time) return "";
-            if (status === "late") {
-                return `<span class="text-red-600 font-semibold">${time} (Late)</span>`;
-            }
-            if (status === "early") {
-                return `<span class="text-green-600 font-semibold">${time} (Early)</span>`;
-            }
-            return time;
-        }
+    /* Dropdown toggle for top-level buttons */
+    document.querySelectorAll('.nav-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const menu = btn.dataset.menu;
+        const submenu = document.querySelector(`[data-submenu="${menu}"]`);
+        const arrow = btn.querySelector('.dropdown-arrow');
+        submenu.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+      });
+    });
 
-        /* =========================
-        RENDER TABLE
-        ========================= */
-        function renderTable() {
-            const tbody = document.getElementById("reportBody");
-            tbody.innerHTML = "";
+    /* Nav link click SPA */
+    document.addEventListener('click', e => {
+      const link = e.target.closest('.nav-link');
+      if (!link) return;
 
-            attendanceData.forEach(row => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="border px-3 py-2 text-center">${row.day}</td>
-                        <td class="border px-3 py-2 text-center">${row.date}</td>
-                        <td class="border px-3 py-2">${badge(row.type)}</td>
-                        <td class="border px-3 py-2 text-center">${timeStyle(row.checkin, row.status)}</td>
-                        <td class="border px-3 py-2 text-center">${row.checkout || ""}</td>
-                        <td class="border px-3 py-2 text-center">${row.checkin2 || ""}</td>
-                        <td class="border px-3 py-2 text-center">${row.checkout2 || ""}</td>
-                        <td class="border px-3 py-2">${row.note || ""}</td>
-                    </tr>
-                `;
-            });
-        }
+      e.preventDefault();
+      currentPage = link.dataset.page;
+      updateActiveState(link);
+      history.pushState({}, '', '?page=' + currentPage);
+    });
 
-        document.addEventListener("DOMContentLoaded", renderTable);
-    </script>
+    /* Back/Forward button handling */
+    window.addEventListener('popstate', () => {
+      const page = new URLSearchParams(location.search).get('page') || 'dashboard';
+      currentPage = page;
+      const link = document.querySelector(`.nav-link[data-page="${page}"]`);
+      if (link) updateActiveState(link);
+    });
 
-</body>
-</html>
+    /* Set initial active states */
+    const initialLink = document.querySelector(`.nav-link[data-page="${currentPage}"]`);
+    if (initialLink) updateActiveState(initialLink);
+
+    /* ================= FUNCTION ================= */
+    function updateActiveState(clickedLink) {
+      // Reset top-level
+      document.querySelectorAll('li[data-opt]').forEach(li => {
+        li.classList.remove('bg-gradient-to-r','from-indigo-500','to-purple-600','text-white','shadow-lg','shadow-indigo-500/50');
+        li.classList.add('hover:bg-slate-700/50','text-slate-300','hover:text-white');
+      });
+      // Reset submenus
+      document.querySelectorAll('.submenu .nav-link').forEach(l => {
+        l.classList.remove('bg-slate-700/70','text-white','font-semibold','border-l-2','border-indigo-400');
+        l.querySelector('.animate-pulse')?.remove();
+      });
+
+      const submenu = clickedLink.closest('.submenu');
+      if (submenu) {
+        const parentIndex = submenu.dataset.parentLi;
+        const parentLi = document.querySelector(`li[data-opt="${parentIndex}"]`);
+
+        parentLi.classList.add('bg-gradient-to-r','from-indigo-500','to-purple-600','text-white','shadow-lg','shadow-indigo-500/50');
+        submenu.classList.remove('hidden');
+
+        const arrow = parentLi.querySelector('.dropdown-arrow');
+        if (arrow) arrow.classList.add('rotate-180');
+
+        clickedLink.classList.add('bg-slate-700/70','text-white','font-semibold','border-l-2','border-indigo-400');
+        clickedLink.insertAdjacentHTML('beforeend','<span class="ml-auto w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>');
+        return;
+      }
+
+      // Top-level item
+      const parentLi = clickedLink.closest('li[data-opt]');
+      parentLi.classList.add('bg-gradient-to-r','from-indigo-500','to-purple-600','text-white','shadow-lg','shadow-indigo-500/50');
+      clickedLink.insertAdjacentHTML('beforeend','<span class="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>');
+
+      // Toggle submenu if exists
+      const sub = parentLi.querySelector('.submenu');
+      if (sub) {
+        sub.classList.toggle('hidden');
+        const arrow = parentLi.querySelector('.dropdown-arrow');
+        if (arrow) arrow.classList.toggle('rotate-180');
+      }
+    }
+  });
+</script>
+
+<style>
+.scrollbar-thin::-webkit-scrollbar { width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+.dropdown-arrow { transition: transform 0.3s ease; }
+.dropdown-arrow.rotate-180 { transform: rotate(180deg); }
+
+.submenu { overflow: hidden; transition: all 0.3s ease; }
+</style>
