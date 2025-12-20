@@ -1,6 +1,9 @@
 <div class="p-6">
   <h2 class="text-2xl font-bold mb-2">Detailed Report</h2>
-
+  <div class="flex p-4 bg-white shadow my-4 justify-end border rounded-lg gap-2">
+    <button class="bg-blue-500 text-white px-4 py-2 rounded">Print</button>
+    <button class="px-4 py-2 bg-green-500 text-white rounded">Export</button>
+  </div>
   <div class="bg-white rounded-lg shadow p-6 mb-4">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div>
