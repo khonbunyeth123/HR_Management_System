@@ -3,44 +3,44 @@
   <div class="menu flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
     <ul class="p-3 space-y-1.5">
 
-<?php
-$current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
+  <?php
+  $current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
 
-$menu_items = [
-  ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard'],
-  ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
-  ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group'],
-  ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month'],
-  [
-    'page'=>'report',
-    'label'=>'Reports',
-    'icon'=>'mdi:chart-box',
-    'submenu'=>[
-      ['page'=>'report/report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today'],
-      ['page'=>'report/report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line'],
-      ['page'=>'report/report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline'],
-      ['page'=>'report/report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle'],
-    ]
-  ],
-  ['page'=>'user','label'=>'User Management','icon'=>'mdi:shield-account'],
-  ['page'=>'audits','label'=>'Audit','icon'=>'mdi:file-document-multiple']
-];
+  $menu_items = [
+    ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard'],
+    ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
+    ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group'],
+    ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month'],
+    [
+      'page'=>'report',
+      'label'=>'Reports',
+      'icon'=>'mdi:chart-box',
+      'submenu'=>[
+        ['page'=>'report/report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today'],
+        ['page'=>'report/report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line'],
+        ['page'=>'report/report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline'],
+        ['page'=>'report/report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle'],
+      ]
+    ],
+    ['page'=>'user','label'=>'User Management','icon'=>'mdi:shield-account'],
+    ['page'=>'audits','label'=>'Audit','icon'=>'mdi:file-document-multiple']
+  ];
 
-foreach ($menu_items as $index => $item):
+  foreach ($menu_items as $index => $item):
 
-  $has_active_submenu = false;
-  if (isset($item['submenu'])) {
-    foreach ($item['submenu'] as $sub) {
-      if ($current_page === strtolower($sub['page'])) {
-        $has_active_submenu = true;
-        break;
+    $has_active_submenu = false;
+    if (isset($item['submenu'])) {
+      foreach ($item['submenu'] as $sub) {
+        if ($current_page === strtolower($sub['page'])) {
+          $has_active_submenu = true;
+          break;
+        }
       }
     }
-  }
 
-  $is_active = $current_page === strtolower($item['page']);
-  $is_parent_active = $is_active || $has_active_submenu;
-?>
+    $is_active = $current_page === strtolower($item['page']);
+    $is_parent_active = $is_active || $has_active_submenu;
+  ?>
 
 <li class="rounded-xl <?= $is_parent_active ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' : 'hover:bg-slate-700/50 text-slate-300' ?>">
 

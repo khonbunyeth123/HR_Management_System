@@ -20,7 +20,7 @@ $input = $_GET;
 
 // Paging options
 $page = isset($input['paging_options']['page']) ? (int) $input['paging_options']['page'] : 1;
-$per_page = isset($input['paging_options']['per_page']) ? (int) $input['paging_options']['per_page'] : 10;
+$per_page = isset($input['paging_options']['per_page']) ? (int) $input['paging_options']['per_page'] : 1;
 $offset = ($page - 1) * $per_page;
 
 // Filters and sorts
