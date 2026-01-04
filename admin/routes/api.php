@@ -1,6 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
+// ✅ Add autoloader
+require_once __DIR__ . '/../vendor/autoload.php';
+
 use App\Controllers\Api\DashboardController;
 
 $method = $_SERVER['REQUEST_METHOD'];

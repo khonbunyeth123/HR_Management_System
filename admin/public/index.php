@@ -2,6 +2,15 @@
 session_start();
 require_once dirname(__DIR__) . '/database/cn.php';
 
+// Get the request URI
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// ✅ Route API requests to api.php
+if (strpos($uri, '/api') === 0) {
+    require_once __DIR__ . '/../routes/api.php';
+    exit;
+}
+
 // AUTH check here...
 // ...
 
