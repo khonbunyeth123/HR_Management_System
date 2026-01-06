@@ -1,5 +1,14 @@
 {
     "php.suggest.basic": false,
+    "intelephense.diagnostics.enable": true,
+    "intelephense.diagnostics.run": "onType",
+    "intelephense.diagnostics.embeddedLanguages": true,
+    "intelephense.diagnostics.undefinedSymbols": false,
+    "intelephense.diagnostics.undefinedMethods": false,
+    "intelephense.diagnostics.undefinedProperties": false,
+    "intelephense.diagnostics.undefinedFunctions": false,
+    "intelephense.diagnostics.undefinedConstants": false,
+    "intelephense.diagnostics.undefinedClassConstants": false,
     "intelephense.stubs": [
         "apache",
         "bcmath",
@@ -21,7 +30,6 @@
         "mcrypt",
         "mysql",
         "mysqli",
-        "password",
         "pcntl",
         "pcre",
         "PDO",

@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Core;
 
 use PDO;
@@ -6,13 +8,14 @@ use PDOException;
 
 class Database
 {
-    private static $instance = null;
-    private $pdo;
+    /** @phpstan-ignore-next-line */
+    private static ?Database $instance = null;
+    private PDO $pdo;
 
     private function __construct()
     {
         $config = require __DIR__ . '/../../config/database.php';
-        
+
         try {
             $this->pdo = new PDO(
                 "mysql:host={$config['host']};dbname={$config['database']};charset=utf8mb4",
@@ -25,19 +28,23 @@ class Database
                 ]
             );
         } catch (PDOException $e) {
-            die("Database connection failed: " . $e->getMessage());
+            throw new PDOException(
+                'Database connection failed: ' . $e->getMessage(),
+                (int) $e->getCode()
+            );
         }
     }
 
-    public static function getInstance()
+    public static function getInstance(): Database
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            self::$instance = new Database();
         }
+
         return self::$instance;
     }
 
-    public function getConnection()
+    public function getConnection(): PDO
     {
         return $this->pdo;
     }

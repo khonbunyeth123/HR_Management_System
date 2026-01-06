@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 // ✅ Add autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Controllers\Api\DashboardController;
+use App\Controllers\Api\ControllerDashboard;
 
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -21,17 +21,17 @@ function api(string $method, string $path): bool
 /* ================= DASHBOARD ================= */
 
 if (api('GET', '/dashboard/summary')) {
-    (new DashboardController())->summary();
+    (new ControllerDashboard())->summary();
     exit;
 }
 
 if (api('GET', '/dashboard/department')) {
-    (new DashboardController())->department();
+    (new ControllerDashboard())->department();
     exit;
 }
 
 if (api('GET', '/dashboard/recent-leaves')) {
-    (new DashboardController())->recentLeaves();
+    (new ControllerDashboard())->recentLeaves();
     exit;
 }
 

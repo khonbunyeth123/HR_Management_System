@@ -10,7 +10,7 @@ class DashboardService
 
     public function __construct()
     {
-        $this->model = new Dashboard();
+        $this->model = new Dashboard(); // ✅ Works now
     }
 
     public function summary(): array
