@@ -1,87 +1,147 @@
 <?php
 session_start();
-include(__DIR__ . "/../database/cn.php");
+header('Content-Type: application/json');
 
-$cn->set_charset("utf8");
-if ($cn->connect_error) {
-    die("Connection failed: " . $cn->connect_error);
+// Get your existing database connection
+require_once __DIR__ . '/../database/cn.php';
+
+// Only accept POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'dpl' => false,
+        'success' => false,
+        'message' => 'Method not allowed'
+    ]);
+    exit;
 }
 
-$email = isset($_POST['email']) ? trim($_POST['email']) : '';
-$pass = isset($_POST['password']) ? trim($_POST['password']) : '';
+try {
+    // Get email and password
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $remember = isset($_POST['remember']) && $_POST['remember'] == 1;
 
-$res = ['dpl' => false, 'message' => ''];
-
-$_SESSION['login'] = false;
-$_SESSION['uid'] = 0;
-
-// Prepare the query (using placeholders for safety)
-$stmt = $cn->prepare("
-    SELECT 
-        id,
-        uuid,
-        username,
-        password,
-        full_name,
-        email,
-        role,
-        status_id,
-        login_session,
-        created_at,
-        created_by,
-        updated_at,
-        updated_by,
-        deleted_at,
-        deleted_by
-    FROM tbl_users
-    WHERE email = ? AND deleted_at IS NULL
-    LIMIT 1
-");
-
-// Bind the email parameter
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result && $result->num_rows > 0) {
-    $user = $result->fetch_assoc();
-
-    // Check if user is active
-    if ($user['status_id'] != 1) {
-        $res['message'] = 'User account is inactive';
-        echo json_encode($res);
+    // Validate input
+    if (empty($email) || empty($password)) {
+        http_response_code(400);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Email and password are required'
+        ]);
         exit;
     }
 
-    // Verify password
-    if (password_verify($pass, $user['password'])) {
-
-        // Generate secure login_session token
-        $loginSession = bin2hex(random_bytes(32));
-
-        // Update login_session and updated_at in DB
-        $updateStmt = $cn->prepare("UPDATE tbl_users SET login_session = ?, updated_at = NOW() WHERE uuid = ?");
-        $updateStmt->bind_param("ss", $loginSession, $user['uuid']);
-        $updateStmt->execute();
-
-        // Set session variables
-        $_SESSION['login'] = true;
-        $_SESSION['uid'] = $user['id'];
-        $_SESSION['login_session'] = $loginSession;
-        $_SESSION['uuid'] = $user['uuid'];
-        $_SESSION['uemail'] = $user['email'];
-        $_SESSION['uname'] = $user['username'];
-        $_SESSION['ufull_name'] = $user['full_name'];
-        $_SESSION['utype'] = $user['role'];
-
-        $res['dpl'] = true;
-        $res['message'] = 'Login successful';
-    } else {
-        $res['message'] = 'Invalid credentials';
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Invalid email format'
+        ]);
+        exit;
     }
-} else {
-    $res['message'] = 'User not found';
-}
 
-echo json_encode($res);
-exit();
+    // Query the database for the user
+    $query = "SELECT id, uuid, username, password, full_name, email, role, status_id FROM tbl_users WHERE email = :email AND deleted_at IS NULL LIMIT 1";
+    $stmt = $cn->prepare($query);
+    $stmt->execute([':email' => $email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user) {
+        http_response_code(401);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Invalid email or password'
+        ]);
+        exit;
+    }
+
+    // Check if account is active
+    if ($user['status_id'] != 1) {
+        http_response_code(403);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Account is inactive. Please contact administrator.'
+        ]);
+        exit;
+    }
+
+    // Verify password using bcrypt
+    if (!password_verify($password, $user['password'])) {
+        http_response_code(401);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Invalid email or password'
+        ]);
+        exit;
+    }
+
+    // Generate session token
+    $session_token = bin2hex(random_bytes(32));
+
+    // Update login session in database
+    $update_query = "UPDATE tbl_users SET login_session = :session_token, updated_at = NOW() WHERE id = :id";
+    $update_stmt = $cn->prepare($update_query);
+    $update_stmt->execute([
+        ':session_token' => $session_token,
+        ':id' => $user['id']
+    ]);
+
+    // Set session variables
+    $_SESSION['login'] = true;
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['uuid'] = $user['uuid'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['full_name'] = $user['full_name'];
+    $_SESSION['email'] = $user['email'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['session_token'] = $session_token;
+
+    // Set remember me cookie if requested
+    if ($remember) {
+        setcookie('remember_token', $session_token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
+        $_SESSION['remember'] = true;
+    }
+
+    // Return success response
+    http_response_code(200);
+    echo json_encode([
+        'dpl' => true,
+        'success' => true,
+        'message' => 'Login successful',
+        'user' => [
+            'id' => $user['id'],
+            'uuid' => $user['uuid'],
+            'username' => $user['username'],
+            'full_name' => $user['full_name'],
+            'email' => $user['email'],
+            'role' => $user['role']
+        ]
+    ]);
+    exit;
+
+} catch (PDOException $e) {
+    error_log('Login error: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'dpl' => false,
+        'success' => false,
+        'message' => 'Database error occurred'
+    ]);
+    exit;
+} catch (Exception $e) {
+    error_log('Login error: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode([
+        'dpl' => false,
+        'success' => false,
+        'message' => 'An error occurred. Please try again.'
+    ]);
+    exit;
+}
+?>

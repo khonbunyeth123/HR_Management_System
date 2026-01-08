@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Database;
 use PDO;
 use PDOException; 
+
 class Dashboard
 {
     private PDO $db;
@@ -16,7 +17,7 @@ class Dashboard
 
     public function totalEmployees(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*) FROM tbl_employees")->fetchColumn();
+        return (int) $this->db->query("SELECT COUNT(*) FROM tbl_employees WHERE deleted_at IS NULL")->fetchColumn();
     }
 
     public function activeEmployees(): int
@@ -43,16 +44,28 @@ class Dashboard
         ")->fetchColumn();
     }
 
+    /**
+     * Get summary stats - returns camelCase keys matching frontend expectations
+     */
+    public function getSummaryStats(): array
+    {
+        return [
+            'total_employees' => $this->totalEmployees(),
+            'active_employees' => $this->activeEmployees(),
+            'pending_leaves' => $this->pendingLeaves(),
+            'on_leave_today' => $this->onLeaveToday(),
+        ];
+    }
+
     public function departmentStats(): array
     {
         try {
             $sql = "
                 SELECT 
                     department AS name,
-                    COUNT(*) AS count,
-                    COUNT(*) AS total
+                    COUNT(*) AS count
                 FROM tbl_employees
-                WHERE status_id = 1 AND deleted_at IS NULL
+                WHERE deleted_at IS NULL
                 GROUP BY department
                 ORDER BY count DESC
             ";
@@ -60,7 +73,17 @@ class Dashboard
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Calculate total for percentages
+            $total = array_sum(array_column($departments, 'count'));
+            
+            // Add percentage to each department
+            return array_map(function($dept) use ($total) {
+                $dept['percentage'] = $total > 0 ? round(($dept['count'] / $total) * 100, 1) : 0;
+                return $dept;
+            }, $departments);
+
         } catch (PDOException $e) {
             error_log("Error fetching department stats: " . $e->getMessage());
             return [];
@@ -116,4 +139,3 @@ class Dashboard
         }
     }
 }
-

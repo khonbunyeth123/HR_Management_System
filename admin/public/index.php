@@ -1,61 +1,101 @@
 <?php
-session_start();
-require_once dirname(__DIR__) . '/database/cn.php';
 
-// Get the request URI
+// ✅ CRITICAL FIX: Check if this is an API request BEFORE doing anything else
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// ✅ Route API requests to api.php
-if (strpos($uri, '/api') === 0) {
-    require_once __DIR__ . '/../routes/api.php';
+if (strpos($uri, '/api/') === 0) {
+    // This is an API request - don't start session or do auth checks
+    // Just return and let Application.php handle it
+    return;
+}
+
+// ✅ Now safe to start session for web requests
+session_start();
+
+// Get the page parameter
+$page = $_GET['page'] ?? 'login';
+
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
+
+// If not logged in and trying to access protected pages, redirect to login
+$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
+
+if (!$isLoggedIn && in_array($page, $protectedPages)) {
+    header('Location: /login.php');
     exit;
 }
 
-// AUTH check here...
-// ...
-
-$page = $_GET['page'] ?? 'dashboard';
-
-// VIEW PATHS
-$viewBasePath = __DIR__ . "/../resources/views/";
-$pagePath = $viewBasePath . $page . '.php';
-
-$isAjax = isset($_GET['ajax']) && $_GET['ajax'] === '1';
-
-if ($isAjax) {
-    if (file_exists($pagePath)) {
-        require $pagePath;
-    } else {
-        http_response_code(404);
-        echo "Page not found";
-    }
-    exit();
+// If logged in and trying to access login page, redirect to dashboard
+if ($isLoggedIn && ($page === 'login' || $page === '')) {
+    header('Location: /index.php?page=dashboard');
+    exit;
 }
+
+// Include layout files
+$baseDir = __DIR__;
+$layoutDir = $baseDir . '/../resources/views/layouts';
+$viewDir = $baseDir . '/../resources/views';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php require $viewBasePath . 'layouts/header.php'; ?>
-<body class="bg-gray-100 text-gray-900">
-<?php require $viewBasePath . 'layouts/navbar.php'; ?>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body class="bg-gray-100">
 
-<div class="flex min-h-[calc(100vh-56px)]">
-    <?php require $viewBasePath . 'layouts/sidebar.php'; ?>
+<?php if ($isLoggedIn): ?>
+    <!-- Logged In Layout -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <?php include $layoutDir . '/sidebar.php'; ?>
+        
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Header/Navbar -->
+            <?php include $layoutDir . '/header.php'; ?>
+            
+            <!-- Page Content -->
+            <div class="p-6">
+                <?php
+                // Load the appropriate page
+                $pageFile = $viewDir . '/' . $page . '.php';
+                
+                if (file_exists($pageFile)) {
+                    include $pageFile;
+                } else {
+                    include $viewDir . '/404.html';
+                }
+                ?>
+            </div>
+        </main>
+    </div>
 
-    <main class="flex-1 p-4" id="content">
-        <?php
-        if (file_exists($pagePath)) {
-            require $pagePath;
-        } else {
-            echo "<h1 class='text-red-500'>404 - Page not found</h1>";
-        }
-        ?>
-    </main>
-</div>
+    <!-- Footer -->
+    <?php include $layoutDir . '/footer.php'; ?>
 
-<?php /* require $viewBasePath . 'layouts/footer.php'; */ ?>
+<?php else: ?>
+    <!-- Not Logged In - Show Login Page -->
+    <?php
+    if ($page === 'login' || $page === '') {
+        include $baseDir . '/login.php';
+    } else {
+        // Redirect to login if trying to access protected page
+        header('Location: /login.php');
+        exit;
+    }
+    ?>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://code.iconify.design/3/3.2.0/iconify.min.js"></script>
+<?php endif; ?>
+
+<script src="/assets/js/jquery.js"></script>
 <script src="/assets/js/script.js"></script>
+
 </body>
 </html>

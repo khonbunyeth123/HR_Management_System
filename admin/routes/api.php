@@ -1,7 +1,6 @@
 <?php
-header('Content-Type: application/json');
 
-// ✅ Add autoloader
+// ✅ Add autoloader (if not already loaded by Application)
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\Api\ControllerDashboard;
@@ -37,9 +36,11 @@ if (api('GET', '/dashboard/recent-leaves')) {
 
 /* ================= FALLBACK ================= */
 
+header('Content-Type: application/json');
 http_response_code(404);
 echo json_encode([
     'success' => false,
-    'message' => 'API endpoint not found'
+    'message' => 'API endpoint not found',
+    'requested_uri' => $uri
 ]);
 exit;

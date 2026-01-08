@@ -80,9 +80,19 @@
 
 <a href="?page=<?= strtolower($item['page']) ?>"
    data-page="<?= strtolower($item['page']) ?>"
-   class="nav-link flex items-center px-4 py-3 gap-3 text-sm font-semibold">
-  <span class="iconify text-xl" data-icon="<?= $item['icon'] ?>"></span>
-  <?= $item['label'] ?>
+   class="nav-link flex items-center justify-between
+          px-4 py-3 rounded-xl
+          text-sm font-semibold text-slate-200
+          hover:bg-slate-700/40 transition">
+
+  <!-- Left: Icon + Text -->
+  <div class="flex items-center gap-3">
+    <span class="iconify text-[1em]" data-icon="<?= $item['icon'] ?>"></span>
+    <span><?= $item['label'] ?></span>
+  </div>
+
+  <!-- Right: placeholder for arrow (keeps alignment consistent) -->
+  <span class="w-4"></span>
 </a>
 
 <?php endif; ?>
