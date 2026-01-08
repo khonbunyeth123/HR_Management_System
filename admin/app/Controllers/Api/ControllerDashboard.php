@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Dashboard;
-use App\Helpers\response;
 
 class ControllerDashboard
 {
@@ -18,32 +17,32 @@ class ControllerDashboard
     /**
      * GET /api/dashboard/summary
      */
-    public function summary()
-    {
-        try {
-            header('Content-Type: application/json');
-            
-            $stats = $this->dashboardModel->getSummaryStats();
+        public function summary()
+        {
+            try {
+                header('Content-Type: application/json');
+                
+                $stats = $this->dashboardModel->getSummaryStats();
 
-            http_response_code(200);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Dashboard summary retrieved',
-                'data' => $stats
-            ]);
-            exit;
-        } catch (\Exception $e) {
-            error_log("Dashboard summary error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error loading statistics',
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            exit;
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Dashboard summary retrieved',
+                    'data' => $stats
+                ]);
+                exit;
+            } catch (\Exception $e) {
+                error_log("Dashboard summary error: " . $e->getMessage());
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Error loading statistics',
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                exit;
+            }
         }
-    }
 
     /**
      * GET /api/dashboard/department

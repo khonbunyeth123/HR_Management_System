@@ -1,6 +1,3 @@
-<?php
-include_once __DIR__ . '/layouts/header.php';
-?>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>

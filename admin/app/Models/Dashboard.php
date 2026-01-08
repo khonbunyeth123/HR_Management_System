@@ -17,31 +17,55 @@ class Dashboard
 
     public function totalEmployees(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*) FROM tbl_employees WHERE deleted_at IS NULL")->fetchColumn();
+        try {
+            $result = $this->db->query("SELECT COUNT(*) FROM tbl_employees WHERE deleted_at IS NULL")->fetchColumn();
+            return (int) $result;
+        } catch (PDOException $e) {
+            error_log("Error fetching total employees: " . $e->getMessage());
+            return 0;
+        }
     }
 
     public function activeEmployees(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*) 
-            FROM tbl_users 
-            WHERE status_id = 1 AND deleted_at IS NULL;")->fetchColumn();
+        try {
+            // Removed the semicolon inside the query string
+            $result = $this->db->query("SELECT COUNT(*) 
+                FROM tbl_users 
+                WHERE status_id = 1 AND deleted_at IS NULL")->fetchColumn();
+            return (int) $result;
+        } catch (PDOException $e) {
+            error_log("Error fetching active employees: " . $e->getMessage());
+            return 0;
+        }
     }
 
     public function pendingLeaves(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*)
+        try {
+            $result = $this->db->query("SELECT COUNT(*)
                 FROM tbl_leave_applications
-                WHERE status_id = 0 AND deleted_at IS NULL;")->fetchColumn();
+                WHERE status_id = 0 AND deleted_at IS NULL")->fetchColumn();
+            return (int) $result;
+        } catch (PDOException $e) {
+            error_log("Error fetching pending leaves: " . $e->getMessage());
+            return 0;
+        }
     }
 
     public function onLeaveToday(): int
     {
-        return (int) $this->db->query("SELECT COUNT(*)
-            FROM tbl_leave_applications
-            WHERE status_id = 1 
-            AND CURDATE() BETWEEN start_date AND end_date
-            AND deleted_at IS NULL
-        ")->fetchColumn();
+        try {
+            $result = $this->db->query("SELECT COUNT(*)
+                FROM tbl_leave_applications
+                WHERE status_id = 1 
+                AND CURDATE() BETWEEN start_date AND end_date
+                AND deleted_at IS NULL")->fetchColumn();
+            return (int) $result;
+        } catch (PDOException $e) {
+            error_log("Error fetching on leave today: " . $e->getMessage());
+            return 0;
+        }
     }
 
     /**

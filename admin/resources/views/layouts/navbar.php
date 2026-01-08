@@ -8,14 +8,14 @@ if (session_status() === PHP_SESSION_NONE) {
 $uname = $_SESSION['uname'] ?? 'User';
 ?>
 <!-- Top Navigation -->
-<nav class="bg-gradient-to-b from-slate-900 to-slate-900 sticky top-0 z-50">
+<nav class="bg-gradient-to-b from-slate-900 to-slate-800 sticky top-0 z-50 w-full">
   <div class="w-full px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-end w-full h-[56px]">
+    <div class="flex items-center justify-between w-full h-[56px]">
 
       <!-- Logo & Brand -->
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 bg-white/10 backdrop-blur-md rounded-lg p-0.5 shadow-md">
-          <img src="assets/img/logo.png" alt="Logo" class="w-full h-full rounded-md object-cover">
+          <img src="/assets/img/logo.png" alt="Logo" class="w-full h-full rounded-md object-cover">
         </div>
         <div class="hidden sm:flex flex-col">
           <h1 class="text-white text-sm font-bold leading-tight">Doorstep Technology</h1>
@@ -24,8 +24,8 @@ $uname = $_SESSION['uname'] ?? 'User';
       </div>
 
       <!-- Clock -->
-      <div class="flex-1 text-center ">
-        <h2 id="clock" class=" hidden text-white text-base sm:text-xs font-semibold"></h2>
+      <div class="flex-1 text-center">
+        <h2 id="clock" class="text-white text-xs sm:text-sm font-semibold"></h2>
       </div>
 
       <!-- User Section -->
@@ -59,7 +59,7 @@ $uname = $_SESSION['uname'] ?? 'User';
 
 <!-- Logout Confirmation Modal -->
 <div id="logoutModal"
-  class="fixed inset-0 flex items-center justify-center bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300">
+  class="fixed inset-0 flex items-center justify-center bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
   <div id="logoutModalContent"
     class="bg-white rounded-lg shadow-lg p-6 w-80 text-center transform scale-90 transition-all duration-300">
     <h2 class="text-lg font-semibold mb-4">Confirm Logout</h2>
@@ -71,7 +71,6 @@ $uname = $_SESSION['uname'] ?? 'User';
   </div>
 </div>
 
-<script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     // --- Real-time Clock ---
@@ -111,7 +110,6 @@ $uname = $_SESSION['uname'] ?? 'User';
       }, 300);
     }
 
-
     // Open modal when logout button is clicked
     logoutBtn.addEventListener('click', openLogoutModal);
 
@@ -130,9 +128,12 @@ $uname = $_SESSION['uname'] ?? 'User';
       fetch('/api/auth/logout.php', { method: 'POST', credentials: 'same-origin' })
         .then(res => res.json())
         .then(data => {
-          if (data.success) window.location.href = 'login.php';
+          if (data.success) window.location.href = '/login.php';
         })
-        .catch(() => alert('Failed to logout.'));
+        .catch(() => {
+          console.log('Logging out...');
+          window.location.href = '/login.php';
+        });
     });
   });
 </script>
