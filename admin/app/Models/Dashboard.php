@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Core\Database;
 use PDO;
-use PDOException; 
+use PDOException;
 
 class Dashboard
 {
@@ -12,9 +13,21 @@ class Dashboard
 
     public function __construct()
     {
-        $this->db = Database::getInstance()->getConnection();
+        try {
+            $this->db = Database::getInstance()->getConnection();
+            
+            if (!$this->db) {
+                throw new \Exception('Failed to establish database connection');
+            }
+        } catch (\Exception $e) {
+            error_log("Dashboard Model - Database Connection Error: " . $e->getMessage());
+            throw $e;
+        }
     }
 
+    /**
+     * Get total count of non-deleted employees
+     */
     public function totalEmployees(): int
     {
         try {
@@ -26,13 +39,13 @@ class Dashboard
         }
     }
 
+    /**
+     * Get count of active users (status_id = 1)
+     */
     public function activeEmployees(): int
     {
         try {
-            // Removed the semicolon inside the query string
-            $result = $this->db->query("SELECT COUNT(*) 
-                FROM tbl_users 
-                WHERE status_id = 1 AND deleted_at IS NULL")->fetchColumn();
+            $result = $this->db->query("SELECT COUNT(*) FROM tbl_users WHERE status_id = 1 AND deleted_at IS NULL")->fetchColumn();
             return (int) $result;
         } catch (PDOException $e) {
             error_log("Error fetching active employees: " . $e->getMessage());
@@ -40,12 +53,13 @@ class Dashboard
         }
     }
 
+    /**
+     * Get count of pending leave applications (status_id = 0)
+     */
     public function pendingLeaves(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*)
-                FROM tbl_leave_applications
-                WHERE status_id = 0 AND deleted_at IS NULL")->fetchColumn();
+            $result = $this->db->query("SELECT COUNT(*) FROM tbl_leave_applications WHERE status_id = 0 AND deleted_at IS NULL")->fetchColumn();
             return (int) $result;
         } catch (PDOException $e) {
             error_log("Error fetching pending leaves: " . $e->getMessage());
@@ -53,14 +67,13 @@ class Dashboard
         }
     }
 
+    /**
+     * Get count of employees on leave today
+     */
     public function onLeaveToday(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*)
-                FROM tbl_leave_applications
-                WHERE status_id = 1 
-                AND CURDATE() BETWEEN start_date AND end_date
-                AND deleted_at IS NULL")->fetchColumn();
+            $result = $this->db->query("SELECT COUNT(*) FROM tbl_leave_applications WHERE status_id = 1 AND CURDATE() BETWEEN start_date AND end_date AND deleted_at IS NULL")->fetchColumn();
             return (int) $result;
         } catch (PDOException $e) {
             error_log("Error fetching on leave today: " . $e->getMessage());
@@ -69,7 +82,8 @@ class Dashboard
     }
 
     /**
-     * Get summary stats - returns camelCase keys matching frontend expectations
+     * Get all summary statistics
+     * Returns: ['total_employees', 'active_employees', 'pending_leaves', 'on_leave_today']
      */
     public function getSummaryStats(): array
     {
@@ -81,6 +95,9 @@ class Dashboard
         ];
     }
 
+    /**
+     * Get department statistics with employee counts and percentages
+     */
     public function departmentStats(): array
     {
         try {
@@ -99,6 +116,11 @@ class Dashboard
 
             $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // If no departments found, return empty array
+            if (empty($departments)) {
+                return [];
+            }
+            
             // Calculate total for percentages
             $total = array_sum(array_column($departments, 'count'));
             
@@ -110,12 +132,19 @@ class Dashboard
 
         } catch (PDOException $e) {
             error_log("Error fetching department stats: " . $e->getMessage());
-            return [];
+            throw $e; // Let controller handle the error
         }
     }
 
+    /**
+     * Get recent leave applications
+     * 
+     * @param int $limit Default: 5, Max: 100
+     * @return array Array of leave applications with employee and leave type details
+     */
     public function recentLeaves(int $limit = 5): array
     {
+        // Validate limit parameter
         if ($limit <= 0 || $limit > 100) {
             $limit = 5;
         }
@@ -159,7 +188,7 @@ class Dashboard
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error fetching recent leaves: " . $e->getMessage());
-            return [];
+            throw $e; // Let controller handle the error
         }
     }
 }

@@ -1,3 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Management Dashboard</title>
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
@@ -112,7 +121,9 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ---------- Dashboard Summary ---------- */
     fetch("/api/dashboard/summary")
         .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
             return res.json();
         })
         .then(result => {
@@ -136,13 +147,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => {
             console.error('Error loading dashboard summary:', error);
-            showError("statsGrid", "Error loading statistics");
+            showError("statsGrid", `Error loading statistics: ${error.message}`);
         });
 
     /* ---------- Recent Leaves ---------- */
     fetch("/api/dashboard/recent-leaves")
         .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
             return res.json();
         })
         .then(result => {
@@ -167,13 +180,15 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => {
             console.error('Error loading leave requests:', error);
-            showError("leaveRequests", "Error loading leave requests");
+            showError("leaveRequests", `Error loading leave requests: ${error.message}`);
         });
 
     /* ---------- Departments ---------- */
     fetch("/api/dashboard/department")
         .then(res => {
-            if (!res.ok) throw new Error('Network response was not ok');
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
             return res.json();
         })
         .then(result => {
@@ -198,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => {
             console.error('Error loading departments:', error);
-            showError("departments", "Error loading departments");
+            showError("departments", `Error loading departments: ${error.message}`);
         });
 
 });
