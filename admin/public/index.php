@@ -1,4 +1,9 @@
 <?php
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -6,7 +11,8 @@ ini_set('display_errors', 1);
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 if (strpos($uri, '/api/') === 0) {
-    return;
+    require_once __DIR__ . '/../routes/api.php';
+    exit;
 }
 
 // ✅ Now safe to start session for web requests
@@ -17,14 +23,10 @@ if (session_status() === PHP_SESSION_NONE) {
 $isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
 
 // ✅ REMOVED THE AUTO-LOGIN CODE
-// Don't set default session values - let login page handle authentication
-// Get the page parameter
-$page = $_GET['page'] ?? 'dashboard';
-
-
+$page           = $_GET['page'] ?? 'dashboard';
 
 // If not logged in and trying to access protected pages, redirect to login
-    $protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
+$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
 
 if (!$isLoggedIn && in_array($page, $protectedPages)) {
     header('Location: /login.php');

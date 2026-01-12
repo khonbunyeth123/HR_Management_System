@@ -11,7 +11,34 @@ class ControllerDashboard
 
     public function __construct()
     {
-        $this->dashboardModel = new Dashboard();
+        try {
+            $this->dashboardModel = new Dashboard();
+        } catch (\Exception $e) {
+            error_log("ControllerDashboard - Initialization Error: " . $e->getMessage());
+            $this->sendJsonError("Failed to initialize dashboard", 500);
+        }
+    }
+
+    /**
+     * Send JSON response helper
+     */
+    private function sendJson(array $data, int $statusCode = 200): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($statusCode);
+        echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Send JSON error response helper
+     */
+    private function sendJsonError(string $message, int $statusCode = 500): void
+    {
+        $this->sendJson([
+            'success' => false,
+            'message' => $message,
+        ], $statusCode);
     }
 
     /**
@@ -21,26 +48,18 @@ class ControllerDashboard
     public function summary(): void
     {
         try {
-            header('Content-Type: application/json');
-            
             $stats = $this->dashboardModel->getSummaryStats();
 
-            http_response_code(200);
-            echo json_encode([
+            error_log("Dashboard summary: " . json_encode($stats));
+
+            $this->sendJson([
                 'success' => true,
                 'message' => 'Dashboard summary retrieved',
                 'data' => $stats
-            ]);
-            exit;
+            ], 200);
         } catch (\Exception $e) {
             error_log("Dashboard summary error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error loading statistics',
-                'error' => $e->getMessage()
-            ]);
-            exit;
+            $this->sendJsonError("Error loading statistics", 500);
         }
     }
 
@@ -51,26 +70,18 @@ class ControllerDashboard
     public function department(): void
     {
         try {
-            header('Content-Type: application/json');
-            
             $departments = $this->dashboardModel->departmentStats();
 
-            http_response_code(200);
-            echo json_encode([
+            error_log("Department stats: " . json_encode($departments));
+
+            $this->sendJson([
                 'success' => true,
                 'message' => 'Department statistics retrieved',
                 'data' => $departments
-            ]);
-            exit;
+            ], 200);
         } catch (\Exception $e) {
             error_log("Department stats error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error loading departments',
-                'error' => $e->getMessage()
-            ]);
-            exit;
+            $this->sendJsonError("Error loading departments", 500);
         }
     }
 
@@ -82,27 +93,19 @@ class ControllerDashboard
     public function recentLeaves(): void
     {
         try {
-            header('Content-Type: application/json');
-            
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
             $leaves = $this->dashboardModel->recentLeaves($limit);
 
-            http_response_code(200);
-            echo json_encode([
+            error_log("Recent leaves: " . json_encode($leaves));
+
+            $this->sendJson([
                 'success' => true,
                 'message' => 'Recent leaves retrieved',
                 'data' => $leaves
-            ]);
-            exit;
+            ], 200);
         } catch (\Exception $e) {
             error_log("Recent leaves error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error loading leave requests',
-                'error' => $e->getMessage()
-            ]);
-            exit;
+            $this->sendJsonError("Error loading leave requests", 500);
         }
     }
 }

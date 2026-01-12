@@ -31,8 +31,8 @@ class Dashboard
     public function totalEmployees(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*) FROM tbl_employees WHERE deleted_at IS NULL")->fetchColumn();
-            return (int) $result;
+            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_employees WHERE deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
+            return $result ? (int)$result['total'] : 0;
         } catch (PDOException $e) {
             error_log("Error fetching total employees: " . $e->getMessage());
             return 0;
@@ -45,8 +45,8 @@ class Dashboard
     public function activeEmployees(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*) FROM tbl_users WHERE status_id = 1 AND deleted_at IS NULL")->fetchColumn();
-            return (int) $result;
+            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_users WHERE status_id = 1 AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
+            return $result ? (int)$result['total'] : 0;
         } catch (PDOException $e) {
             error_log("Error fetching active employees: " . $e->getMessage());
             return 0;
@@ -59,8 +59,8 @@ class Dashboard
     public function pendingLeaves(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*) FROM tbl_leave_applications WHERE status_id = 0 AND deleted_at IS NULL")->fetchColumn();
-            return (int) $result;
+            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_leave_applications WHERE status_id = 0 AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
+            return $result ? (int)$result['total'] : 0;
         } catch (PDOException $e) {
             error_log("Error fetching pending leaves: " . $e->getMessage());
             return 0;
@@ -73,8 +73,8 @@ class Dashboard
     public function onLeaveToday(): int
     {
         try {
-            $result = $this->db->query("SELECT COUNT(*) FROM tbl_leave_applications WHERE status_id = 1 AND CURDATE() BETWEEN start_date AND end_date AND deleted_at IS NULL")->fetchColumn();
-            return (int) $result;
+            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_leave_applications WHERE status_id = 1 AND CURDATE() BETWEEN start_date AND end_date AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
+            return $result ? (int)$result['total'] : 0;
         } catch (PDOException $e) {
             error_log("Error fetching on leave today: " . $e->getMessage());
             return 0;
@@ -116,15 +116,13 @@ class Dashboard
 
             $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // If no departments found, return empty array
             if (empty($departments)) {
+                error_log("No departments found");
                 return [];
             }
             
-            // Calculate total for percentages
             $total = array_sum(array_column($departments, 'count'));
             
-            // Add percentage to each department
             return array_map(function($dept) use ($total) {
                 $dept['percentage'] = $total > 0 ? round(($dept['count'] / $total) * 100, 1) : 0;
                 return $dept;
@@ -132,7 +130,7 @@ class Dashboard
 
         } catch (PDOException $e) {
             error_log("Error fetching department stats: " . $e->getMessage());
-            throw $e; // Let controller handle the error
+            return [];
         }
     }
 
@@ -144,7 +142,6 @@ class Dashboard
      */
     public function recentLeaves(int $limit = 5): array
     {
-        // Validate limit parameter
         if ($limit <= 0 || $limit > 100) {
             $limit = 5;
         }
@@ -188,7 +185,7 @@ class Dashboard
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error fetching recent leaves: " . $e->getMessage());
-            throw $e; // Let controller handle the error
+            return [];
         }
     }
 }
