@@ -88,6 +88,8 @@ if (matchRoute('GET', '/dashboard/recent-leaves', $method, $route)) {
     exit;
 }
 
+/* ================= ATTENDACE ROUTES ================= */
+
 /* ================= 404 FALLBACK ================= */
 
 sendJson([
