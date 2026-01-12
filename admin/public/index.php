@@ -13,24 +13,18 @@ if (strpos($uri, '/api/') === 0) {
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// Set default session values if not set (for testing)
-if (!isset($_SESSION['login'])) {
-    $_SESSION['login'] = true;  // Auto-login for testing
-}
-
-if (!isset($_SESSION['uname'])) {
-    $_SESSION['uname'] = 'Admin User';
-}
-
-// Get the page parameter
-$page = $_GET['page'] ?? 'dashboard';
-
 // Check if user is logged in
 $isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
 
+// ✅ REMOVED THE AUTO-LOGIN CODE
+// Don't set default session values - let login page handle authentication
+// Get the page parameter
+$page = $_GET['page'] ?? 'dashboard';
+
+
+
 // If not logged in and trying to access protected pages, redirect to login
-$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
+    $protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
 
 if (!$isLoggedIn && in_array($page, $protectedPages)) {
     header('Location: /login.php');
@@ -38,7 +32,7 @@ if (!$isLoggedIn && in_array($page, $protectedPages)) {
 }
 
 // If logged in and trying to access login page, redirect to dashboard
-if ($isLoggedIn && ($page === 'login' || $page === '')) {
+if ($isLoggedIn && $page === 'login') {
     header('Location: /index.php?page=dashboard');
     exit;
 }
@@ -54,7 +48,10 @@ $viewDir = $baseDir . '/../resources/views';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoorStep - Employee Management System</title>
+    <title>DoorStep Technology Co.,Ltd</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="assets/img/logo.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
@@ -111,14 +108,7 @@ $viewDir = $baseDir . '/../resources/views';
 
 <?php else: ?>
     <!-- Not Logged In - Show Login Page -->
-    <?php
-    if ($page === 'login' || $page === '') {
-        include $baseDir . '/login.php';
-    } else {
-        header('Location: /login.php');
-        exit;
-    }
-    ?>
+    <?php include $baseDir . '/login.php'; ?>
 
 <?php endif; ?>
 
