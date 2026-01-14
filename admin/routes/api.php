@@ -9,6 +9,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\Api\ControllerDashboard;
+use App\Controllers\Api\ControllerAttendance;
 
 // Get the request URI and clean it
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -26,14 +27,6 @@ $route = rtrim($route, '/') ?: '/';
 error_log("API Route: $method $route");
 
 /**
- * Route matcher function
- */
-function matchRoute(string $method, string $pattern, string $requestMethod, string $requestRoute): bool
-{
-    return $requestMethod === $method && $requestRoute === $pattern;
-}
-
-/**
  * Send JSON response
  */
 function sendJson(array $data, int $statusCode = 200): void
@@ -46,49 +39,58 @@ function sendJson(array $data, int $statusCode = 200): void
 
 /* ================= DASHBOARD ROUTES ================= */
 
-if (matchRoute('GET', '/dashboard/summary', $method, $route)) {
+$dashboardController = new ControllerDashboard();
+$dashboardRoutes = [
+    'GET' => [
+        '/dashboard/summary'       => 'summary',
+        '/dashboard/department'    => 'department',
+        '/dashboard/recent-leaves' => 'recentLeaves',
+    ],
+];
+
+if (isset($dashboardRoutes[$method][$route])) {
+    $action = $dashboardRoutes[$method][$route];
     try {
-        (new ControllerDashboard())->summary();
+        $dashboardController->$action();
     } catch (\Exception $e) {
-        error_log("Dashboard summary error: " . $e->getMessage());
+        error_log("Dashboard $action error: " . $e->getMessage());
         sendJson([
             'success' => false,
-            'message' => 'Error loading statistics',
+            'message' => "Error in $action",
             'error' => $e->getMessage()
         ], 500);
     }
     exit;
 }
 
-if (matchRoute('GET', '/dashboard/department', $method, $route)) {
+/* ================= ATTENDANCE ROUTES ================= */
+
+$attendanceController = new ControllerAttendance();
+$attendanceRoutes = [
+    'GET' => [
+        '/attendance/today'  => 'today',
+        '/attendance/show'   => 'show',
+    ],
+    'POST' => [
+        '/attendance/checkin'  => 'checkIn',
+        '/attendance/checkout' => 'checkOut',
+    ],
+];
+
+if (isset($attendanceRoutes[$method][$route])) {
+    $action = $attendanceRoutes[$method][$route];
     try {
-        (new ControllerDashboard())->department();
+        $attendanceController->$action();
     } catch (\Exception $e) {
-        error_log("Dashboard department error: " . $e->getMessage());
+        error_log("Attendance $action error: " . $e->getMessage());
         sendJson([
             'success' => false,
-            'message' => 'Error loading departments',
+            'message' => "Error in $action",
             'error' => $e->getMessage()
         ], 500);
     }
     exit;
 }
-
-if (matchRoute('GET', '/dashboard/recent-leaves', $method, $route)) {
-    try {
-        (new ControllerDashboard())->recentLeaves();
-    } catch (\Exception $e) {
-        error_log("Dashboard recent leaves error: " . $e->getMessage());
-        sendJson([
-            'success' => false,
-            'message' => 'Error loading leave requests',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-    exit;
-}
-
-/* ================= ATTENDACE ROUTES ================= */
 
 /* ================= 404 FALLBACK ================= */
 
