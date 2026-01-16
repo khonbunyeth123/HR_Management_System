@@ -10,6 +10,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\Api\ControllerDashboard;
 use App\Controllers\Api\ControllerAttendance;
+use App\Controllers\Api\ControllerEmployee;
 
 // Get the request URI and clean it
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -91,6 +92,48 @@ if (isset($attendanceRoutes[$method][$route])) {
     }
     exit;
 }
+
+
+//* ========== EMPLOYEE ROUTES ========== */
+
+    $employeeController = new ControllerEmployee();
+    // List all employees
+    if ($method === 'GET' && ($route === '/employees' || $route === '/employees/show')) {
+        $employeeController->index();
+        exit;
+    }
+
+    // Show single employee by ID
+    if ($method === 'GET' && preg_match('#^/employees/(\d+)$#', $route, $matches)) {
+        $employeeController->show((int)$matches[1]);
+        exit;
+    }
+
+    // CREATE EMPLOYEE
+    if ($method === 'POST' && $route === '/employees') {
+        $employeeController->store();
+        exit;
+    }
+
+    // Update employee
+    if ($method === 'PUT' && preg_match('#^/employees/(\d+)$#', $route, $m)) {
+        $employeeController->update((int)$m[1]);
+    exit;
+    }
+
+    // Delete employee
+    if ($method === 'POST' && $route === '/employees/delete') {
+        $employeeController->destroy();
+        exit;
+    }
+
+
+    // DELETE
+    if ($method === 'DELETE' && preg_match('#^/employees/(\d+)$#', $route, $matches)) {
+        $id = (int)$matches[1];
+        $employeeController->delete($id); // or destroy($id)
+        exit;
+    }
 
 /* ================= 404 FALLBACK ================= */
 
