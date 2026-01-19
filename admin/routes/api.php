@@ -11,6 +11,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use App\Controllers\Api\ControllerDashboard;
 use App\Controllers\Api\ControllerAttendance;
 use App\Controllers\Api\ControllerEmployee;
+use App\Controllers\Api\ControllerLeave;
 
 // Get the request URI and clean it
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -134,6 +135,24 @@ if (isset($attendanceRoutes[$method][$route])) {
         $employeeController->delete($id); // or destroy($id)
         exit;
     }
+
+
+/* ================= Leave ROUTES ================= */
+    if (strpos($uri, '/api/leave') === 0) {
+
+    $leave = new ControllerLeave();
+
+    if ($uri === '/api/leave/list') {
+        $leave->index();
+        return;
+    }
+
+    if ($uri === '/api/leave/approve') {
+        $leave->approve();
+        return;
+    }
+}
+
 
 /* ================= 404 FALLBACK ================= */
 

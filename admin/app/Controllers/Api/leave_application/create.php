@@ -1,9 +1,4 @@
 <?php
-// =======================
-// Leave Application API
-// =======================
-
-// Enable full error reporting
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -13,9 +8,6 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// -----------------------
-// Include helpers & DB
-// -----------------------
 $cn_path = __DIR__ . "/../../action/db/cn.php";
 $response_path = __DIR__ . "/../../utils/response.php";
 
@@ -45,10 +37,6 @@ if (!isset($cn) || $cn->connect_error) {
 }
 
 $cn->set_charset("utf8");
-
-// -----------------------
-// Only POST allowed
-// -----------------------
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         "success" => false,
@@ -57,10 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ], JSON_PRETTY_PRINT);
     exit;
 }
-
-// -----------------------
-// Read JSON input
-// -----------------------
 $input = json_decode(file_get_contents("php://input"), true);
 
 if (!$input) {
@@ -71,10 +55,6 @@ if (!$input) {
     ], JSON_PRETTY_PRINT);
     exit;
 }
-
-// -----------------------
-// Required fields
-// -----------------------
 $required = ['employee_id', 'leave_type_id', 'start_date', 'end_date', 'reason'];
 foreach ($required as $field) {
     if (empty($input[$field])) {
@@ -85,10 +65,6 @@ foreach ($required as $field) {
         exit;
     }
 }
-
-// -----------------------
-// Assign variables
-// -----------------------
 $uuid = bin2hex(random_bytes(16));
 $employee_id = (int) $input['employee_id'];
 $leave_type_id = (int) $input['leave_type_id'];
@@ -104,10 +80,6 @@ if ($end_date < $start_date) {
     ], JSON_PRETTY_PRINT);
     exit;
 }
-
-// -----------------------
-// Validate leave_type_id exists
-// -----------------------
 $result = $cn->query("SELECT id FROM tbl_leave_types WHERE id = $leave_type_id");
 if ($result->num_rows === 0) {
     echo json_encode([
@@ -116,10 +88,6 @@ if ($result->num_rows === 0) {
     ], JSON_PRETTY_PRINT);
     exit;
 }
-
-// -----------------------
-// Insert into database (using leave_type_id instead of name)
-// -----------------------
 $sql = "INSERT INTO tbl_leave_applications
         (uuid, employee_id, leave_type_id, start_date, end_date, reason, created_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW())";

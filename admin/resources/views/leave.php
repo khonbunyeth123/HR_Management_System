@@ -71,7 +71,7 @@
     </div>
 </div>
 
-<script src="./utils/component/pagination.js"></script>
+<script src="/assets/js/pagination.js"></script>
 <script>
 const perPage = 5;
 let currentPage = 1;
@@ -99,7 +99,7 @@ function loadLeaveApplications(page = 1) {
         "filters[status_id]": status
     });
 
-    fetch("api/leave_application/show.php?" + params.toString())
+    fetch("/api/leave/list?" + params.toString())
         .then(res => res.json())
         .then(result => {
             if (result.success && result.data) {
