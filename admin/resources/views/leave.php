@@ -158,8 +158,8 @@ function renderTable(records) {
             <td class="px-4 py-3">${getStatusBadge(rec.status_id)}</td>
             <td class="px-4 py-3 text-gray-500 text-xs">${new Date(rec.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
             <td class="px-4 py-3">
-               ${rec.status_id == 0 ? `
-                    <button 
+            ${rec.status_id == 0 ? `
+                    <button
                         onclick="approveLeave('${rec.uuid}', 1)"
                         class="inline-flex items-center justify-center text-green-600 hover:text-green-800 mr-3"
                         title="Approve"
@@ -167,8 +167,8 @@ function renderTable(records) {
                         <iconify-icon icon="mdi:check-circle" style="font-size:20px;"></iconify-icon>
                     </button>
 
-                    <button 
-                        onclick="approveLeave('${rec.uuid}', 2)"
+                    <button
+                        onclick="rejectLeave('${rec.uuid}')"
                         class="inline-flex items-center justify-center text-red-600 hover:text-red-800"
                         title="Reject"
                     >
@@ -177,42 +177,90 @@ function renderTable(records) {
                 ` : `
                     <span class="text-gray-400">—</span>
                 `}
-
             </td>
+
         </tr>
     `).join('');
 }
 
 // Approve / Reject leave
-function approveLeave(leaveId, statusId) {
-    if (window.approving) return;
-    window.approving = true;
+function approveLeave(uuid) {
+    if (window.processing) return;
+    window.processing = true;
 
-    let remark = '';
-    if (statusId === 2) {
-        remark = prompt("Enter reject reason:");
-        if (!remark) { window.approving=false; return; }
+    if (!confirm("Are you sure you want to approve this leave?")) {
+        window.processing = false;
+        return;
     }
 
-    if (!confirm(`Are you sure you want to ${statusId==1?'approve':'reject'} this leave?`)) { window.approving=false; return; }
-
-    fetch("api/leave_application/approve.php", {
+    fetch("/api/leave/approve", {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({id:leaveId, status_id:statusId, remark})
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ uuid })
     })
-    .then(res=>res.json())
-    .then(result=>{
-        window.approving=false;
-        alert(result.message || 'Action completed');
-        loadLeaveApplications(currentPage);
+    .then(res => res.json())
+    .then(data => {
+        window.processing = false;
+
+        if (data.success) {
+            alert(data.message);
+            loadLeaveApplications(currentPage); // reload table
+        } else {
+            alert(data.message || "Approval failed");
+        }
     })
-    .catch(err=>{
-        window.approving=false;
-        alert('Server error');
+    .catch(err => {
+        window.processing = false;
+        alert("Server error");
         console.error(err);
     });
 }
+
+function rejectLeave(uuid) {
+    if (window.rejecting) return;
+    window.rejecting = true;
+
+    const remark = prompt("Enter reject reason:");
+    if (!remark) {
+        window.rejecting = false;
+        return;
+    }
+
+    if (!confirm("Are you sure you want to reject this leave?")) {
+        window.rejecting = false; // ✅ fixed
+        return;
+    }
+
+    fetch("/api/leave/reject", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            uuid: uuid,
+            remark: remark
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        window.rejecting = false; // ✅ fixed
+
+        if (data.success) {
+            alert(data.message);
+            loadLeaveApplications(currentPage);
+        } else {
+            alert(data.message || "Rejection failed");
+        }
+    })
+    .catch(err => {
+        window.rejecting = false; // ✅ fixed
+        alert("Server error");
+        console.error(err);
+    });
+}
+
 
 // Event listeners
 document.getElementById("searchInput").addEventListener("input", ()=>loadLeaveApplications(1));

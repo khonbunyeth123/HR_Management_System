@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
@@ -23,7 +22,7 @@ final class CreateTblLeaveTypesTable extends AbstractMigration
             ->addIndex(['uuid'], ['unique' => true])
             ->create();
 
-        // Default leave types
+        // Insert default leave types
         $this->table('tbl_leave_types')->insert([
             [
                 'uuid' => bin2hex(random_bytes(16)),

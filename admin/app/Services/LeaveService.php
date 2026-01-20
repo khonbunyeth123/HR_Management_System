@@ -30,4 +30,43 @@ class LeaveService
     {
         return $this->model->getLeaveTypes();
     }
+
+    public function approveLeave(string $uuid): bool
+    {
+        return $this->model->approveLeave($uuid, 1, null); // 1 = approved
+    }
+
+    public function rejectLeave(string $uuid, string $remark): bool
+    {
+        return $this->model->rejectLeave($uuid, $remark);
+    }
+
+
+    public function create(array $input): array
+    {
+        // Required fields
+        $required = ['employee_id', 'leave_type_id', 'start_date', 'end_date', 'reason'];
+        foreach ($required as $field) {
+            if (empty($input[$field])) {
+                return ['success' => false, 'error' => "Missing required field: $field"];
+            }
+        }
+
+        // Validate dates
+        if ($input['end_date'] < $input['start_date']) {
+            return ['success' => false, 'error' => "End date cannot be before start date"];
+        }
+
+        // Optional: business rules (e.g., max leave days, overlapping leaves)
+
+        // Delegate to model
+        return $this->model->create(
+            (int)$input['employee_id'],
+            (int)$input['leave_type_id'],
+            $input['start_date'],
+            $input['end_date'],
+            $input['reason']
+        );
+    }
+
 }

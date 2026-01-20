@@ -40,4 +40,99 @@ class ControllerLeave
             ]
         ]);
     }
+
+
+    //create
+    public function create(): void
+    {
+        header('Content-Type: application/json');
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Methods: POST');
+        header('Access-Control-Allow-Headers: Content-Type');
+
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        $result = $this->service->create($input);
+
+        if ($result['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Leave application created successfully',
+                'data'    => $result['data'] ?? null
+            ]);
+        } else {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => $result['error'] ?? 'Failed to create leave application'
+            ]);
+        }
+    }
+
+    //approve
+         public function approve(): void
+    {
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $uuid = $input['uuid'] ?? '';
+
+        if (empty($uuid)) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'UUID is required'
+            ]);
+            return;
+        }
+
+        $result = $this->service->approveLeave($uuid);
+
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Leave application approved successfully'
+            ]);
+        } else {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to approve leave application'
+            ]);
+        }
+    }
+
+    //reject
+    public function reject(): void
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    $uuid   = $input['uuid'] ?? '';
+    $remark = $input['remark'] ?? '';
+
+    if (!$uuid || !$remark) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'UUID and remark are required'
+        ]);
+        return;
+    }
+
+    // ✅ CORRECT METHOD
+    $result = $this->service->rejectLeave($uuid, $remark);
+
+    if ($result) {
+        echo json_encode([
+            'success' => true,
+            'message' => 'Leave application rejected successfully'
+        ]);
+    } else {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Failed to reject leave application'
+        ]);
+    }
+}
+
 }

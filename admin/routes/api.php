@@ -151,6 +151,15 @@ if (isset($attendanceRoutes[$method][$route])) {
         $leave->approve();
         return;
     }
+
+    if ($uri === '/api/leave/reject') {
+        $leave->reject();
+        return;
+    }
+    if ($uri === '/api/leave/create') {
+        $leave->create();
+        return;
+    }
 }
 
 

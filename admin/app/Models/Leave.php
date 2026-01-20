@@ -106,11 +106,76 @@ class Leave {
         return $types;
     }
 
-    public function approveLeave(string $uuid): bool
+  public function approveLeave(string $uuid, int $statusId): bool
+{
+    $sql = "UPDATE tbl_leave_applications
+            SET status_id = :status_id
+            WHERE uuid = :uuid";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
+    $stmt->bindValue(':uuid', $uuid);
+
+    return $stmt->execute();
+}
+
+
+    public function rejectLeave(string $uuid, string $remark): bool
     {
-        $sql = "UPDATE tbl_leave_applications SET status_id = 2 WHERE uuid = :uuid";
+        $sql = "UPDATE tbl_leave_applications
+                SET status_id = 2, remark = :remark
+                WHERE uuid = :uuid";
+
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':remark', $remark, PDO::PARAM_STR);
         $stmt->bindValue(':uuid', $uuid);
+
         return $stmt->execute();
+    }
+
+
+
+
+    public function create(int $employee_id, int $leave_type_id, string $start_date, string $end_date, string $reason): array
+    {
+        try {
+            // 1. Check if leave_type_id exists
+            $stmt = $this->db->prepare("SELECT id FROM tbl_leave_types WHERE id = :id");
+            $stmt->bindValue(':id', $leave_type_id, \PDO::PARAM_INT);
+            $stmt->execute();
+
+            if ($stmt->rowCount() === 0) {
+                return ['success' => false, 'error' => 'Invalid leave_type_id'];
+            }
+
+            // 2. Generate UUID
+            $uuid = bin2hex(random_bytes(16));
+
+            // 3. Insert leave application
+            $stmt = $this->db->prepare("
+                INSERT INTO tbl_leave_applications
+                (uuid, employee_id, leave_type_id, start_date, end_date, reason, created_at)
+                VALUES (:uuid, :employee_id, :leave_type_id, :start_date, :end_date, :reason, NOW())
+            ");
+
+            $stmt->bindValue(':uuid', $uuid);
+            $stmt->bindValue(':employee_id', $employee_id, \PDO::PARAM_INT);
+            $stmt->bindValue(':leave_type_id', $leave_type_id, \PDO::PARAM_INT);
+            $stmt->bindValue(':start_date', $start_date);
+            $stmt->bindValue(':end_date', $end_date);
+            $stmt->bindValue(':reason', $reason);
+
+            $stmt->execute();
+
+            return [
+                'success' => true,
+                'data' => [
+                    'uuid' => $uuid,
+                    'id' => (int)$this->db->lastInsertId()
+                ]
+            ];
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 }

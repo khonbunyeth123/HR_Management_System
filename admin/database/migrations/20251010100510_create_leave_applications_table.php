@@ -1,10 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class CreateLeaveApplicationsTable extends AbstractMigration
+final class CreateTblLeaveApplicationsTable extends AbstractMigration
 {
     public function up(): void
     {
@@ -21,6 +20,7 @@ final class CreateLeaveApplicationsTable extends AbstractMigration
                 'default' => 0,
                 'comment' => '0=pending, 1=approved, 2=rejected'
             ])
+            ->addColumn('remark', 'text', ['null' => true, 'after' => 'status_id']) // <-- added
             ->addColumn('approved_by', 'integer', ['null' => true])
             ->addColumn('approved_at', 'datetime', ['null' => true])
             ->addColumn('created_at', 'datetime')
