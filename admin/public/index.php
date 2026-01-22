@@ -85,7 +85,7 @@ $viewDir = $baseDir . '/../resources/views';
                 ?>
                 
                 <!-- Page Content -->
-                <div class="flex-1 p-6 overflow-y-auto">
+                <div class="flex-1 overflow-y-auto">
                     <?php
                     // Load the appropriate page
                     $pageFile = $viewDir . '/' . $page . '.php';
