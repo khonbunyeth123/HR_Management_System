@@ -1,11 +1,8 @@
-  <div class="container mx-auto p-6">
-      <div class="bg-white rounded-lg shadow-lg p-6">
+  <div class="w-full h-full">
+      <div class="bg-white rounded-lg shadow-lg p-4">
           <div class="flex justify-between items-center mb-6">
               <h1 class="text-3xl font-bold text-slate-800">Detailed Attendance Report</h1>
               <div class="flex gap-2">
-                  <button onclick="printReport()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
-                      <span>🖨️</span> Print
-                  </button>
                   <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                       <span>📊</span> Export Excel
                   </button>
@@ -27,16 +24,9 @@
                       <label class="block text-sm font-medium text-gray-700 mb-2">To Date:</label>
                       <input type="date" id="toDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="2025-12-24">
                   </div>
-                  <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Employee:</label>
-                      <select id="employeeFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                          <option value="">All Employees</option>
-                          <option value="EMP001">John Doe (EMP001)</option>
-                          <option value="EMP002">Jane Smith (EMP002)</option>
-                          <option value="EMP003">Mike Johnson (EMP003)</option>
-                          <option value="EMP004">Sarah Williams (EMP004)</option>
-                          <option value="EMP005">David Brown (EMP005)</option>
-                      </select>
+                   <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">Search Employee:</label>
+                      <input type="text" id="searchInput" placeholder="Search by name or ID..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   </div>
                   <div>
                       <label class="block text-sm font-medium text-gray-700 mb-2">Department:</label>
@@ -47,41 +37,6 @@
                           <option value="Sales">Sales Department</option>
                           <option value="Finance">Finance Department</option>
                       </select>
-                  </div>
-              </div>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Check Type:</label>
-                      <select id="checkTypeFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                          <option value="">All Check Types</option>
-                          <option value="1">Check-in 1 (Morning)</option>
-                          <option value="2">Check-out 1 (Lunch)</option>
-                          <option value="3">Check-in 2 (Afternoon)</option>
-                          <option value="4">Check-out 2 (Evening)</option>
-                      </select>
-                  </div>
-                  <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Status:</label>
-                      <select id="statusFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                          <option value="">All Status</option>
-                          <option value="on-time">On Time</option>
-                          <option value="late">Late</option>
-                          <option value="early">Early</option>
-                          <option value="missing">Missing</option>
-                      </select>
-                  </div>
-                  <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">Search Employee:</label>
-                      <input type="text" id="searchInput" placeholder="Search by name or ID..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  </div>
-                  <div class="flex items-end gap-2">
-                      <button onclick="applyFilters()" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                          Apply Filters
-                      </button>
-                      <button onclick="resetFilters()" class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition font-medium">
-                          Reset
-                      </button>
                   </div>
               </div>
           </div>
@@ -381,10 +336,6 @@
       function sortTable(column) {
           console.log('Sorting by:', column);
           alert('Sort functionality - integrate with backend');
-      }
-
-      function printReport() {
-          window.print();
       }
 
       function exportToExcel() {

@@ -1,6 +1,6 @@
 
-    <div class="container mx-auto p-6">
-        <div class="bg-white rounded-lg shadow-lg p-6">
+    <div class="w-full h-full">
+        <div class="bg-white shadow-lg p-4">
             <h1 class="text-3xl font-bold text-slate-800 mb-6">Top Employees - Attendance Leaderboard</h1>
             
             <!-- Period Selector -->
@@ -24,81 +24,6 @@
                     <input type="date" id="toDate" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <button onclick="loadReport()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Load Report</button>
-            </div>
-
-            <!-- Top 3 Highlight Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- 1st Place -->
-                <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl p-6 text-white shadow-xl transform hover:scale-105 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-5xl font-bold">🥇</span>
-                        <span class="text-6xl font-bold opacity-50">1</span>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Mike Johnson</h3>
-                    <p class="text-yellow-100 mb-4">EMP003</p>
-                    <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                        <p class="text-sm mb-1">Attendance Score</p>
-                        <p class="text-3xl font-bold">100%</p>
-                    </div>
-                    <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-yellow-100">Present</p>
-                            <p class="font-bold">24 days</p>
-                        </div>
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-yellow-100">Late</p>
-                            <p class="font-bold">0 days</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2nd Place -->
-                <div class="bg-gradient-to-br from-gray-300 to-gray-500 rounded-xl p-6 text-white shadow-xl transform hover:scale-105 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-5xl font-bold">🥈</span>
-                        <span class="text-6xl font-bold opacity-50">2</span>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">David Brown</h3>
-                    <p class="text-gray-200 mb-4">EMP005</p>
-                    <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                        <p class="text-sm mb-1">Attendance Score</p>
-                        <p class="text-3xl font-bold">95.8%</p>
-                    </div>
-                    <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-gray-200">Present</p>
-                            <p class="font-bold">23 days</p>
-                        </div>
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-gray-200">Late</p>
-                            <p class="font-bold">1 day</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3rd Place -->
-                <div class="bg-gradient-to-br from-amber-600 to-amber-800 rounded-xl p-6 text-white shadow-xl transform hover:scale-105 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <span class="text-5xl font-bold">🥉</span>
-                        <span class="text-6xl font-bold opacity-50">3</span>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">John Doe</h3>
-                    <p class="text-amber-200 mb-4">EMP001</p>
-                    <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                        <p class="text-sm mb-1">Attendance Score</p>
-                        <p class="text-3xl font-bold">91.7%</p>
-                    </div>
-                    <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-amber-200">Present</p>
-                            <p class="font-bold">22 days</p>
-                        </div>
-                        <div class="bg-white bg-opacity-20 rounded p-2">
-                            <p class="text-amber-200">Late</p>
-                            <p class="font-bold">1 day</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Full Leaderboard Table -->

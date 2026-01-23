@@ -1,12 +1,9 @@
 
-    <div class="container mx-auto p-6">
-        <div class="bg-white rounded-lg shadow-lg p-6">
+    <div class="w-full h-full">
+        <div class="bg-white rounded-lg shadow-lg p-4">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold text-slate-800">Summary Attendance Report</h1>
                 <div class="flex gap-2">
-                    <button onclick="printReport()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
-                        <span>🖨️</span> Print
-                    </button>
                     <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
                         <span>📊</span> Export Excel
                     </button>
@@ -30,39 +27,30 @@
                             <input type="date" id="toDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="2025-12-24">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quick Select:</label>
-                        <div class="flex gap-2 flex-wrap">
-                            <button onclick="setDateRange('today')" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium">Today</button>
-                            <button onclick="setDateRange('week')" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium">This Week</button>
-                            <button onclick="setDateRange('month')" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">This Month</button>
-                            <button onclick="setDateRange('quarter')" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium">This Quarter</button>
-                            <button onclick="setDateRange('year')" class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200 text-sm font-medium">This Year</button>
+                    
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Department:</label>
+                            <select id="departmentFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">All Departments</option>
+                                <option value="IT">IT Department</option>
+                                <option value="HR">HR Department</option>
+                                <option value="Sales">Sales Department</option>
+                                <option value="Finance">Finance Department</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="generateReport()" class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                                Generate Report
+                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Department:</label>
-                        <select id="departmentFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">All Departments</option>
-                            <option value="IT">IT Department</option>
-                            <option value="HR">HR Department</option>
-                            <option value="Sales">Sales Department</option>
-                            <option value="Finance">Finance Department</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button onclick="generateReport()" class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                            Generate Report
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <!-- Overall Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <!-- <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 text-white shadow-lg">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-blue-100 text-sm font-medium">Total Employees</p>
@@ -103,7 +91,7 @@
                     <p class="text-3xl font-bold">47</p>
                     <p class="text-yellow-100 text-xs mt-1">8.8% late rate</p>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -347,7 +335,6 @@
                     </tbody>
                 </table>
             </div>
-
             <!-- Key Insights -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
@@ -433,33 +420,6 @@
             }
         });
 
-        function setDateRange(period) {
-            const today = new Date();
-            let fromDate, toDate = today;
-            
-            switch(period) {
-                case 'today':
-                    fromDate = today;
-                    break;
-                case 'week':
-                    fromDate = new Date(today.setDate(today.getDate() - 7));
-                    break;
-                case 'month':
-                    fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                    break;
-                case 'quarter':
-                    const quarter = Math.floor(today.getMonth() / 3);
-                    fromDate = new Date(today.getFullYear(), quarter * 3, 1);
-                    break;
-                case 'year':
-                    fromDate = new Date(today.getFullYear(), 0, 1);
-                    break;
-            }
-            
-            document.getElementById('fromDate').value = fromDate.toISOString().split('T')[0];
-            document.getElementById('toDate').value = new Date().toISOString().split('T')[0];
-        }
-
         function generateReport() {
             const fromDate = document.getElementById('fromDate').value;
             const toDate = document.getElementById('toDate').value;
@@ -468,10 +428,6 @@
             console.log('Generating report:', { fromDate, toDate, department });
             // TODO: Add AJAX call to fetch data from PHP backend
             alert('Report generated! Integration with PHP backend needed.');
-        }
-
-        function printReport() {
-            window.print();
         }
 
         function exportToExcel() {

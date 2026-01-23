@@ -12,6 +12,7 @@ use App\Controllers\Api\ControllerDashboard;
 use App\Controllers\Api\ControllerAttendance;
 use App\Controllers\Api\ControllerEmployee;
 use App\Controllers\Api\ControllerLeave;
+use App\Controllers\Api\ControllerReport;
 
 // Get the request URI and clean it
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -161,6 +162,15 @@ if (isset($attendanceRoutes[$method][$route])) {
         return;
     }
 }
+
+
+/* ================= Report ROUTES ================= */
+   $reportController = new ControllerReport();
+
+    if ($method === 'GET' && $route === '/report/daily') {
+        $reportController->dailyList();
+        exit;
+    }
 
 
 /* ================= 404 FALLBACK ================= */
