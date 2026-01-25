@@ -43,4 +43,9 @@ class ReportService
         if (empty($row['check_out_1']) || empty($row['check_out_2'])) return 'Incomplete';
         return 'On Time';
     }
+
+     public function getSummary($from, $to, $department = null)
+    {
+        return (new Report())->summary($from, $to, $department);
+    }
 }

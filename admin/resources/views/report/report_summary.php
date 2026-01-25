@@ -1,7 +1,7 @@
 
     <div class="w-full h-full">
         <div class="bg-white rounded-lg shadow-lg p-4">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex justify-between items-center mb-">
                 <h1 class="text-3xl font-bold text-slate-800">Summary Attendance Report</h1>
                 <div class="flex gap-2">
                     <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
@@ -10,11 +10,11 @@
                     <button onclick="exportToPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2">
                         <span>📄</span> Export PDF
                     </button>
-                </div>
+                </div>  
             </div>
             
             <!-- Date Range & Quick Presets -->
-            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
                 <h2 class="text-lg font-semibold text-gray-700 mb-4">📅 Select Report Period</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="flex gap-4">

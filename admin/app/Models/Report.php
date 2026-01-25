@@ -53,4 +53,31 @@ class Report
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function summary($from, $to, $department = null)
+    {
+        $sql = "
+            SELECT 
+                e.id,
+                e.name,
+                e.department,
+                COUNT(ar.id) AS total_days,
+                SUM(ct.name = 'present') AS present_days,
+                SUM(ct.name = 'absent') AS absent_days,
+                SUM(ct.name = 'late') AS late_days
+            FROM tbl_employees e
+            LEFT JOIN attendance_records ar ON e.id = ar.employee_id
+            LEFT JOIN tbl_check_types ct ON ar.check_type_id = ct.id
+            WHERE DATE(ar.check_time) BETWEEN :from AND :to
+        ";
+
+        if ($department) {
+            $sql .= " AND e.department = :dept";
+        }
+
+        $sql .= " GROUP BY e.id";
+
+        return $this->db->query($sql, compact('from','to','department'));
+    }
+
 }

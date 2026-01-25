@@ -41,36 +41,8 @@
               </div>
           </div>
 
-          <!-- Quick Stats -->
-          <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-              <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <p class="text-blue-600 text-xs font-medium">Total Records</p>
-                  <p class="text-2xl font-bold text-blue-800">156</p>
-              </div>
-              <div class="bg-green-50 p-3 rounded-lg border border-green-200">
-                  <p class="text-green-600 text-xs font-medium">On Time</p>
-                  <p class="text-2xl font-bold text-green-800">128</p>
-              </div>
-              <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                  <p class="text-yellow-600 text-xs font-medium">Late</p>
-                  <p class="text-2xl font-bold text-yellow-800">18</p>
-              </div>
-              <div class="bg-red-50 p-3 rounded-lg border border-red-200">
-                  <p class="text-red-600 text-xs font-medium">Missing</p>
-                  <p class="text-2xl font-bold text-red-800">10</p>
-              </div>
-              <div class="bg-purple-50 p-3 rounded-lg border border-purple-200">
-                  <p class="text-purple-600 text-xs font-medium">Early</p>
-                  <p class="text-2xl font-bold text-purple-800">8</p>
-              </div>
-              <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                  <p class="text-indigo-600 text-xs font-medium">Avg Punctuality</p>
-                  <p class="text-2xl font-bold text-indigo-800">82%</p>
-              </div>
-          </div>
-
           <!-- Results Info -->
-          <div class="flex justify-between items-center mb-4">
+          <!-- <div class="flex justify-between items-center mb-4">
               <div>
                   <p class="text-gray-600">
                       Showing <span class="font-bold text-gray-800">1-20</span> of <span class="font-bold text-gray-800">156</span> records
@@ -86,7 +58,7 @@
                       <option value="all">All</option>
                   </select>
               </div>
-          </div>
+          </div> -->
 
           <!-- Detailed Records Table -->
           <div class="overflow-x-auto shadow-md rounded-lg">

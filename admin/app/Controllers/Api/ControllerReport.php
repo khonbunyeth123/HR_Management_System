@@ -15,23 +15,34 @@ class ControllerReport
     }
 
     public function dailyList(): void
-{
-    $date = $_GET['date'] ?? null;
+    {
+        $date = $_GET['date'] ?? null;
 
-    if (!$date) {
+        if (!$date) {
+            response::json([
+                'success' => false,
+                'message' => 'Date is required'
+            ], 400);
+            return;
+        }
+
+        $data = $this->service->getDailyList($date);
+
         response::json([
-            'success' => false,
-            'message' => 'Date is required'
-        ], 400);
-        return;
+            'success' => true,
+            'data'    => $data
+        ]);
     }
 
-    $data = $this->service->getDailyList($date);
+    public function summary()
+    {
+        $from = $_GET['from'];
+        $to   = $_GET['to'];
+        $dept = $_GET['department'] ?? null;
 
-    response::json([
-        'success' => true,
-        'data'    => $data
-    ]);
-}
+        $data = (new ReportService())->getSummary($from, $to, $dept);
+
+        response()->json($data);
+    }
 
 }
