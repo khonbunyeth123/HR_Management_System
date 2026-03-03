@@ -44,8 +44,8 @@ class ReportService
         return 'On Time';
     }
 
-     public function getSummary($from, $to, $department = null)
+    public function getSummary(string $from, string $to, ?string $department = null): array
     {
-        return (new Report())->summary($from, $to, $department);
+        return $this->model->summary($from, $to, $department);
     }
 }

@@ -173,7 +173,7 @@ if (isset($attendanceRoutes[$method][$route])) {
     }
 
     if ($method === 'GET' && $route === '/report/summary') {
-        $reportController->summaryReport();
+        $reportController->summary();
         exit;
     }
 

@@ -34,15 +34,27 @@ class ControllerReport
         ]);
     }
 
-    public function summary()
+    public function summary(): void
     {
-        $from = $_GET['from'];
-        $to   = $_GET['to'];
+        $from = $_GET['from'] ?? null;
+        $to   = $_GET['to'] ?? null;
         $dept = $_GET['department'] ?? null;
 
-        $data = (new ReportService())->getSummary($from, $to, $dept);
+        if (!$from || !$to) {
+            response::json([
+                'success' => false,
+                'message' => 'From and To dates are required'
+            ], 400);
+            return;
+        }
 
-        response()->json($data);
+        $data = $this->service->getSummary($from, $to, $dept);
+
+        response::json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
+
 
 }
