@@ -1,25 +1,41 @@
 <div class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen ">
     <div class="p-2">
-        <!-- Header -->
         <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
             <div class="flex flex-col gap-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <iconify-icon icon="mdi:account-group" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
+                        <iconify-icon icon="mdi:users-group" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
                         <h1 class="text-lg font-bold text-gray-900">User Directory</h1>
                     </div>
-                    <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full"
-                        id="totalCount">0 Users</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full"
+                            id="totalCount">0 Users</span>
+                        <button onclick="openCreateModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
+                            <iconify-icon icon="mdi:plus-circle"></iconify-icon>
+                            Add User
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Search Bar -->
+                <!-- Search & Filter Bar -->
                 <div class="flex flex-col sm:flex-row gap-2">
                     <div class="flex-1 relative">
                         <iconify-icon icon="mdi:magnify"
-                            style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;"></iconify-icon>
+                            style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;">
+                        </iconify-icon>
                         <input type="text" id="searchInput" placeholder="Search by name or username..."
                             class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     </div>
+
+                    <select id="departmentFilter"
+                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Departments</option>
+                    </select>
+                    <select id="positionFilter"
+                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Positions</option>
+                    </select>
                 </div>
             </div>
         </div>

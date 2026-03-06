@@ -48,4 +48,15 @@ class ReportService
     {
         return $this->model->summary($from, $to, $department);
     }
+
+    public function getDetailedAttendance(string $from,string $to,?string $department = null,?string $search = null,?string $status = null): array 
+    {
+        return $this->model->fetchDetailedAttendance(
+            $from, $to, $department, $search, $status
+        );
+    }
+    public function getTopEmployees(string $from, string $to): array
+    {
+        return $this->model->fetchTopEmployees($from, $to);
+    }
 }

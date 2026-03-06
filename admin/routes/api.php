@@ -177,6 +177,16 @@ if (isset($attendanceRoutes[$method][$route])) {
         exit;
     }
 
+    if ($method === 'GET' && $route === '/report/detailed') {
+        $reportController->detailedList();
+        exit;
+    }
+
+    if ($method === 'GET' && $route === '/report/top-employees') {
+    $reportController->topEmployees();
+    exit;
+}
+
 
 /* ================= 404 FALLBACK ================= */
 

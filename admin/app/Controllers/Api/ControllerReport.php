@@ -56,5 +56,50 @@ class ControllerReport
         ]);
     }
 
+    public function detailedList(): void
+    {
+        $from   = $_GET['from']        ?? null;
+        $to     = $_GET['to']          ?? null;
+        $dept   = $_GET['department']  ?? null;
+        $search = $_GET['search']      ?? null;
+        $status = $_GET['status']      ?? null;
+
+        if (!$from || !$to) {
+            response::json([
+                'success' => false,
+                'message' => 'From and To dates are required'
+            ], 400);
+            return;
+        }
+
+        $data = $this->service->getDetailedAttendance(
+            $from, $to, $dept, $search, $status
+        );
+
+        response::json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
+
+    public function topEmployees(): void
+    {
+        $from = $_GET['from'] ?? null;
+        $to   = $_GET['to']   ?? null;
+
+        if (!$from || !$to) {
+            response::json([
+                'success' => false,
+                'message' => 'From and To dates are required'
+            ], 400);
+            return;
+        }
+        $data = $this->service->getTopEmployees($from, $to);
+        response::json([
+            'success' => true,
+            'data'    => $data
+        ]);
+    }
+
 
 }
