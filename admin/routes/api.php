@@ -1,6 +1,10 @@
 <?php
 /**
- * API Routes Handler
+ * API Routes - Using Router Class
+ * 
+ * This file registers all API endpoints using the clean Router class
+ * Much cleaner and more maintainable than the old approach
+ * 
  * Called from public/index.php when URI contains /api/
  */
 
@@ -8,228 +12,58 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Controllers\Api\ControllerDashboard;
-use App\Controllers\Api\ControllerAttendance;
-use App\Controllers\Api\ControllerEmployee;
-use App\Controllers\Api\ControllerLeave;
-use App\Controllers\Api\ControllerReport;
-use App\Controllers\Api\ControllerUser;
+use App\Core\Router;
 
-// Get the request URI and clean it
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Remove /api prefix for routing
-$route = str_replace('/api', '', $uri);
-
-// Remove query string
-$route = explode('?', $route)[0];
-
-// Normalize route
-$route = rtrim($route, '/') ?: '/';
-
-error_log("API Route: $method $route");
-
-/**
- * Send JSON response
- */
-function sendJson(array $data, int $statusCode = 200): void
-{
-    header('Content-Type: application/json; charset=utf-8');
-    http_response_code($statusCode);
-    echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    exit;
-}
+// Create router instance
+$router = new Router();
 
 /* ================= DASHBOARD ROUTES ================= */
 
-$dashboardController = new ControllerDashboard();
-$dashboardRoutes = [
-    'GET' => [
-        '/dashboard/summary'       => 'summary',
-        '/dashboard/department'    => 'department',
-        '/dashboard/recent-leaves' => 'recentLeaves',
-    ],
-];
-
-if (isset($dashboardRoutes[$method][$route])) {
-    $action = $dashboardRoutes[$method][$route];
-    try {
-        $dashboardController->$action();
-    } catch (\Exception $e) {
-        error_log("Dashboard $action error: " . $e->getMessage());
-        sendJson([
-            'success' => false,
-            'message' => "Error in $action",
-            'error' => $e->getMessage()
-        ], 500);
-    }
-    exit;
-}
+$router->get('/dashboard/summary', 'ControllerDashboard@summary');
+$router->get('/dashboard/department', 'ControllerDashboard@department');
+$router->get('/dashboard/recent-leaves', 'ControllerDashboard@recentLeaves');
 
 /* ================= ATTENDANCE ROUTES ================= */
 
-$attendanceController = new ControllerAttendance();
-$attendanceRoutes = [
-    'GET' => [
-        '/attendance/today'  => 'today',
-        '/attendance/show'   => 'show',
-    ],
-    'POST' => [
-        '/attendance/checkin'  => 'checkIn',
-        '/attendance/checkout' => 'checkOut',
-    ],
-];
+$router->get('/attendance/today', 'ControllerAttendance@today');
+$router->get('/attendance/show', 'ControllerAttendance@show');
+$router->post('/attendance/checkin', 'ControllerAttendance@checkIn');
+$router->post('/attendance/checkout', 'ControllerAttendance@checkOut');
 
-if (isset($attendanceRoutes[$method][$route])) {
-    $action = $attendanceRoutes[$method][$route];
-    try {
-        $attendanceController->$action();
-    } catch (\Exception $e) {
-        error_log("Attendance $action error: " . $e->getMessage());
-        sendJson([
-            'success' => false,
-            'message' => "Error in $action",
-            'error' => $e->getMessage()
-        ], 500);
-    }
-    exit;
-}
+/* ================= EMPLOYEE ROUTES ================= */
 
+$router->get('/employees', 'ControllerEmployee@index');
+$router->get('/employees/show', 'ControllerEmployee@index');
+$router->get('/employees/{id}', 'ControllerEmployee@show');
+$router->post('/employees', 'ControllerEmployee@store');
+$router->put('/employees/{id}', 'ControllerEmployee@update');
+$router->delete('/employees/{id}', 'ControllerEmployee@delete');
+$router->post('/employees/delete', 'ControllerEmployee@destroy');
 
-//* ========== EMPLOYEE ROUTES ========== */
+/* ================= LEAVE ROUTES ================= */
 
-    $employeeController = new ControllerEmployee();
-    // List all employees
-    if ($method === 'GET' && ($route === '/employees' || $route === '/employees/show')) {
-        $employeeController->index();
-        exit;
-    }
+$router->get('/leave/list', 'ControllerLeave@index');
+$router->post('/leave/create', 'ControllerLeave@create');
+$router->post('/leave/approve', 'ControllerLeave@approve');
+$router->post('/leave/reject', 'ControllerLeave@reject');
 
-    // Show single employee by ID
-    if ($method === 'GET' && preg_match('#^/employees/(\d+)$#', $route, $matches)) {
-        $employeeController->show((int)$matches[1]);
-        exit;
-    }
+/* ================= REPORT ROUTES ================= */
 
-    // CREATE EMPLOYEE
-    if ($method === 'POST' && $route === '/employees') {
-        $employeeController->store();
-        exit;
-    }
-
-    // Update employee
-    if ($method === 'PUT' && preg_match('#^/employees/(\d+)$#', $route, $m)) {
-        $employeeController->update((int)$m[1]);
-    exit;
-    }
-
-    // Delete employee
-    if ($method === 'POST' && $route === '/employees/delete') {
-        $employeeController->destroy();
-        exit;
-    }
-
-
-    // DELETE
-    if ($method === 'DELETE' && preg_match('#^/employees/(\d+)$#', $route, $matches)) {
-        $id = (int)$matches[1];
-        $employeeController->delete($id); // or destroy($id)
-        exit;
-    }
-
-
-/* ================= Leave ROUTES ================= */
-    if (strpos($uri, '/api/leave') === 0) {
-
-    $leave = new ControllerLeave();
-
-    if ($uri === '/api/leave/list') {
-        $leave->index();
-        return;
-    }
-
-    if ($uri === '/api/leave/approve') {
-        $leave->approve();
-        return;
-    }
-
-    if ($uri === '/api/leave/reject') {
-        $leave->reject();
-        return;
-    }
-    if ($uri === '/api/leave/create') {
-        $leave->create();
-        return;
-    }
-}
-
-
-/* ================= Report ROUTES ================= */
-   $reportController = new ControllerReport();
-
-    if ($method === 'GET' && $route === '/report/daily') {
-        $reportController->dailyList();
-        exit;
-    }
-
-    if ($method === 'GET' && $route === '/report/summary') {
-        $reportController->summary();
-        exit;
-    }
-
-    if ($method === 'GET' && $route === '/report/detailed') {
-        $reportController->detailedList();
-        exit;
-    }
-
-    if ($method === 'GET' && $route === '/report/top-employees') {
-    $reportController->topEmployees();
-    exit;
-}
-
+$router->get('/report/daily', 'ControllerReport@dailyList');
+$router->get('/report/summary', 'ControllerReport@summary');
+$router->get('/report/detailed', 'ControllerReport@detailedList');
+$router->get('/report/top-employees', 'ControllerReport@topEmployees');
 
 /* ================= USER ROUTES ================= */
 
-$userController = new ControllerUser();
+$router->get('/users', 'ControllerUser@show');
+$router->get('/users/show', 'ControllerUser@show');
+$router->post('/users/create', 'ControllerUser@create');
+$router->get('/users/{id}', 'ControllerUser@getUserById');
+$router->put('/users/{id}', 'ControllerUser@update');
+$router->delete('/users/{id}', 'ControllerUser@delete');
 
-// Get all users with pagination
-if ($method === 'GET' && ($route === '/users' || $route === '/users/show')) {
-    $userController->show();
-    exit;
-}
+/* ================= DISPATCH REQUEST ================= */
 
-// Create new user
-if ($method === 'POST' && $route === '/users/create') {
-    $userController->create();
-    exit;
-}
-
-// Get single user
-if ($method === 'GET' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
-    $userController->getUserById((int)$matches[1]);
-    exit;
-}
-
-// Update user
-if ($method === 'PUT' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
-    $userController->update((int)$matches[1]);
-    exit;
-}
-
-// Delete user
-if ($method === 'DELETE' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
-    $userController->delete((int)$matches[1]);
-    exit;
-}
-
-
-
-/* ================= 404 FALLBACK ================= */
-
-sendJson([
-    'success' => false,
-    'message' => 'API endpoint not found',
-    'requested_route' => $route,
-    'method' => $method
-], 404);
+// This will execute the matched route or return 404
+$router->dispatch();

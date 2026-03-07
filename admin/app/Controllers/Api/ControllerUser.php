@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Models\User;
 use App\Services\UserService;
+use App\Helpers\Response;
 
 class ControllerUser
 {
@@ -34,20 +35,17 @@ class ControllerUser
             // Call service
             $result = $this->userService->getAllUsers($page, $per_page, $filters, $sorts);
 
-            sendJson([
-                'success' => true,
-                'message' => 'Users fetched successfully',
-                'data' => $result['data'],
-                'pagination' => $result['pagination']
-            ], 200);
+            Response::paginated(
+                $result['data'],
+                $result['pagination']['total'] ?? 0,
+                $page,
+                $per_page,
+                'Users fetched successfully'
+            );
 
         } catch (\Exception $e) {
             error_log("ControllerUser show error: " . $e->getMessage());
-            sendJson([
-                'success' => false,
-                'message' => 'Error fetching users',
-                'error' => $e->getMessage()
-            ], 500);
+            Response::serverError('Error fetching users', ['exception' => $e->getMessage()]);
         }
     }
 
@@ -70,28 +68,32 @@ class ControllerUser
             $created_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
             // Validation
+            $errors = [];
+            
             if (empty($full_name)) {
-                throw new \Exception('Full name is required');
+                $errors['full_name'] = 'Full name is required';
             }
 
             if (empty($username)) {
-                throw new \Exception('Username is required');
+                $errors['username'] = 'Username is required';
             }
 
             if (empty($email)) {
-                throw new \Exception('Email is required');
-            }
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                throw new \Exception('Invalid email format');
+                $errors['email'] = 'Email is required';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Invalid email format';
             }
 
             if (empty($password) || strlen($password) < 6) {
-                throw new \Exception('Password must be at least 6 characters');
+                $errors['password'] = 'Password must be at least 6 characters';
             }
 
             if (empty($role)) {
-                throw new \Exception('Role is required');
+                $errors['role'] = 'Role is required';
+            }
+
+            if (!empty($errors)) {
+                Response::validationError($errors, 'Validation failed');
             }
 
             // Call service to create user
@@ -105,18 +107,11 @@ class ControllerUser
                 $created_by
             );
 
-            sendJson([
-                'success' => true,
-                'message' => 'User created successfully',
-                'data' => $user
-            ], 201);
+            Response::created($user, 'User created successfully');
 
         } catch (\Exception $e) {
             error_log("ControllerUser create error: " . $e->getMessage());
-            sendJson([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            Response::error($e->getMessage(), 400);
         }
     }
 
@@ -127,24 +122,21 @@ class ControllerUser
     public function getUserById(int $id)
     {
         try {
+            if ($id <= 0) {
+                Response::validationError(['id' => 'Invalid user ID']);
+            }
+
             $user = $this->userService->getUserById($id);
 
             if (!$user) {
-                throw new \Exception('User not found');
+                Response::notFound('User not found');
             }
 
-            sendJson([
-                'success' => true,
-                'message' => 'User fetched successfully',
-                'data' => $user
-            ], 200);
+            Response::success($user, 'User fetched successfully');
 
         } catch (\Exception $e) {
             error_log("ControllerUser getUserById error: " . $e->getMessage());
-            sendJson([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 404);
+            Response::serverError('Error fetching user', ['exception' => $e->getMessage()]);
         }
     }
 
@@ -155,6 +147,10 @@ class ControllerUser
     public function update(int $id)
     {
         try {
+            if ($id <= 0) {
+                Response::validationError(['id' => 'Invalid user ID']);
+            }
+
             // Parse JSON or form data
             $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
@@ -169,18 +165,11 @@ class ControllerUser
             // Call service to update user
             $user = $this->userService->updateUser($id, $full_name, $email, $role, $status_id, $updated_by);
 
-            sendJson([
-                'success' => true,
-                'message' => 'User updated successfully',
-                'data' => $user
-            ], 200);
+            Response::success($user, 'User updated successfully');
 
         } catch (\Exception $e) {
             error_log("ControllerUser update error: " . $e->getMessage());
-            sendJson([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            Response::error($e->getMessage(), 400);
         }
     }
 
@@ -191,22 +180,20 @@ class ControllerUser
     public function delete(int $id)
     {
         try {
+            if ($id <= 0) {
+                Response::validationError(['id' => 'Invalid user ID']);
+            }
+
             // Get current user ID (from session or auth)
             $deleted_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
             $this->userService->deleteUser($id, $deleted_by);
 
-            sendJson([
-                'success' => true,
-                'message' => 'User deleted successfully'
-            ], 200);
+            Response::success([], 'User deleted successfully');
 
         } catch (\Exception $e) {
             error_log("ControllerUser delete error: " . $e->getMessage());
-            sendJson([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            Response::error($e->getMessage(), 400);
         }
     }
 }
