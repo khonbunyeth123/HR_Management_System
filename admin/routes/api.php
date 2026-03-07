@@ -13,6 +13,7 @@ use App\Controllers\Api\ControllerAttendance;
 use App\Controllers\Api\ControllerEmployee;
 use App\Controllers\Api\ControllerLeave;
 use App\Controllers\Api\ControllerReport;
+use App\Controllers\Api\ControllerUser;
 
 // Get the request URI and clean it
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -186,6 +187,42 @@ if (isset($attendanceRoutes[$method][$route])) {
     $reportController->topEmployees();
     exit;
 }
+
+
+/* ================= USER ROUTES ================= */
+
+$userController = new ControllerUser();
+
+// Get all users with pagination
+if ($method === 'GET' && ($route === '/users' || $route === '/users/show')) {
+    $userController->show();
+    exit;
+}
+
+// Create new user
+if ($method === 'POST' && $route === '/users/create') {
+    $userController->create();
+    exit;
+}
+
+// Get single user
+if ($method === 'GET' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
+    $userController->getUserById((int)$matches[1]);
+    exit;
+}
+
+// Update user
+if ($method === 'PUT' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
+    $userController->update((int)$matches[1]);
+    exit;
+}
+
+// Delete user
+if ($method === 'DELETE' && preg_match('#^/users/(\d+)$#', $route, $matches)) {
+    $userController->delete((int)$matches[1]);
+    exit;
+}
+
 
 
 /* ================= 404 FALLBACK ================= */

@@ -4,25 +4,43 @@
 
       <?php
         $current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
-        $menu_items = [
-          ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard'],
-          ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
-          ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group'],
-          ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month'],
-          [
-            'page'=>'report',
-            'label'=>'Reports',
-            'icon'=>'mdi:chart-box',
-            'submenu'=>[
-              ['page'=>'report/report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today'],
-              ['page'=>'report/report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line'],
-              ['page'=>'report/report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline'],
-              ['page'=>'report/report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle'],
-            ]
-          ],
-          ['page'=>'user','label'=>'User Management','icon'=>'mdi:shield-account'],
-          ['page'=>'audits','label'=>'Audit','icon'=>'mdi:file-document-multiple']
-        ];
+
+$menu_items = [
+
+  ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard'],
+
+  ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
+
+  ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group'],
+
+  ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month'],
+
+  [
+    'page'=>'report',
+    'label'=>'Reports',
+    'icon'=>'mdi:chart-box',
+    'submenu'=>[
+      ['page'=>'report/report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today'],
+      ['page'=>'report/report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line'],
+      ['page'=>'report/report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline'],
+      ['page'=>'report/report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle'],
+    ]
+  ],
+
+  // NEW SECURITY MENU
+  [
+    'page'=>'security',
+    'label'=>'Security',
+    'icon'=>'mdi:shield-lock',
+    'submenu'=>[
+      ['page'=>'user','label'=>'User Management','icon'=>'mdi:account-cog'],
+      ['page'=>'roles','label'=>'Roles','icon'=>'mdi:shield-account'],
+      ['page'=>'permissions','label'=>'Permissions','icon'=>'mdi:key-outline'],
+      ['page'=>'audits','label'=>'Audit Logs','icon'=>'mdi:file-document-multiple']
+    ]
+  ],
+
+];
 
         foreach ($menu_items as $item):
         // Detect active submenu
