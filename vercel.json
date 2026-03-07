@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "public/index.php",
+      "use": "@vercelphp/php@0.7.0",
+      "config": {
+        "documentRoot": "public"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "public/index.php"
+    }
+  ],
+  "env": {
+    "APP_ENV": "production"
+  }
+}
