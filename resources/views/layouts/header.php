@@ -6,7 +6,8 @@
   <title>DoorStep Technology Co.,Ltd</title>
 
   <!-- Favicon -->
-  <link rel="icon" href="assets/img/logo.png" type="image/x-icon">
+ <link rel="icon" href="/assets/img/logo.png" type="image/png">
+<link rel="shortcut icon" href="/assets/img/logo.png" type="image/png">
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

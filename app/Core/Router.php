@@ -20,10 +20,21 @@ class Router
     private function cleanUri(): string
     {
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $route = str_replace('/api', '', $uri);
-        $route = explode('?', $route)[0];
-        $route = rtrim($route, '/') ?: '/';
-        return $route;
+
+        // REMOVE PROJECT BASE PATH
+        $basePath = '/project_doorstep/my_project_3/admin';
+
+        if (strpos($uri, $basePath) === 0) {
+            $uri = substr($uri, strlen($basePath));
+        }
+
+        // REMOVE query string (just in case)
+        $uri = explode('?', $uri)[0];
+
+        // Normalize
+        $uri = rtrim($uri, '/') ?: '/';
+
+        return $uri;
     }
 
     public function get(string $path, string $handler): self

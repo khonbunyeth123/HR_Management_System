@@ -1,9 +1,8 @@
 <?php
-
 return [
     'paths' => [
-        'migrations' => __DIR__ . '/action/db/migrations',
-        'seeds' => __DIR__ . '/action/db/seeds',
+        'migrations' => __DIR__ . '/database/migrations',
+        'seeds' => __DIR__ . '/database/seeds',
     ],
     'environments' => [
         'default_migration_table' => 'phinxlog',
@@ -20,7 +19,7 @@ return [
         'production' => [
             'adapter' => 'mysql',
             'host' => 'localhost',
-            'name' => 'doorstep',  // change if different
+            'name' => 'doorstep',
             'user' => 'root',
             'pass' => '123456',
             'port' => '3306',

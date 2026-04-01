@@ -330,9 +330,15 @@
                     <td class="px-4 py-3">${e.position}</td>
                     <td class="px-4 py-3">${e.department}</td>
                     <td class="px-4 py-3 text-xs">${e.date_hired ?? '-'}</td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="openEditModal(${e.id})" class="mr-2">✏️</button>
-                        <button onclick="openDeleteModal(${e.id}, '${e.full_name}')">🗑️</button>
+                    <td class="px-4 py-3 flex gap-2 justify-center">
+                        <button onclick="openEditModal(${e.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors">
+                            <iconify-icon icon="mdi:pencil" style="font-size: 14px;"></iconify-icon>
+                            edit
+                        </button>
+                        <button onclick="openDeleteModal(${e.id}, '${e.full_name}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1 transition-colors">
+                            <iconify-icon icon="mdi:delete" style="font-size: 14px;"></iconify-icon>
+                            delete
+                        </button>
                     </td>
                 </tr>
             `).join('');
