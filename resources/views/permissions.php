@@ -3,34 +3,7 @@ $pageTitle = "Permission Management";
 $activeMenu = "permissions";
 $totalCount = $totalCount ?? 0;
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <!-- <style>
-            @keyframes slideUp { from { opacity:0;transform:translateY(20px); } to { opacity:1;transform:translateY(0); } }
-            @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
-            @keyframes spin    { to { transform:rotate(360deg); } }
-            .modal-enter     { animation:slideUp .25s ease-out; }
-            .modal-backdrop  { animation:fadeIn .2s ease-out; }
-            .spinner         { display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:white;animation:spin .7s linear infinite; }
-            .form-error      { border-color:#ef4444!important; }
-            .error-msg       { font-size:12px;color:#dc2626;margin-top:3px;display:none; }
-            .error-msg.show  { display:block; }
-            .no-results      { text-align:center;padding:2.5rem;color:#9ca3af; }
-            .toast-wrap      { position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:8px; }
-            .toast           { animation:slideUp .25s ease-out;min-width:280px;max-width:380px; }
-            .toast.success   { background:#ecfdf5;border-left:4px solid #10b981;color:#065f46; }
-            .toast.error     { background:#fef2f2;border-left:4px solid #ef4444;color:#7f1d1d; }
-            .toast.info      { background:#eff6ff;border-left:4px solid #3b82f6;color:#1e3a8a; }
-            .tab-content.hidden { display:none; }
-            .group-chevron.open { transform:rotate(180deg); }
-        </style> -->
-</head>
+
 <body class="bg-gray-50">\
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
