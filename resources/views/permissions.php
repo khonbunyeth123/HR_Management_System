@@ -1,466 +1,419 @@
 <?php
 $pageTitle = "Permission Management";
 $activeMenu = "permissions";
-$totalCount = $totalCount ?? 0;
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'DM Sans', sans-serif; }
 
-<body class="bg-gray-50">\
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .modal-backdrop { animation: fadeIn 0.2s ease-out; }
+        .modal-box      { animation: slideUp 0.25s ease-out; }
+
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%; border-top-color: white;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.2s infinite;
+            border-radius: 6px;
+        }
+
+        tbody tr { transition: background 0.12s; }
+        tbody tr:hover { background: #f0f7ff; }
+
+        .toast-container {
+            position: fixed; top: 1rem; right: 1rem;
+            z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            animation: slideUp 0.3s ease-out;
+            min-width: 280px; display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            font-size: 14px; font-weight: 500;
+        }
+        .toast.success { background:#ecfdf5; border-left:4px solid #10b981; color:#065f46; }
+        .toast.error   { background:#fef2f2; border-left:4px solid #ef4444; color:#7f1d1d; }
+        .toast.info    { background:#eff6ff; border-left:4px solid #3b82f6; color:#1e3a8a; }
+
+        .error-msg { font-size:12px; color:#dc2626; margin-top:3px; display:none; }
+        .error-msg.show { display:block; }
+        .field-error { border-color:#ef4444 !important; }
+
+        .modal-scroll { max-height: 70vh; overflow-y: auto; }
+
+        .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+        .badge-active   { background:#dcfce7; color:#15803d; }
+        .badge-inactive { background:#fee2e2; color:#b91c1c; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-8 border-b-2 border-gray-200 mb-8">
-        <div class="flex items-center gap-4 mb-4 sm:mb-0">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-lg flex items-center justify-center text-white text-xl shadow">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-gray-200 mb-6">
+        <div class="flex items-center gap-3 mb-4 sm:mb-0">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                 <i class="fas fa-shield-alt"></i>
             </div>
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Permission Management</h1>
-                <p class="text-gray-500 text-sm mt-0.5">Manage system permissions and role assignments</p>
+                <h1 class="text-2xl font-bold text-gray-900">Permission Management</h1>
+                <p class="text-gray-500 text-sm">Define system permissions (module + action)</p>
             </div>
         </div>
-        <button onclick="openAddModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow">
+        <button onclick="openAddModal()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm text-sm">
             <i class="fas fa-plus"></i> Add Permission
         </button>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500 flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium"><i class="fas fa-key mr-1"></i> Total Permissions</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statTotal"><?php echo (int)$totalCount; ?></p>
+                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Total Permissions</p>
+                <p class="text-3xl font-bold text-gray-900 mt-1" id="statTotal">—</p>
             </div>
-            <i class="fas fa-key text-blue-400 text-3xl opacity-20"></i>
+            <i class="fas fa-key text-blue-300 text-3xl"></i>
         </div>
-        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 flex items-center justify-between">
+        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium"><i class="fas fa-layer-group mr-1"></i> Modules</p>
+                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Modules</p>
                 <p class="text-3xl font-bold text-gray-900 mt-1" id="statModules">—</p>
             </div>
-            <i class="fas fa-layer-group text-green-400 text-3xl opacity-20"></i>
+            <i class="fas fa-layer-group text-green-300 text-3xl"></i>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="border-b-2 border-gray-200 mb-8">
-        <div class="flex gap-1 overflow-x-auto">
-            <button class="tab-btn px-6 py-3 font-medium text-blue-600 border-b-2 border-blue-600 transition-colors" onclick="switchTab(event,'tab-permissions')">
-                <i class="fas fa-key mr-2"></i>Permissions
-            </button>
-            <button class="tab-btn px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-blue-600 transition-colors" onclick="switchTab(event,'tab-assignments')">
-                <i class="fas fa-link mr-2"></i>Role Assignments
-            </button>
+    <!-- Search + Module Filter -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-5">
+        <div class="relative flex-1">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
+            <input type="text" id="searchInput" placeholder="Search permissions..."
+                class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                oninput="debounceSearch(loadPermissions, 300)">
         </div>
+        <select id="moduleFilter" onchange="loadPermissions()"
+            class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-max">
+            <option value="">All Modules</option>
+        </select>
     </div>
 
-    <!-- ── PERMISSIONS TAB ── -->
-    <div id="tab-permissions" class="tab-content">
-        <!-- Filters -->
-        <div class="flex flex-col sm:flex-row gap-3 mb-6">
-            <div class="flex-1 relative">
-                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
-                <input id="searchInput" type="text" placeholder="Search permissions…" oninput="debounce(loadPermissions,350)()"
-                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            </div>
-            <select id="moduleFilter" onchange="loadPermissions()"
-                class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm min-w-max">
-                <option value="">All Modules</option>
-            </select>
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wide">
+                        <th class="px-6 py-3 text-left font-semibold">#</th>
+                        <th class="px-6 py-3 text-left font-semibold">Slug</th>
+                        <th class="px-6 py-3 text-left font-semibold">Module</th>
+                        <th class="px-6 py-3 text-left font-semibold">Action</th>
+                        <th class="px-6 py-3 text-left font-semibold">Description</th>
+                        <th class="px-6 py-3 text-center font-semibold">Status</th>
+                        <th class="px-6 py-3 text-center font-semibold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="permissionsTableBody">
+                    <?php for ($i = 0; $i < 5; $i++): ?>
+                    <tr class="border-b border-gray-100">
+                        <?php for ($j = 0; $j < 7; $j++): ?>
+                        <td class="px-6 py-4"><div class="skeleton h-4 w-full"></div></td>
+                        <?php endfor; ?>
+                    </tr>
+                    <?php endfor; ?>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Table -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-4 text-left"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" class="w-4 h-4 text-blue-600 rounded cursor-pointer"></th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Permission</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Module</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Description</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="permissionsTable" class="divide-y divide-gray-100">
-                        <tr><td colspan="7" class="px-6 py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="permsNoResults" class="no-results hidden">
-                <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
-                <p>No permissions found</p>
-            </div>
+        <div id="noResults" class="hidden text-center py-16 text-gray-400">
+            <i class="fas fa-search text-4xl mb-3 opacity-30 block"></i>
+            <p class="font-medium">No permissions found</p>
+            <p class="text-sm mt-1">Try adjusting your search or filter</p>
+        </div>
+
+        <div class="px-6 py-3 border-t border-gray-100 text-sm text-gray-500">
+            <span id="paginationInfo">Showing 0 permissions</span>
         </div>
     </div>
+</div>
 
-    <!-- ── ROLE ASSIGNMENTS TAB ── -->
-    <div id="tab-assignments" class="tab-content hidden">
-        <div class="flex flex-col sm:flex-row gap-3 mb-6">
-            <div class="flex-1 relative">
-                <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
-                <input id="roleSearchInput" type="text" placeholder="Search roles…" oninput="debounce(loadRoles,350)()"
-                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-            </div>
+<!-- ===================== ADD PERMISSION MODAL ===================== -->
+<div id="addModal"
+    class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
+    onclick="if(event.target===this) closeModal('addModal')">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full modal-box" role="dialog">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-bold text-gray-900">Add New Permission</h2>
+            <button onclick="closeModal('addModal')" class="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
         </div>
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Slug</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Permissions</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rolesTable" class="divide-y divide-gray-100">
-                        <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="rolesNoResults" class="no-results hidden">
-                <i class="fas fa-search text-4xl mb-3 opacity-20"></i>
-                <p>No roles found</p>
-            </div>
-        </div>
-    </div>
-
-</div><!-- /container -->
-
-<!-- ═══════════════════════════════════════════
-     ADD PERMISSION MODAL
-════════════════════════════════════════════ -->
-<div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
-     onclick="if(event.target===this)closeModal('addModal')">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg modal-enter">
-        <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900">Add New Permission</h2>
-            <button onclick="closeModal('addModal')" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
-        </div>
-        <div class="p-6 space-y-4">
+        <div class="px-6 py-5 space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Module *</label>
-                    <input id="addModule" type="text" placeholder="e.g. users" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Module <span class="text-red-500">*</span></label>
+                    <input type="text" id="addModule" placeholder="e.g. users"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="clearFieldError(this)">
                     <p class="error-msg" id="addModuleErr">Module is required</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Action *</label>
-                    <input id="addAction" type="text" placeholder="e.g. view" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Action <span class="text-red-500">*</span></label>
+                    <input type="text" id="addAction" placeholder="e.g. view"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="clearFieldError(this)">
                     <p class="error-msg" id="addActionErr">Action is required</p>
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea id="addDesc" rows="3" placeholder="What does this permission allow?" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+                <textarea id="addDesc" rows="2" placeholder="What does this permission allow?"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
             </div>
         </div>
-        <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-            <button onclick="closeModal('addModal')" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm transition-colors">Cancel</button>
-            <button onclick="submitAdd()" id="addBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow">
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <button type="button" onclick="closeModal('addModal')"
+                class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-sm transition-colors">Cancel</button>
+            <button type="button" onclick="submitAdd()" id="addBtn"
+                class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm transition-colors flex items-center gap-2">
                 <i class="fas fa-plus"></i> Create
             </button>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     EDIT PERMISSION MODAL
-════════════════════════════════════════════ -->
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
-     onclick="if(event.target===this)closeModal('editModal')">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-lg modal-enter">
-        <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900">Edit Permission</h2>
-            <button onclick="closeModal('editModal')" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
+<!-- ===================== EDIT PERMISSION MODAL ===================== -->
+<div id="editModal"
+    class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
+    onclick="if(event.target===this) closeModal('editModal')">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full modal-box" role="dialog">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-bold text-gray-900">Edit Permission</h2>
+            <button onclick="closeModal('editModal')" class="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
         </div>
-        <div class="p-6 space-y-4">
+        <div class="px-6 py-5 space-y-4">
             <input type="hidden" id="editId">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Module *</label>
-                    <input id="editModule" type="text" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Module <span class="text-red-500">*</span></label>
+                    <input type="text" id="editModule"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="clearFieldError(this)">
                     <p class="error-msg" id="editModuleErr">Module is required</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Action *</label>
-                    <input id="editAction" type="text" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Action <span class="text-red-500">*</span></label>
+                    <input type="text" id="editAction"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="clearFieldError(this)">
                     <p class="error-msg" id="editActionErr">Action is required</p>
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea id="editDesc" rows="3" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"></textarea>
+                <textarea id="editDesc" rows="2"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                <select id="editStatus" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+                <select id="editStatus"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     <option value="1">Active</option>
                     <option value="2">Inactive</option>
                 </select>
             </div>
         </div>
-        <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl">
-            <button onclick="closeModal('editModal')" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm transition-colors">Cancel</button>
-            <button onclick="submitEdit()" id="editBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow">
+        <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+            <button type="button" onclick="closeModal('editModal')"
+                class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-sm transition-colors">Cancel</button>
+            <button type="button" onclick="submitEdit()" id="editBtn"
+                class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm transition-colors flex items-center gap-2">
                 <i class="fas fa-save"></i> Save Changes
             </button>
         </div>
     </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     ASSIGN PERMISSIONS TO ROLE MODAL
-════════════════════════════════════════════ -->
-<div id="assignModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
-     onclick="if(event.target===this)closeModal('assignModal')">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col modal-enter">
-        <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200 shrink-0">
-            <div>
-                <h2 class="text-xl font-bold text-gray-900">Assign Permissions</h2>
-                <p id="assignSubtitle" class="text-sm text-gray-500 mt-0.5"></p>
-            </div>
-            <button onclick="closeModal('assignModal')" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
-        </div>
-        <div class="p-6 overflow-y-auto flex-1 space-y-3" id="assignGroups">
-            <!-- Injected by JS -->
-        </div>
-        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50 shrink-0 rounded-b-xl">
-            <p class="text-sm text-gray-500"><span id="assignCount">0</span> permission(s) selected</p>
-            <div class="flex gap-3">
-                <button onclick="closeModal('assignModal')" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm transition-colors">Cancel</button>
-                <button onclick="submitAssign()" id="assignBtn" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow">
-                    <i class="fas fa-save"></i> Save
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     DELETE CONFIRM MODAL
-════════════════════════════════════════════ -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
-     onclick="if(event.target===this)closeModal('deleteModal')">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-sm modal-enter text-center p-8">
+<!-- ===================== DELETE CONFIRM MODAL ===================== -->
+<div id="deleteModal"
+    class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4 modal-backdrop"
+    onclick="if(event.target===this) closeModal('deleteModal')">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full modal-box p-6 text-center" role="dialog">
         <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <i class="fas fa-trash text-red-500 text-xl"></i>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">Delete Permission</h3>
-        <p class="text-gray-500 text-sm mb-6" id="deleteMsg">Are you sure? This cannot be undone.</p>
+        <h2 class="text-lg font-bold text-gray-900 mb-1">Delete Permission</h2>
+        <p class="text-gray-500 text-sm mb-6">
+            Delete <strong id="deletePermName" class="text-gray-800"></strong>?
+            This cannot be undone and may affect roles using it.
+        </p>
+        <input type="hidden" id="deletePermId">
         <div class="flex gap-3 justify-center">
-            <button onclick="closeModal('deleteModal')" class="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-sm">Cancel</button>
-            <button onclick="confirmDelete()" id="deleteBtn" class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm shadow">Delete</button>
+            <button onclick="closeModal('deleteModal')"
+                class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold text-sm transition-colors">Cancel</button>
+            <button onclick="confirmDelete()" id="deleteBtn"
+                class="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold text-sm transition-colors flex items-center gap-2">
+                <i class="fas fa-trash"></i> Delete
+            </button>
         </div>
     </div>
 </div>
 
 <!-- Toast -->
-<div id="toastWrap" class="toast-wrap"></div>
+<div id="toastContainer" class="toast-container"></div>
 
+<!-- ===================== JAVASCRIPT ===================== -->
 <script>
-// ════════════════════════════════════
-//  STATE
-// ════════════════════════════════════
-let allPermissions   = [];   // flat list
-let allRoles         = [];
-let permsByModule    = {};   // { module: [perm, …] }
-let deleteTargetId   = null;
-let assignRoleId     = null;
-let assignRolePerms  = [];   // currently assigned perm IDs
+// ─── CONFIG ───────────────────────────────────────────────
+const API_BASE = (function() {
+    const match = window.location.pathname.match(/^(.*\/admin)/);
+    return match ? match[1] + '/api' : '/api';
+})();
 
-// ════════════════════════════════════
-//  INIT
-// ════════════════════════════════════
+// ─── STATE ────────────────────────────────────────────────
+let allPermissions = [];
+let deleteTargetId = null;
+
+// ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    loadPermissions();
     loadModules();
+    loadPermissions();
 });
 
-// ════════════════════════════════════
-//  TABS
-// ════════════════════════════════════
-function switchTab(e, id) {
-    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('text-blue-600','border-blue-600');
-        b.classList.add('text-gray-500','border-transparent');
-    });
-    document.getElementById(id).classList.remove('hidden');
-    const btn = e.target.closest('.tab-btn');
-    btn.classList.add('text-blue-600','border-blue-600');
-    btn.classList.remove('text-gray-500','border-transparent');
-    if (id === 'tab-assignments' && allRoles.length === 0) loadRoles();
+// ─── LOAD MODULES (for filter dropdown) ───────────────────
+async function loadModules() {
+    try {
+        const res  = await fetch(`${API_BASE}/permissions/categories`);
+        const json = await res.json();
+        const mods = json.data ?? [];
+        const sel  = document.getElementById('moduleFilter');
+        mods.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m.charAt(0).toUpperCase() + m.slice(1);
+            sel.appendChild(opt);
+        });
+    } catch (err) {
+        console.error('loadModules error:', err);
+    }
 }
 
-// ════════════════════════════════════
-//  LOAD PERMISSIONS
-// ════════════════════════════════════
+// ─── LOAD & RENDER PERMISSIONS ────────────────────────────
+// GET /api/permissions  (or /api/permissions/list)
 async function loadPermissions() {
     const search = document.getElementById('searchInput').value.trim();
     const module = document.getElementById('moduleFilter').value;
 
-    let url = '/api/permissions/list?';
+    let url = `${API_BASE}/permissions?`;
     if (search) url += `search=${encodeURIComponent(search)}&`;
     if (module) url += `module=${encodeURIComponent(module)}&`;
-
-    const tbody = document.getElementById('permissionsTable');
-    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>`;
 
     try {
         const res  = await fetch(url);
         const json = await res.json();
-        allPermissions = json.data?.data ?? json.data ?? [];
 
-        // rebuild module map
-        permsByModule = {};
-        allPermissions.forEach(p => {
-            if (!permsByModule[p.module]) permsByModule[p.module] = [];
-            permsByModule[p.module].push(p);
-        });
+        allPermissions = Array.isArray(json.data?.data) ? json.data.data
+                       : Array.isArray(json.data)       ? json.data
+                       : Array.isArray(json)            ? json
+                       : [];
 
-        document.getElementById('statTotal').textContent   = allPermissions.length;
-        document.getElementById('statModules').textContent = Object.keys(permsByModule).length;
-
-        renderPermissionsTable(allPermissions);
-    } catch(err) {
-        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-red-400"><i class="fas fa-exclamation-circle mr-2"></i>Failed to load permissions</td></tr>`;
+        renderTable();
+        updateStats();
+    } catch (err) {
+        showToast('Failed to load permissions: ' + err.message, 'error');
     }
 }
 
-function renderPermissionsTable(perms) {
-    const tbody   = document.getElementById('permissionsTable');
-    const noRes   = document.getElementById('permsNoResults');
+function updateStats() {
+    const modules = [...new Set(allPermissions.map(p => p.module))];
+    document.getElementById('statTotal').textContent   = allPermissions.length;
+    document.getElementById('statModules').textContent = modules.length;
+}
 
-    if (!perms.length) {
+function renderTable() {
+    const tbody  = document.getElementById('permissionsTableBody');
+    const noRes  = document.getElementById('noResults');
+    const info   = document.getElementById('paginationInfo');
+
+    if (!allPermissions.length) {
         tbody.innerHTML = '';
         noRes.classList.remove('hidden');
+        info.textContent = 'No permissions found';
         return;
     }
+
     noRes.classList.add('hidden');
+    info.textContent = `Showing ${allPermissions.length} permission${allPermissions.length > 1 ? 's' : ''}`;
 
     const moduleColors = {
         users:'blue', employees:'purple', attendance:'green',
         leave:'yellow', report:'red', roles:'orange', permissions:'indigo'
     };
 
-    tbody.innerHTML = perms.map(p => {
+    tbody.innerHTML = allPermissions.map((p, idx) => {
         const slug   = `${p.module}.${p.action}`;
         const color  = moduleColors[p.module] ?? 'gray';
         const active = parseInt(p.status_id) === 1;
         return `
-        <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4"><input type="checkbox" class="perm-cb w-4 h-4 text-blue-600 rounded cursor-pointer" data-id="${p.id}"></td>
-            <td class="px-6 py-4 font-mono text-sm font-semibold text-gray-800">${slug}</td>
+        <tr class="border-b border-gray-100">
+            <td class="px-6 py-4 text-gray-500 font-medium">${idx + 1}</td>
+            <td class="px-6 py-4 font-mono text-xs font-semibold text-gray-800 bg-gray-50">${escHtml(slug)}</td>
             <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 bg-${color}-100 text-${color}-800 text-xs font-semibold rounded capitalize">${p.module}</span>
+                <span class="inline-block px-2.5 py-1 bg-${color}-100 text-${color}-800 text-xs font-semibold rounded capitalize">${escHtml(p.module)}</span>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-600">${p.action}</td>
-            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">${p.description ?? '—'}</td>
-            <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}">
-                    ${active ? 'Active' : 'Inactive'}
-                </span>
+            <td class="px-6 py-4 text-gray-600 text-sm">${escHtml(p.action)}</td>
+            <td class="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">${escHtml(p.description || '—')}</td>
+            <td class="px-6 py-4 text-center">
+                <span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? 'Active' : 'Inactive'}</span>
             </td>
-            <td class="px-6 py-4 flex gap-1">
-                <button onclick="openEditModal(${p.id})" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
-                    <i class="fas fa-edit text-sm"></i>
-                </button>
-                <button onclick="openDeleteModal(${p.id},'${slug}')" class="p-2 text-gray-500 hover:bg-red-100 hover:text-red-600 rounded-lg transition-colors" title="Delete">
-                    <i class="fas fa-trash text-sm"></i>
-                </button>
+            <td class="px-6 py-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="openEditModal(${p.id})"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-700 text-xs font-semibold transition-colors">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button onclick="openDeleteModal(${p.id}, '${escHtml(slug)}')"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
             </td>
         </tr>`;
     }).join('');
 }
 
-// ════════════════════════════════════
-//  LOAD MODULES (for filter dropdown)
-// ════════════════════════════════════
-async function loadModules() {
-    try {
-        const res  = await fetch('/api/permissions/categories');
-        const json = await res.json();
-        const mods = json.data ?? [];
-        const sel  = document.getElementById('moduleFilter');
-        mods.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m; opt.textContent = m.charAt(0).toUpperCase() + m.slice(1);
-            sel.appendChild(opt);
-        });
-    } catch {}
-}
-
-// ════════════════════════════════════
-//  LOAD ROLES
-// ════════════════════════════════════
-async function loadRoles() {
-    const tbody = document.getElementById('rolesTable');
-    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</td></tr>`;
-
-    try {
-        const res  = await fetch('/api/roles');
-        const json = await res.json();
-        allRoles   = json.data?.data ?? json.data ?? [];
-
-        const q = document.getElementById('roleSearchInput').value.toLowerCase();
-        const filtered = q ? allRoles.filter(r => r.name.toLowerCase().includes(q) || r.slug.toLowerCase().includes(q)) : allRoles;
-
-        renderRolesTable(filtered);
-    } catch {
-        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-red-400">Failed to load roles</td></tr>`;
-    }
-}
-
-function renderRolesTable(roles) {
-    const tbody = document.getElementById('rolesTable');
-    const noRes = document.getElementById('rolesNoResults');
-
-    if (!roles.length) {
-        tbody.innerHTML = '';
-        noRes.classList.remove('hidden');
-        return;
-    }
-    noRes.classList.add('hidden');
-
-    tbody.innerHTML = roles.map(r => {
-        const active = r.status === 'active' || parseInt(r.status_id) === 1;
-        const permCount = Array.isArray(r.permissions) ? r.permissions.length : 0;
-        return `
-        <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 font-semibold text-gray-900">${r.name}</td>
-            <td class="px-6 py-4 font-mono text-sm text-gray-500">${r.slug}</td>
-            <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded">${permCount} assigned</span>
-            </td>
-            <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 text-xs font-semibold rounded-full ${active ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                    ${active ? 'Active' : 'Pending'}
-                </span>
-            </td>
-            <td class="px-6 py-4">
-                <button onclick="openAssignModal(${r.id},'${r.name}')"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow-sm">
-                    <i class="fas fa-sliders-h"></i> Manage Permissions
-                </button>
-            </td>
-        </tr>`;
-    }).join('');
-}
-
-// ════════════════════════════════════
-//  ADD PERMISSION
-// ════════════════════════════════════
+// ─── ADD ──────────────────────────────────────────────────
 function openAddModal() {
     document.getElementById('addModule').value = '';
     document.getElementById('addAction').value = '';
     document.getElementById('addDesc').value   = '';
-    clearErr('addModule','addModuleErr');
-    clearErr('addAction','addActionErr');
     openModal('addModal');
 }
 
@@ -470,44 +423,40 @@ async function submitAdd() {
     const desc   = document.getElementById('addDesc').value.trim();
 
     let valid = true;
-    if (!module) { showErr('addModule','addModuleErr'); valid = false; } else clearErr('addModule','addModuleErr');
-    if (!action) { showErr('addAction','addActionErr'); valid = false; } else clearErr('addAction','addActionErr');
+    if (!module) { showFieldError('addModule', 'addModuleErr', 'Module is required'); valid = false; }
+    if (!action) { showFieldError('addAction', 'addActionErr', 'Action is required'); valid = false; }
     if (!valid) return;
 
-    setBtnLoading('addBtn', true, 'Creating…');
+    setLoading('addBtn', true, 'Creating...');
     try {
-        const res  = await fetch('/api/permissions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ module, action, description: desc })
+        const res  = await fetch(`${API_BASE}/permissions`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body:    JSON.stringify({ module, action, description: desc }),
         });
         const json = await res.json();
-        if (json.success || res.ok) {
-            toast('Permission created successfully!', 'success');
-            closeModal('addModal');
-            loadPermissions();
-            loadModules();
-        } else {
-            toast(json.message ?? 'Failed to create permission', 'error');
-        }
-    } catch { toast('Network error', 'error'); }
-    setBtnLoading('addBtn', false, '<i class="fas fa-plus"></i> Create');
+        if (!res.ok) throw new Error(json.message || 'Failed to create');
+
+        showToast('Permission created successfully!', 'success');
+        closeModal('addModal');
+        loadPermissions();
+        loadModules();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        setLoading('addBtn', false, '<i class="fas fa-plus"></i> Create');
+    }
 }
 
-// ════════════════════════════════════
-//  EDIT PERMISSION
-// ════════════════════════════════════
+// ─── EDIT ─────────────────────────────────────────────────
 function openEditModal(id) {
-    const perm = allPermissions.find(p => p.id == id);
-    if (!perm) return;
-
-    document.getElementById('editId').value     = perm.id;
-    document.getElementById('editModule').value = perm.module;
-    document.getElementById('editAction').value = perm.action;
-    document.getElementById('editDesc').value   = perm.description ?? '';
-    document.getElementById('editStatus').value = perm.status_id ?? 1;
-    clearErr('editModule','editModuleErr');
-    clearErr('editAction','editActionErr');
+    const p = allPermissions.find(p => p.id == id);
+    if (!p) return;
+    document.getElementById('editId').value     = p.id;
+    document.getElementById('editModule').value = p.module;
+    document.getElementById('editAction').value = p.action;
+    document.getElementById('editDesc').value   = p.description ?? '';
+    document.getElementById('editStatus').value = p.status_id ?? 1;
     openModal('editModal');
 }
 
@@ -519,205 +468,112 @@ async function submitEdit() {
     const status = document.getElementById('editStatus').value;
 
     let valid = true;
-    if (!module) { showErr('editModule','editModuleErr'); valid = false; } else clearErr('editModule','editModuleErr');
-    if (!action) { showErr('editAction','editActionErr'); valid = false; } else clearErr('editAction','editActionErr');
+    if (!module) { showFieldError('editModule', 'editModuleErr', 'Module is required'); valid = false; }
+    if (!action) { showFieldError('editAction', 'editActionErr', 'Action is required'); valid = false; }
     if (!valid) return;
 
-    setBtnLoading('editBtn', true, 'Saving…');
+    setLoading('editBtn', true, 'Saving...');
     try {
-        const res  = await fetch(`/api/permissions/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ module, action, description: desc, status_id: parseInt(status) })
+        const res  = await fetch(`${API_BASE}/permissions/${id}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body:    JSON.stringify({ module, action, description: desc, status_id: parseInt(status) }),
         });
         const json = await res.json();
-        if (json.success || res.ok) {
-            toast('Permission updated successfully!', 'success');
-            closeModal('editModal');
-            loadPermissions();
-        } else {
-            toast(json.message ?? 'Failed to update', 'error');
-        }
-    } catch { toast('Network error', 'error'); }
-    setBtnLoading('editBtn', false, '<i class="fas fa-save"></i> Save Changes');
+        if (!res.ok) throw new Error(json.message || 'Failed to update');
+
+        showToast('Permission updated!', 'success');
+        closeModal('editModal');
+        loadPermissions();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        setLoading('editBtn', false, '<i class="fas fa-save"></i> Save Changes');
+    }
 }
 
-// ════════════════════════════════════
-//  DELETE PERMISSION
-// ════════════════════════════════════
+// ─── DELETE ───────────────────────────────────────────────
 function openDeleteModal(id, slug) {
     deleteTargetId = id;
-    document.getElementById('deleteMsg').textContent = `Delete "${slug}"? This cannot be undone.`;
+    document.getElementById('deletePermId').value      = id;
+    document.getElementById('deletePermName').textContent = slug;
     openModal('deleteModal');
 }
 
 async function confirmDelete() {
     if (!deleteTargetId) return;
-    setBtnLoading('deleteBtn', true, 'Deleting…');
+    setLoading('deleteBtn', true, 'Deleting...');
     try {
-        const res  = await fetch(`/api/permissions/${deleteTargetId}`, { method: 'DELETE' });
-        const json = await res.json();
-        if (json.success || res.ok) {
-            toast('Permission deleted!', 'success');
-            closeModal('deleteModal');
-            loadPermissions();
-        } else {
-            toast(json.message ?? 'Cannot delete — may be assigned to roles', 'error');
-        }
-    } catch { toast('Network error', 'error'); }
-    setBtnLoading('deleteBtn', false, 'Delete');
-    deleteTargetId = null;
-}
-
-// ════════════════════════════════════
-//  ASSIGN PERMISSIONS TO ROLE
-// ════════════════════════════════════
-async function openAssignModal(roleId, roleName) {
-    assignRoleId = roleId;
-    document.getElementById('assignSubtitle').textContent = `Role: ${roleName}`;
-    document.getElementById('assignGroups').innerHTML = `<p class="text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</p>`;
-    openModal('assignModal');
-
-    try {
-        // load all permissions + currently assigned ones in parallel
-        const [permRes, assignedRes] = await Promise.all([
-            fetch('/api/permissions/list'),
-            fetch(`/api/permissions/role/${roleId}`)
-        ]);
-        const permJson    = await permRes.json();
-        const assignedJson= await assignedRes.json();
-
-        const all      = permJson.data?.data    ?? permJson.data    ?? [];
-        const assigned = assignedJson.data?.data ?? assignedJson.data ?? [];
-        assignRolePerms = assigned.map(p => p.id);
-
-        // Group by module
-        const grouped = {};
-        all.forEach(p => {
-            if (!grouped[p.module]) grouped[p.module] = [];
-            grouped[p.module].push(p);
+        const res  = await fetch(`${API_BASE}/permissions/${deleteTargetId}`, {
+            method:  'DELETE',
+            headers: { 'Accept': 'application/json' },
         });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message || 'Failed to delete');
 
-        const moduleColors = { users:'blue',employees:'purple',attendance:'green',leave:'yellow',report:'red',roles:'orange',permissions:'indigo' };
-
-        document.getElementById('assignGroups').innerHTML = Object.entries(grouped).map(([mod, perms]) => {
-            const color    = moduleColors[mod] ?? 'gray';
-            const allCheck = perms.every(p => assignRolePerms.includes(p.id));
-            const items    = perms.map(p => `
-                <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer p-1 rounded hover:bg-gray-50">
-                    <input type="checkbox" class="assign-cb w-4 h-4 text-blue-600 rounded" value="${p.id}"
-                        ${assignRolePerms.includes(p.id) ? 'checked' : ''} onchange="updateAssignCount()">
-                    <span class="font-mono">${mod}.${p.action}</span>
-                </label>`).join('');
-            return `
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <div class="flex items-center gap-3 bg-${color}-50 px-4 py-2.5 cursor-pointer select-none" onclick="toggleAssignGroup(this)">
-                    <input type="checkbox" class="group-toggle w-4 h-4 text-${color}-600 rounded border-${color}-300"
-                        ${allCheck ? 'checked' : ''} onchange="toggleAssignGroupPerms(this)" onclick="event.stopPropagation()">
-                    <span class="text-xs font-bold text-${color}-800 uppercase tracking-wide flex-1">${mod}</span>
-                    <i class="fas fa-chevron-down text-${color}-400 text-xs group-chevron transition-transform duration-200"></i>
-                </div>
-                <div class="grid grid-cols-2 gap-1 p-3 bg-white">${items}</div>
-            </div>`;
-        }).join('');
-
-        updateAssignCount();
-    } catch {
-        document.getElementById('assignGroups').innerHTML = `<p class="text-center text-red-400">Failed to load permissions</p>`;
+        showToast('Permission deleted!', 'success');
+        closeModal('deleteModal');
+        loadPermissions();
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        setLoading('deleteBtn', false, '<i class="fas fa-trash"></i> Delete');
+        deleteTargetId = null;
     }
 }
 
-function toggleAssignGroup(header) {
-    const body    = header.nextElementSibling;
-    const chevron = header.querySelector('.group-chevron');
-    const hidden  = body.classList.toggle('hidden');
-    if (chevron) chevron.classList.toggle('open', !hidden);
-}
-
-function toggleAssignGroupPerms(toggle) {
-    toggle.closest('.border').querySelectorAll('.assign-cb').forEach(cb => cb.checked = toggle.checked);
-    updateAssignCount();
-}
-
-function updateAssignCount() {
-    document.getElementById('assignCount').textContent = document.querySelectorAll('#assignGroups .assign-cb:checked').length;
-}
-
-async function submitAssign() {
-    if (!assignRoleId) return;
-    const ids = [...document.querySelectorAll('#assignGroups .assign-cb:checked')].map(cb => parseInt(cb.value));
-
-    setBtnLoading('assignBtn', true, 'Saving…');
-    try {
-        const res  = await fetch('/api/permissions/assign-multiple-to-role', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ role_id: assignRoleId, permission_ids: ids })
-        });
-        const json = await res.json();
-        if (json.success || res.ok) {
-            toast(`${ids.length} permission(s) assigned to role!`, 'success');
-            closeModal('assignModal');
-            if (allRoles.length) loadRoles();
-        } else {
-            toast(json.message ?? 'Failed to assign', 'error');
-        }
-    } catch { toast('Network error', 'error'); }
-    setBtnLoading('assignBtn', false, '<i class="fas fa-save"></i> Save');
-}
-
-// ════════════════════════════════════
-//  SELECT ALL (permissions table)
-// ════════════════════════════════════
-function toggleSelectAll(master) {
-    document.querySelectorAll('.perm-cb').forEach(cb => cb.checked = master.checked);
-}
-
-// ════════════════════════════════════
-//  MODAL HELPERS
-// ════════════════════════════════════
+// ─── MODAL HELPERS ────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById(id).querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+    document.getElementById(id).querySelectorAll('.error-msg').forEach(el => el.classList.remove('show'));
+}
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') document.querySelectorAll('[id$="Modal"]:not(.hidden)').forEach(m => closeModal(m.id));
+    if (e.key === 'Escape')
+        document.querySelectorAll('.fixed[id$="Modal"]:not(.hidden)').forEach(m => closeModal(m.id));
 });
 
-// ════════════════════════════════════
-//  FORM HELPERS
-// ════════════════════════════════════
-function showErr(inputId, errId) {
-    document.getElementById(inputId).classList.add('form-error','border-red-400');
-    document.getElementById(errId).classList.add('show');
+// ─── UTILITIES ────────────────────────────────────────────
+function showFieldError(inputId, errId, msg) {
+    const input = document.getElementById(inputId);
+    const err   = document.getElementById(errId);
+    input.classList.add('field-error');
+    err.textContent = msg;
+    err.classList.add('show');
 }
-function clearErr(inputId, errId) {
-    document.getElementById(inputId).classList.remove('form-error','border-red-400');
-    document.getElementById(errId).classList.remove('show');
+function clearFieldError(input) {
+    input.classList.remove('field-error');
+    const err = input.parentElement.querySelector('.error-msg');
+    if (err) err.classList.remove('show');
 }
-function setBtnLoading(btnId, loading, html) {
+function setLoading(btnId, loading, html) {
     const btn = document.getElementById(btnId);
-    btn.disabled = loading;
-    btn.innerHTML = loading ? `<span class="spinner"></span> ${html}` : html;
+    btn.disabled  = loading;
+    btn.innerHTML = loading ? `<span class="spinner"></span> ${html.replace(/(<([^>]+)>)/gi,'')}` : html;
 }
-
-// ════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════
-function toast(msg, type = 'success') {
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(message, type = 'success') {
     const icons = { success:'check-circle', error:'exclamation-circle', info:'info-circle' };
+    const c = document.getElementById('toastContainer');
     const t = document.createElement('div');
-    t.className = `toast ${type} px-4 py-3 rounded-lg shadow-md flex items-center gap-2`;
-    t.innerHTML = `<i class="fas fa-${icons[type]}"></i><span class="flex-1 text-sm">${msg}</span><button onclick="this.parentElement.remove()" class="ml-2 text-lg leading-none opacity-60 hover:opacity-100">×</button>`;
-    document.getElementById('toastWrap').appendChild(t);
+    t.className = `toast ${type}`;
+    t.innerHTML = `
+        <i class="fas fa-${icons[type] || 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-auto text-lg leading-none hover:opacity-70">×</button>`;
+    c.appendChild(t);
     setTimeout(() => t.remove(), 5000);
 }
-
-// ════════════════════════════════════
-//  DEBOUNCE
-// ════════════════════════════════════
-function debounce(fn, ms) {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+let debounceTimer;
+function debounceSearch(fn, delay) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fn, delay);
 }
 </script>
 </body>

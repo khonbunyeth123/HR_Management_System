@@ -49,7 +49,7 @@ class Role
     public function getRoleById($id)
     {
         $query = "SELECT 
-                    r.id,
+                    r.id,   
                     r.uuid,
                     r.name,
                     r.description,
@@ -59,14 +59,26 @@ class Role
                     r.updated_at,
                     r.updated_by,
                     COUNT(DISTINCT u.id) as user_count
-                  FROM tbl_roles r
-                  LEFT JOIN tbl_users u ON r.id = u.role_id AND u.deleted_at IS NULL
-                  WHERE r.id = ? AND r.deleted_at IS NULL
-                  GROUP BY r.id";
+                FROM tbl_roles r
+                LEFT JOIN tbl_users u ON r.id = u.role_id AND u.deleted_at IS NULL
+                WHERE r.id = ? AND r.deleted_at IS NULL
+                GROUP BY r.id";
         
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$id]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $role = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$role) return null;
+
+        // ✅ ADD THIS (IMPORTANT)
+        $permissions = $this->getRolePermissions($id);
+
+        // Convert to slug array (VERY IMPORTANT for frontend)
+        $role['permissions'] = array_map(function ($p) {
+            return $p['permission_slug'];
+        }, $permissions);
+
+        return $role;
     }
 
     /**
