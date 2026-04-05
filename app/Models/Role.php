@@ -28,17 +28,20 @@ class Role
                     r.created_by,
                     r.updated_at,
                     r.updated_by,
-                    COUNT(DISTINCT u.id) as user_count
-                  FROM tbl_roles r
-                  LEFT JOIN tbl_users u ON r.id = u.role_id AND u.deleted_at IS NULL";
-        
+                    COUNT(DISTINCT u.id) as user_count,
+                    COUNT(DISTINCT rp.permission_id) as permission_count
+                FROM tbl_roles r
+                LEFT JOIN tbl_users u 
+                    ON r.id = u.role_id AND u.deleted_at IS NULL
+                LEFT JOIN tbl_role_permissions rp 
+                    ON r.id = rp.role_id";
+
         if (!$includeDeleted) {
             $query .= " WHERE r.deleted_at IS NULL";
         }
-        
+
         $query .= " GROUP BY r.id ORDER BY r.created_at DESC";
-        
-        // FIXED: Use proper prepared statement pattern
+
         $result = $this->pdo->query($query);
         return $result->fetchAll(\PDO::FETCH_ASSOC);
     }

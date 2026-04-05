@@ -401,17 +401,18 @@ class ControllerRole
     private function formatRoleForResponse($role)
     {
         return [
-            'id' => $role['id'],
-            'uuid' => $role['uuid'],
-            'name' => $role['name'],
-            'slug' => $role['slug'] ?? $this->generateSlug($role['name']),
-            'description' => $role['description'] ?? '',
-            'status' => $role['status'],
-            'status_id' => $role['status_id'],
-            'user_count' => $role['user_count'] ?? 0,
-            'permissions' => $role['permissions'] ?? [],
-            'created_at' => $role['created_at'],
-            'updated_at' => $role['updated_at']
+            'id'               => $role['id'],
+            'uuid'             => $role['uuid'],
+            'name'             => $role['name'],
+            'slug'             => $role['slug'] ?? $this->generateSlug($role['name']),
+            'description'      => $role['description'] ?? '',
+            'status'           => $role['status'],
+            'status_id'        => $role['status_id'],
+            'user_count'       => $role['user_count'] ?? 0,
+            'permission_count' => $role['permission_count'] ?? 0,  // ✅ ADD THIS
+            'permissions'      => $role['permissions'] ?? [],
+            'created_at'       => $role['created_at'],
+            'updated_at'       => $role['updated_at'],
         ];
     }
 

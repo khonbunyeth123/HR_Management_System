@@ -598,15 +598,12 @@ async function openPermissionsModal(roleId, roleName) {
     openModal('permissionsModal');
 
     try {
-        // Fetch current role's assigned permissions
-        const res  = await fetch(`${API_BASE}/roles/${roleId}`);
-        const json = await res.json();
+        const res    = await fetch(`${API_BASE}/roles/${roleId}/permissions`);
+        const json   = await res.json();
         const detail = json.data?.data ?? json.data ?? json;
 
-        const assigned = (detail.permissions || []).map(p => {
-            if (typeof p === 'string') return p;
-            return p.permission_slug || p.slug || p.name || '';
-        });
+        // permissions is already a flat array of slug strings e.g. ["users.create", "roles.manage"]
+        const assigned = detail.permissions || [];
 
         buildPermGrid(assigned);
     } catch (err) {
@@ -707,10 +704,10 @@ async function submitPermissions() {
 
     setLoading('savePermBtn', true, 'Saving...');
     try {
-        const res  = await fetch(`${API_BASE}/roles/${permRoleId}`, {
-            method:  'PUT',
+        const res = await fetch(`${API_BASE}/roles/${permRoleId}/permissions`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body:    JSON.stringify({ permissions }),
+            body: JSON.stringify({ permissions }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.message || 'Failed to save permissions');
@@ -727,7 +724,6 @@ async function submitPermissions() {
         setLoading('savePermBtn', false, '<i class="fas fa-save"></i> Save Permissions');
     }
 }
-
 // ─── ACCEPT ───────────────────────────────────────────────
 function openAcceptModal(roleId, roleName) {
     document.getElementById('acceptRoleId').value         = roleId;
@@ -759,7 +755,6 @@ async function confirmAccept() {
         setLoading('acceptRoleBtn', false, '<i class="fas fa-check"></i> Accept');
     }
 }
-
 // ─── DELETE ───────────────────────────────────────────────
 function openDeleteModal(roleId, roleName) {
     document.getElementById('deleteRoleId').value         = roleId;

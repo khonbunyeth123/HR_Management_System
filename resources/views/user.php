@@ -11,7 +11,7 @@ $activeMenu = "users";
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
+    <!-- <style>
         * { font-family: 'DM Sans', sans-serif; }
 
         @keyframes slideUp {
@@ -64,7 +64,7 @@ $activeMenu = "users";
         .badge-inactive { background:#fee2e2; color:#b91c1c; }
 
         .modal-scroll { max-height: 70vh; overflow-y: auto; }
-    </style>
+    </style> -->
 </head>
 <body class="bg-gray-50 min-h-screen">
 
@@ -118,7 +118,8 @@ $activeMenu = "users";
             <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
             <input type="text" id="searchInput" placeholder="Search by name, username or email..."
                 class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                oninput="applyFilters()">
+                oninput="applyFilters()"
+                autocomplete="off">
         </div>
         <select id="filterStatus" onchange="applyFilters()"
             class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-w-max">
@@ -355,18 +356,21 @@ const API_BASE = (function() {
     return match ? match[1] + '/api' : '/api';
 })();
 
-// ─── STATE ────────────────────────────────────────────────
 let allUsers = [];
 let allRoles = [];
 
-// ─── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     loadRoles();
     loadUsers();
+
+    setTimeout(() => {
+        const s = document.getElementById('searchInput');
+        s.value = '';
+        applyFilters();
+    }, 200);
 });
 
-// ─── LOAD ROLES (for dropdowns) ───────────────────────────
-// GET /api/roles  — same endpoint, reuse what roles.php uses
+
 async function loadRoles() {
     try {
         const res  = await fetch(`${API_BASE}/roles`);
@@ -399,8 +403,6 @@ function populateRoleSelects(roles) {
     });
 }
 
-// ─── LOAD USERS ───────────────────────────────────────────
-// GET /api/users/show
 async function loadUsers() {
     try {
         const res  = await fetch(`${API_BASE}/users/show`);
@@ -418,7 +420,6 @@ async function loadUsers() {
     }
 }
 
-// ─── STATS ────────────────────────────────────────────────
 function updateStats() {
     const active   = allUsers.filter(u => parseInt(u.status_id) === 1).length;
     const inactive = allUsers.length - active;
@@ -427,7 +428,6 @@ function updateStats() {
     document.getElementById('statInactive').textContent = inactive;
 }
 
-// ─── FILTER & RENDER ──────────────────────────────────────
 function applyFilters() {
     const q      = document.getElementById('searchInput').value.toLowerCase();
     const status = document.getElementById('filterStatus').value;
@@ -492,7 +492,6 @@ function renderTable(users) {
     }).join('');
 }
 
-// ─── CREATE USER ──────────────────────────────────────────
 function openCreateModal() {
     document.getElementById('createFullName').value = '';
     document.getElementById('createUsername').value = '';
@@ -540,7 +539,6 @@ async function submitCreateUser() {
     }
 }
 
-// ─── EDIT USER ────────────────────────────────────────────
 function openEditModal(userId) {
     const user = allUsers.find(u => u.id === userId);
     if (!user) return;
@@ -597,7 +595,6 @@ async function submitEditUser() {
     }
 }
 
-// ─── DELETE USER ──────────────────────────────────────────
 function openDeleteModal(userId, userName) {
     document.getElementById('deleteUserId').value         = userId;
     document.getElementById('deleteUserName').textContent = userName;
@@ -628,19 +625,18 @@ async function confirmDeleteUser() {
     }
 }
 
-// ─── MODAL HELPERS ────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id) {
     document.getElementById(id).classList.add('hidden');
     document.getElementById(id).querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
     document.getElementById(id).querySelectorAll('.error-msg').forEach(el => el.classList.remove('show'));
 }
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape')
         document.querySelectorAll('.fixed[id$="Modal"]:not(.hidden)').forEach(m => closeModal(m.id));
 });
 
-// ─── UTILITIES ────────────────────────────────────────────
 function formatDate(str) {
     if (!str) return '<span class="text-gray-400">—</span>';
     try {
@@ -649,26 +645,31 @@ function formatDate(str) {
         return d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
     } catch { return '<span class="text-gray-400">—</span>'; }
 }
+
 function showFieldError(inputId, errId, msg) {
     document.getElementById(inputId).classList.add('field-error');
     const err = document.getElementById(errId);
     err.textContent = msg; err.classList.add('show');
 }
+
 function clearFieldError(input) {
     input.classList.remove('field-error');
     const err = input.parentElement.querySelector('.error-msg');
     if (err) err.classList.remove('show');
 }
+
 function setLoading(btnId, loading, html) {
     const btn = document.getElementById(btnId);
     btn.disabled  = loading;
     btn.innerHTML = loading ? `<span class="spinner"></span> ${html.replace(/(<([^>]+)>)/gi,'')}` : html;
 }
+
 function escHtml(str) {
     return String(str)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
 function showToast(message, type = 'success') {
     const icons = { success:'check-circle', error:'exclamation-circle', info:'info-circle' };
     const c = document.getElementById('toastContainer');

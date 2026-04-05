@@ -1,4 +1,4 @@
-   <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+  <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
     <div class="p-2">
         <!-- Header with Filters and Add Button -->
         <div class="bg-white rounded-lg shadow-sm p-4 mb-4">

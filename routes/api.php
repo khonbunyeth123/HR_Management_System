@@ -48,7 +48,7 @@ $router->get('/api/report/top-employees', 'ControllerReport@topEmployees');
 $router->get('/api/users',          'ControllerUser@show');
 $router->get('/api/users/show',     'ControllerUser@show');
 $router->post('/api/users/create',  'ControllerUser@create');
-$router->post('/api/users/update',  'ControllerUser@update');
+$router->post('/api/users/update', 'ControllerUser@update');
 $router->post('/api/users/delete',  'ControllerUser@delete');
 
 /* ================= ROLE ROUTES ================= */

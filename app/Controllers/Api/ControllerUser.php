@@ -134,27 +134,29 @@ class ControllerUser
         }
     }
 
-    public function update(int $id)
+    public function update()
     {
         try {
+            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+
+            $id = isset($input['id']) ? (int)$input['id'] : 0;
+
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
             }
 
-            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-
-            $full_name = isset($input['full_name']) ? trim($input['full_name']) : '';
-            $email = isset($input['email']) ? trim($input['email']) : '';
-            $role_id = isset($input['role_id']) ? trim($input['role_id']) : '';
-            $status_id = isset($input['status_id']) ? (int)$input['status_id'] : null;
+            $full_name  = isset($input['full_name'])  ? trim($input['full_name'])  : '';
+            $email      = isset($input['email'])       ? trim($input['email'])      : '';
+            $role_id    = isset($input['role_id'])     ? trim($input['role_id'])    : '';
+            $status_id  = isset($input['status_id'])   ? (int)$input['status_id']  : null;
 
             $updated_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
             $data = [
-                'full_name' => $full_name,
-                'email' => $email,
-                'role_id' => $role_id,
-                'status_id' => $status_id,
+                'full_name'  => $full_name,
+                'email'      => $email,
+                'role_id'    => $role_id,
+                'status_id'  => $status_id,
                 'updated_by' => $updated_by
             ];
 
@@ -174,14 +176,28 @@ class ControllerUser
             // Get raw input
             $rawInput = file_get_contents("php://input");
 
-            // Try to parse as form-data
-            parse_str($rawInput, $data);
+            // Try JSON first, fallback to form-urlencoded
+            $data = json_decode($rawInput, true);
+            if (empty($data)) {
+                parse_str($rawInput, $data);
+            }
 
-            $id = $data['id'] ?? ($_POST['id'] ?? null);
-            $id = (int)$id;
+            // Fallback to $_POST
+            if (empty($data)) {
+                $data = $_POST;
+            }
+
+            // Validate id exists before casting
+            if (empty($data['id'])) {
+                Response::validationError(['id' => 'User ID is required']);
+                return;
+            }
+
+            $id = (int)$data['id'];
 
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
+                return;
             }
 
             $deleted_by = $_SESSION['user_id'] ?? null;
