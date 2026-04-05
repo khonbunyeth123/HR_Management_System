@@ -316,11 +316,7 @@ class ControllerPermission
         }
     }
 
-    /**
-     * Bulk replace all permissions for a role
-     * POST /permissions/assign-multiple-to-role
-     * Body: { "role_id": 1, "permission_ids": [1, 2, 3] }
-     */
+   
     public function assignMultipleToRole()
     {
         try {
