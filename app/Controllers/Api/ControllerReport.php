@@ -3,7 +3,7 @@
 namespace App\Controllers\Api;
 
 use App\Services\ReportService;
-use App\Helpers\response;
+use App\Helpers\Response;
 
 class ControllerReport
 {
@@ -19,7 +19,7 @@ class ControllerReport
         $date = $_GET['date'] ?? null;
 
         if (!$date) {
-            response::json([
+            Response::json([
                 'success' => false,
                 'message' => 'Date is required'
             ], 400);
@@ -28,7 +28,7 @@ class ControllerReport
 
         $data = $this->service->getDailyList($date);
 
-        response::json([
+        Response::json([
             'success' => true,
             'data'    => $data
         ]);
@@ -41,7 +41,7 @@ class ControllerReport
         $dept = $_GET['department'] ?? null;
 
         if (!$from || !$to) {
-            response::json([
+            Response::json([
                 'success' => false,
                 'message' => 'From and To dates are required'
             ], 400);
@@ -50,7 +50,7 @@ class ControllerReport
 
         $data = $this->service->getSummary($from, $to, $dept);
 
-        response::json([
+        Response::json([
             'success' => true,
             'data' => $data
         ]);
@@ -65,7 +65,7 @@ class ControllerReport
         $status = $_GET['status']      ?? null;
 
         if (!$from || !$to) {
-            response::json([
+            Response::json([
                 'success' => false,
                 'message' => 'From and To dates are required'
             ], 400);
@@ -76,7 +76,7 @@ class ControllerReport
             $from, $to, $dept, $search, $status
         );
 
-        response::json([
+        Response::json([
             'success' => true,
             'data'    => $data
         ]);
@@ -88,14 +88,14 @@ class ControllerReport
         $to   = $_GET['to']   ?? null;
 
         if (!$from || !$to) {
-            response::json([
+            Response::json([
                 'success' => false,
                 'message' => 'From and To dates are required'
             ], 400);
             return;
         }
         $data = $this->service->getTopEmployees($from, $to);
-        response::json([
+        Response::json([
             'success' => true,
             'data'    => $data
         ]);
