@@ -5,6 +5,7 @@ namespace App\Controllers\Api;
 use App\Models\User;
 use App\Services\UserService;
 use App\Helpers\Response;
+use App\Helpers\PermissionHelper;
 
 class ControllerUser
 {
@@ -22,6 +23,11 @@ class ControllerUser
     public function show()
     {
         try {
+            if (!PermissionHelper::can('user', 'view')) {
+                Response::error('Forbidden', 403);
+            }
+            $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
+            $currentRank = PermissionHelper::getRoleRank();
             // Get pagination parameters
             $page = isset($_GET['paging_options']['page']) ? (int)$_GET['paging_options']['page'] : 1;
             $per_page = isset($_GET['paging_options']['per_page']) ? (int)$_GET['paging_options']['per_page'] : 18;
@@ -34,6 +40,16 @@ class ControllerUser
 
             // Call service
             $result = $this->userService->getAllUsers($page, $per_page, $filters, $sorts);
+
+            if (!empty($result['data']['users'])) {
+                $result['data']['users'] = array_values(array_filter($result['data']['users'], function ($u) use ($currentRank, $currentUserId) {
+                    $targetRank = PermissionHelper::getRoleRank((int) ($u['role_id'] ?? 0));
+                    if ($currentUserId && (int) $u['id'] === $currentUserId) {
+                        return false; // hide self
+                    }
+                    return $targetRank <= $currentRank; // hide higher roles
+                }));
+            }
 
             Response::paginated(
                 $result['data'],
@@ -56,12 +72,15 @@ class ControllerUser
     public function create()
     {
         try {
+            if (!PermissionHelper::can('user', 'create')) {
+                Response::error('Forbidden', 403);
+            }
             // Get POST data
             $full_name = isset($_POST['full_name']) ? trim($_POST['full_name']) : '';
             $username = isset($_POST['username']) ? trim($_POST['username']) : '';
             $email = isset($_POST['email']) ? trim($_POST['email']) : '';
             $password = isset($_POST['password']) ? $_POST['password'] : '';
-            $role = isset($_POST['role']) ? trim($_POST['role']) : '';
+            $role_id = $_POST['role_id'] ?? ($_POST['role'] ?? '');
             $status_id = isset($_POST['status_id']) ? (int)$_POST['status_id'] : 1;
 
             // Get current user ID (from session or auth)
@@ -88,8 +107,8 @@ class ControllerUser
                 $errors['password'] = 'Password must be at least 6 characters';
             }
 
-            if (empty($role)) {
-                $errors['role'] = 'Role is required';
+            if (empty($role_id)) {
+                $errors['role_id'] = 'Role is required';
             }
 
             if (!empty($errors)) {
@@ -102,7 +121,7 @@ class ControllerUser
                 $username,
                 $email,
                 $password,
-                $role,
+                $role_id,
                 $status_id,
                 $created_by
             );
@@ -122,6 +141,9 @@ class ControllerUser
     public function getUserById(int $id)
     {
         try {
+            if (!PermissionHelper::can('user', 'view')) {
+                Response::error('Forbidden', 403);
+            }
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
             }
@@ -147,8 +169,17 @@ class ControllerUser
     public function update(int $id)
     {
         try {
+            if (!PermissionHelper::can('user', 'update')) {
+                Response::error('Forbidden', 403);
+            }
+            $currentRank = PermissionHelper::getRoleRank();
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
+            }
+            $targetRoleId = $this->userService->getUserRoleId($id);
+            $targetRank = PermissionHelper::getRoleRank($targetRoleId);
+            if ($targetRank > $currentRank) {
+                Response::error('Forbidden: cannot modify higher role', 403);
             }
 
             // Parse JSON or form data
@@ -156,14 +187,22 @@ class ControllerUser
 
             $full_name = isset($input['full_name']) ? trim($input['full_name']) : '';
             $email = isset($input['email']) ? trim($input['email']) : '';
-            $role = isset($input['role']) ? trim($input['role']) : '';
+            $role_id = $input['role_id'] ?? ($input['role'] ?? null);
             $status_id = isset($input['status_id']) ? (int)$input['status_id'] : null;
 
             // Get current user ID (from session or auth)
             $updated_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
+            // Prevent non-admin from changing roles
+            if ($role_id !== null) {
+                $newRank = PermissionHelper::getRoleRank((int) $role_id);
+                if ($newRank > $currentRank) {
+                    Response::error('Forbidden: cannot assign higher role', 403);
+                }
+            }
+
             // Call service to update user
-            $user = $this->userService->updateUser($id, $full_name, $email, $role, $status_id, $updated_by);
+            $user = $this->userService->updateUser($id, $full_name, $email, $role_id, $status_id, $updated_by);
 
             Response::success($user, 'User updated successfully');
 
@@ -180,8 +219,17 @@ class ControllerUser
     public function delete(int $id)
     {
         try {
+            if (!PermissionHelper::can('user', 'delete')) {
+                Response::error('Forbidden', 403);
+            }
+            $currentRank = PermissionHelper::getRoleRank();
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
+            }
+            $targetRoleId = $this->userService->getUserRoleId($id);
+            $targetRank = PermissionHelper::getRoleRank($targetRoleId);
+            if ($targetRank > $currentRank) {
+                Response::error('Forbidden: cannot delete higher role', 403);
             }
 
             // Get current user ID (from session or auth)

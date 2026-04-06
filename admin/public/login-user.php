@@ -44,7 +44,20 @@ try {
     }
 
     // Query the database for the user
-    $query = "SELECT id, uuid, username, password, full_name, email, role, status_id FROM tbl_users WHERE email = :email AND deleted_at IS NULL LIMIT 1";
+    $query = "SELECT 
+                u.id,
+                u.uuid,
+                u.username,
+                u.password,
+                u.full_name,
+                u.email,
+                u.role_id,
+                r.name AS role_name,
+                u.status_id
+              FROM tbl_users u
+              LEFT JOIN tbl_roles r ON u.role_id = r.id
+              WHERE u.email = :email AND u.deleted_at IS NULL
+              LIMIT 1";
     $stmt = $cn->prepare($query);
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -66,6 +79,18 @@ try {
             'dpl' => false,
             'success' => false,
             'message' => 'Account is inactive. Please contact administrator.'
+        ]);
+        exit;
+    }
+
+    // Block Employee from logging in
+    $roleName = strtolower($user['role_name'] ?? '');
+    if ($roleName === 'employee') {
+        http_response_code(403);
+        echo json_encode([
+            'dpl' => false,
+            'success' => false,
+            'message' => 'Employee accounts are not allowed to log in.'
         ]);
         exit;
     }
@@ -99,7 +124,8 @@ try {
     $_SESSION['username'] = $user['username'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['email'] = $user['email'];
-    $_SESSION['role'] = $user['role'];
+    $_SESSION['role'] = $user['role_name'] ?? '';
+    $_SESSION['role_id'] = $user['role_id'] ?? null;
     $_SESSION['session_token'] = $session_token;
 
     // Set remember me cookie if requested
@@ -120,7 +146,8 @@ try {
             'username' => $user['username'],
             'full_name' => $user['full_name'],
             'email' => $user['email'],
-            'role' => $user['role']
+            'role' => $user['role_name'] ?? '',
+            'role_id' => $user['role_id'] ?? null
         ]
     ]);
     exit;

@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Services\ReportService;
 use App\Helpers\response;
+use App\Helpers\PermissionHelper;
 
 class ControllerReport
 {
@@ -16,6 +17,10 @@ class ControllerReport
 
     public function dailyList(): void
     {
+        if (!PermissionHelper::can('report', 'view_daily')) {
+            response::json(['success' => false, 'message' => 'Forbidden'], 403);
+            return;
+        }
         $date = $_GET['date'] ?? null;
 
         if (!$date) {
@@ -36,6 +41,10 @@ class ControllerReport
 
     public function summary(): void
     {
+        if (!PermissionHelper::can('report', 'view_summary')) {
+            response::json(['success' => false, 'message' => 'Forbidden'], 403);
+            return;
+        }
         $from = $_GET['from'] ?? null;
         $to   = $_GET['to'] ?? null;
         $dept = $_GET['department'] ?? null;
@@ -58,6 +67,10 @@ class ControllerReport
 
     public function detailedList(): void
     {
+        if (!PermissionHelper::can('report', 'view_detail')) {
+            response::json(['success' => false, 'message' => 'Forbidden'], 403);
+            return;
+        }
         $from   = $_GET['from']        ?? null;
         $to     = $_GET['to']          ?? null;
         $dept   = $_GET['department']  ?? null;
@@ -84,6 +97,10 @@ class ControllerReport
 
     public function topEmployees(): void
     {
+        if (!PermissionHelper::can('report', 'view_top')) {
+            response::json(['success' => false, 'message' => 'Forbidden'], 403);
+            return;
+        }
         $from = $_GET['from'] ?? null;
         $to   = $_GET['to']   ?? null;
 

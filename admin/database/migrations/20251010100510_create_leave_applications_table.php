@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class CreateTblLeaveApplicationsTable extends AbstractMigration
+final class CreateLeaveApplicationsTable extends AbstractMigration
 {
     public function up(): void
     {

@@ -2,8 +2,8 @@
 
 return [
     'paths' => [
-        'migrations' => __DIR__ . '/action/db/migrations',
-        'seeds' => __DIR__ . '/action/db/seeds',
+        'migrations' => __DIR__ . '/database/migrations',
+        'seeds' => __DIR__ . '/database/seeds',
     ],
     'environments' => [
         'default_migration_table' => 'phinxlog',

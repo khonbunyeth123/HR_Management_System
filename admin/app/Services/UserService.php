@@ -39,6 +39,11 @@ class UserService
                     $where_clause .= " AND status_id = ?";
                     $params[] = $status_id;
                 }
+                if (isset($filter['property']) && $filter['property'] === 'role_id') {
+                    $role_id = (int)$filter['value'];
+                    $where_clause .= " AND role_id = ?";
+                    $params[] = $role_id;
+                }
             }
         }
 
@@ -49,7 +54,7 @@ class UserService
         if (!empty($sorts)) {
             foreach ($sorts as $sort) {
                 if (isset($sort['property'])) {
-                    $allowed_sorts = ['id', 'uuid', 'username', 'full_name', 'email', 'role', 'status_id', 'created_at', 'updated_at'];
+                    $allowed_sorts = ['id', 'uuid', 'username', 'full_name', 'email', 'role_id', 'status_id', 'created_at', 'updated_at'];
                     if (in_array($sort['property'], $allowed_sorts)) {
                         $sort_property = $sort['property'];
                     }
@@ -68,10 +73,21 @@ class UserService
         $total = (int)($countResult['total'] ?? 0);
 
         // Get paginated data
-        $query = "SELECT id, uuid, username, full_name, email, role, status_id, created_at, updated_at 
-                  FROM tbl_users 
-                  $where_clause 
-                  ORDER BY $sort_property $sort_direction 
+        $query = "SELECT 
+                    u.id,
+                    u.uuid,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    u.role_id,
+                    r.name AS role_name,
+                    u.status_id,
+                    u.created_at,
+                    u.updated_at
+                  FROM tbl_users u
+                  LEFT JOIN tbl_roles r ON u.role_id = r.id
+                  $where_clause
+                  ORDER BY u.$sort_property $sort_direction
                   LIMIT $offset, $per_page";
 
         $stmt = $this->pdo->prepare($query);
@@ -92,7 +108,7 @@ class UserService
     /**
      * Create a new user
      */
-    public function createUser(string $full_name, string $username, string $email, string $password, string $role, int $status_id = 1, $created_by = null)
+    public function createUser(string $full_name, string $username, string $email, string $password, $role_id, int $status_id = 1, $created_by = null)
     {
         // Check if username already exists
         $checkUsername = "SELECT id FROM tbl_users WHERE username = ? AND deleted_at IS NULL";
@@ -116,19 +132,21 @@ class UserService
         // Hash password
         $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
+        $role_id = $this->normalizeRoleId($role_id);
+
         // Insert user
-        $query = "INSERT INTO tbl_users (uuid, username, password, full_name, email, role, status_id, created_at, created_by) 
+        $query = "INSERT INTO tbl_users (uuid, username, password, full_name, email, role_id, status_id, created_at, created_by)
                   VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
 
         $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$uuid, $username, $hashed_password, $full_name, $email, $role, $status_id, $created_by]);
+        $stmt->execute([$uuid, $username, $hashed_password, $full_name, $email, $role_id, $status_id, $created_by]);
 
         return [
             'uuid' => $uuid,
             'username' => $username,
             'full_name' => $full_name,
             'email' => $email,
-            'role' => $role,
+            'role_id' => $role_id,
             'status_id' => $status_id
         ];
     }
@@ -138,8 +156,21 @@ class UserService
      */
     public function getUserById(int $id)
     {
-        $query = "SELECT id, uuid, username, full_name, email, role, status_id, created_at, updated_at 
-                  FROM tbl_users WHERE id = ? AND deleted_at IS NULL LIMIT 1";
+        $query = "SELECT 
+                    u.id,
+                    u.uuid,
+                    u.username,
+                    u.full_name,
+                    u.email,
+                    u.role_id,
+                    r.name AS role_name,
+                    u.status_id,
+                    u.created_at,
+                    u.updated_at
+                  FROM tbl_users u
+                  LEFT JOIN tbl_roles r ON u.role_id = r.id
+                  WHERE u.id = ? AND u.deleted_at IS NULL
+                  LIMIT 1";
 
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$id]);
@@ -148,10 +179,18 @@ class UserService
         return $result ?: null;
     }
 
+    public function getUserRoleId(int $id): ?int
+    {
+        $stmt = $this->pdo->prepare("SELECT role_id FROM tbl_users WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row && isset($row['role_id']) ? (int) $row['role_id'] : null;
+    }
+
     /**
      * Update user
      */
-    public function updateUser(int $id, string $full_name = '', string $email = '', string $role = '', $status_id = null, $updated_by = null)
+    public function updateUser(int $id, string $full_name = '', string $email = '', $role_id = null, $status_id = null, $updated_by = null)
     {
         $updates = [];
         $params = [];
@@ -173,9 +212,10 @@ class UserService
             $params[] = $email;
         }
 
-        if (!empty($role)) {
-            $updates[] = "role = ?";
-            $params[] = $role;
+        if (!empty($role_id)) {
+            $normalized_role_id = $this->normalizeRoleId($role_id);
+            $updates[] = "role_id = ?";
+            $params[] = $normalized_role_id;
         }
 
         if ($status_id !== null) {
@@ -225,5 +265,22 @@ class UserService
     private function generateUUID()
     {
         return bin2hex(random_bytes(18));
+    }
+
+    private function normalizeRoleId($role_id): ?int
+    {
+        if (is_numeric($role_id)) {
+            return (int) $role_id;
+        }
+
+        if (is_string($role_id) && $role_id !== '') {
+            $query = "SELECT id FROM tbl_roles WHERE LOWER(name) = LOWER(?) LIMIT 1";
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([$role_id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ? (int) $row['id'] : null;
+        }
+
+        return null;
     }
 }

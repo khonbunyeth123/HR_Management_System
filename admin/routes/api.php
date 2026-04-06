@@ -63,6 +63,34 @@ $router->get('/users/{id}', 'ControllerUser@getUserById');
 $router->put('/users/{id}', 'ControllerUser@update');
 $router->delete('/users/{id}', 'ControllerUser@delete');
 
+/* ================= ROLE ROUTES ================= */
+
+$router->get('/roles',               'ControllerRole@index');
+$router->post('/roles',              'ControllerRole@store');
+$router->get('/roles/stats',         'ControllerRole@stats');
+$router->get('/roles/search',        'ControllerRole@search');
+$router->get('/roles/{id}',          'ControllerRole@show');
+$router->put('/roles/{id}',          'ControllerRole@update');
+$router->delete('/roles/{id}',       'ControllerRole@destroy');
+$router->patch('/roles/{id}/status', 'ControllerRole@updateStatus');
+$router->get('/roles/{id}/permissions',  'ControllerRole@rolePermissions');
+$router->post('/roles/{id}/permissions', 'ControllerRole@updateRolePermissions');
+
+/* ================= PERMISSION ROUTES ================= */
+
+$router->get('/permissions',            'ControllerPermission@index');
+$router->post('/permissions',           'ControllerPermission@create');
+$router->get('/permissions/list',       'ControllerPermission@index');
+$router->get('/permissions/grouped',    'ControllerPermission@getByCategory');
+$router->get('/permissions/categories', 'ControllerPermission@getCategories');
+$router->get('/permissions/role/{roleId}',                'ControllerPermission@getPermissionsByRole');
+$router->post('/permissions/assign-to-role',              'ControllerPermission@assignToRole');
+$router->post('/permissions/remove-from-role',            'ControllerPermission@removeFromRole');
+$router->post('/permissions/assign-multiple-to-role',     'ControllerPermission@assignMultipleToRole');
+$router->get('/permissions/{id}',       'ControllerPermission@getById');
+$router->put('/permissions/{id}',       'ControllerPermission@update');
+$router->delete('/permissions/{id}',    'ControllerPermission@delete');
+
 /* ================= DISPATCH REQUEST ================= */
 
 // This will execute the matched route or return 404

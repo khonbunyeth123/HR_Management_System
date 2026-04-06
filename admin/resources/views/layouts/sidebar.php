@@ -4,6 +4,32 @@
 
       <?php
         $current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
+        require_once __DIR__ . '/../../../app/Helpers/PermissionHelper.php';
+        use App\Helpers\PermissionHelper;
+
+        $pagePermissionMap = [
+          'dashboard' => ['dashboard', 'view'],
+          'attendance' => ['attendance', 'view'],
+          'employee' => ['employee', 'view'],
+          'leave' => ['leave', 'view'],
+          'audits' => ['audits', 'view'],
+          'report' => ['report', 'view'],
+          'report/report_daily' => ['report', 'view_daily'],
+          'report/report_summary' => ['report', 'view_summary'],
+          'report/report_detail' => ['report', 'view_detail'],
+          'report/report_top_employee' => ['report', 'view_top'],
+          'user' => ['user', 'view'],
+          'roles' => ['roles', 'view'],
+          'permissions' => ['permissions', 'view'],
+        ];
+
+        $canAccess = function (string $page) use ($pagePermissionMap): bool {
+          if (!isset($pagePermissionMap[$page])) {
+            return true;
+          }
+          [$mod, $act] = $pagePermissionMap[$page];
+          return PermissionHelper::can($mod, $act);
+        };
 
 $menu_items = [
 
@@ -43,6 +69,18 @@ $menu_items = [
 ];
 
         foreach ($menu_items as $item):
+        if (isset($item['submenu'])) {
+          $item['submenu'] = array_values(array_filter($item['submenu'], function ($sub) use ($canAccess) {
+            return $canAccess($sub['page']);
+          }));
+          if (count($item['submenu']) === 0) {
+            continue;
+          }
+        } else {
+          if (!$canAccess($item['page'])) {
+            continue;
+          }
+        }
         // Detect active submenu
         $has_active_submenu = false;
         if (isset($item['submenu'])) {
@@ -78,6 +116,7 @@ $menu_items = [
           ?>
           <li>
             <a href="?page=<?= strtolower($sub['page']) ?>"
+              data-page="<?= strtolower($sub['page']) ?>"
               class="no-underline flex items-center gap-2 py-2.5 px-3 rounded-lg text-sm
                       <?= $is_sub_active
                           ? 'bg-slate-700 text-white font-semibold'
@@ -91,6 +130,7 @@ $menu_items = [
         </ul>
         <?php else: ?>
         <a href="?page=<?= strtolower($item['page']) ?>"
+          data-page="<?= strtolower($item['page']) ?>"
           class="no-underline flex items-center gap-3 px-4 py-3 rounded-xl
                 text-sm font-semibold text-slate-200
                 hover:bg-slate-700/40 transition">

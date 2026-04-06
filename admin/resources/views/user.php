@@ -147,17 +147,13 @@
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <!-- Role -->
                     <div>
-                        <label for="role" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <label for="role_id" class="block text-sm font-semibold text-gray-700 mb-2">
                             Role
                             <span class="text-red-500">*</span>
                         </label>
-                        <select id="role" name="role" required
+                        <select id="role_id" name="role_id" required
                             class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white cursor-pointer transition-colors">
                             <option value="">Select a role</option>
-                            <option value="admin">Admin</option>
-                            <option value="manager">Manager</option>
-                            <option value="user">User</option>
-                            <option value="guest">Guest</option>
                         </select>
                     </div>
 
@@ -233,7 +229,7 @@
         const username = document.getElementById("username").value.trim();
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
-        const role = document.getElementById("role").value;
+        const roleId = document.getElementById("role_id").value;
         const status = document.getElementById("status").value;
 
         // Validation
@@ -257,7 +253,7 @@
             showFormError("Password must be at least 6 characters");
             return;
         }
-        if (!role) {
+        if (!roleId) {
             showFormError("Role is required");
             return;
         }
@@ -276,7 +272,7 @@
         formData.append("username", username);
         formData.append("email", email);
         formData.append("password", password);
-        formData.append("role", role);
+        formData.append("role_id", roleId);
         formData.append("status_id", status);
 
         fetch("api/users/create", {
@@ -361,7 +357,7 @@
         <td class="px-4 py-3 text-gray-600 text-xs font-mono">@${user.username}</td>
         <td class="px-4 py-3 text-gray-700">${user.email}</td>
         <td class="px-4 py-3">
-          <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">${user.role}</span>
+          <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">${user.role_name || '—'}</span>
         </td>
         <td class="px-4 py-3 text-gray-600 text-xs">${new Date(user.created_at).toLocaleDateString('en-US', {
             month: 'short', day: 'numeric', year: 'numeric'
@@ -461,6 +457,29 @@
         }
     });
 
+    function loadRoles() {
+        fetch("api/roles")
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success || !Array.isArray(result.data)) return;
+                const select = document.getElementById("role_id");
+                select.innerHTML = '<option value="">Select a role</option>';
+                const myRole = (window.__currentRoleName || '').toLowerCase();
+                const rank = (name) => name === 'admin' ? 3 : name === 'manager' ? 2 : name === 'employee' ? 1 : 0;
+                const myRank = rank(myRole);
+                result.data.forEach(r => {
+                    const rRank = rank((r.name || '').toLowerCase());
+                    if (rRank > myRank) return;
+                    const opt = document.createElement("option");
+                    opt.value = r.id;
+                    opt.textContent = r.name;
+                    select.appendChild(opt);
+                });
+            })
+            .catch(err => console.error("Error loading roles:", err));
+    }
+
     // Load users on page load
+    loadRoles();
     loadUsers(1);
 </script>

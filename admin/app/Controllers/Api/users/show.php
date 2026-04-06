@@ -43,16 +43,18 @@ $total = $stmtCount->get_result()->fetch_assoc()['total'] ?? 0;
 // --- Fetch data ---
 $sql = "
     SELECT 
-        id,
-        uuid,
-        username,
-        full_name,
-        email,
-        role,
-        status_id,
-        created_at,
-        updated_at
-    FROM tbl_users
+        u.id,
+        u.uuid,
+        u.username,
+        u.full_name,
+        u.email,
+        u.role_id,
+        r.name AS role_name,
+        u.status_id,
+        u.created_at,
+        u.updated_at
+    FROM tbl_users u
+    LEFT JOIN tbl_roles r ON u.role_id = r.id
     WHERE deleted_at IS NULL AND $whereSQL
     $orderSQL
     LIMIT ? OFFSET ?

@@ -35,6 +35,9 @@ class ControllerUser
 
         } catch (\Exception $e) {
             error_log("ControllerUser show error: " . $e->getMessage());
+            if ((int) $e->getCode() === 403) {
+                Response::error($e->getMessage(), 403);
+            }
             Response::serverError('Error fetching users', ['exception' => $e->getMessage()]);
         }
     }
@@ -107,7 +110,8 @@ class ControllerUser
             echo json_encode(['success' => true, 'message' => 'User created successfully', 'data' => $user]);
 
         } catch (\Exception $e) {
-            http_response_code(400);
+            $code = (int) $e->getCode() ?: 400;
+            http_response_code($code);
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -130,6 +134,9 @@ class ControllerUser
 
         } catch (\Exception $e) {
             error_log("ControllerUser getUserById error: " . $e->getMessage());
+            if ((int) $e->getCode() === 403) {
+                Response::error($e->getMessage(), 403);
+            }
             Response::serverError('Error fetching user', ['exception' => $e->getMessage()]);
         }
     }
@@ -166,7 +173,8 @@ class ControllerUser
 
         } catch (\Exception $e) {
             error_log("ControllerUser update error: " . $e->getMessage());
-            Response::error($e->getMessage(), 400);
+            $code = (int) $e->getCode() ?: 400;
+            Response::error($e->getMessage(), $code);
         }
     }
 
@@ -208,7 +216,8 @@ class ControllerUser
 
         } catch (\Exception $e) {
             error_log("ControllerUser delete error: " . $e->getMessage());
-            Response::error($e->getMessage(), 400);
+            $code = (int) $e->getCode() ?: 400;
+            Response::error($e->getMessage(), $code);
         }
     }
 }

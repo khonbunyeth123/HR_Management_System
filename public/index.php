@@ -54,6 +54,21 @@ if ($isLoggedIn && $page === 'login') {
 $baseDir = __DIR__;
 $layoutDir = $baseDir . '/../resources/views/layouts';
 $viewDir = $baseDir . '/../resources/views';
+$pageFile = $viewDir . '/' . $page . '.php';
+$isAjax = isset($_GET['ajax']) && $_GET['ajax'] == '1';
+
+if ($isAjax) {
+    if (!$isLoggedIn && in_array($page, $protectedPages)) {
+        http_response_code(401);
+        exit;
+    }
+    if (file_exists($pageFile)) {
+        include $pageFile;
+    } else {
+        echo '<div class="text-center text-gray-500 mt-10"><h1>Page not found</h1></div>';
+    }
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -89,10 +104,8 @@ $viewDir = $baseDir . '/../resources/views';
                 }
                 ?>
 
-                <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+                <div style="flex: 1; overflow-y: auto; overflow-x: hidden;" id="content">
                     <?php
-                    $pageFile = $viewDir . '/' . $page . '.php';
-
                     if (file_exists($pageFile)) {
                         include $pageFile;
                     } else {

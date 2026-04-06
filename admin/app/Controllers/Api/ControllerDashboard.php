@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Dashboard;
+use App\Helpers\PermissionHelper;
 
 class ControllerDashboard
 {
@@ -48,6 +49,9 @@ class ControllerDashboard
     public function summary(): void
     {
         try {
+            if (!PermissionHelper::can('dashboard', 'view')) {
+                $this->sendJsonError('Forbidden', 403);
+            }
             $stats = $this->dashboardModel->getSummaryStats();
 
             error_log("Dashboard summary: " . json_encode($stats));
@@ -70,6 +74,9 @@ class ControllerDashboard
     public function department(): void
     {
         try {
+            if (!PermissionHelper::can('dashboard', 'view')) {
+                $this->sendJsonError('Forbidden', 403);
+            }
             $departments = $this->dashboardModel->departmentStats();
 
             error_log("Department stats: " . json_encode($departments));
@@ -93,6 +100,9 @@ class ControllerDashboard
     public function recentLeaves(): void
     {
         try {
+            if (!PermissionHelper::can('dashboard', 'view')) {
+                $this->sendJsonError('Forbidden', 403);
+            }
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
             $leaves = $this->dashboardModel->recentLeaves($limit);
 

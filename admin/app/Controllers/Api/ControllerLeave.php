@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace App\Controllers\Api;
 use App\Services\LeaveService;
+use App\Helpers\PermissionHelper;
 
 class ControllerLeave
 {
@@ -15,6 +16,11 @@ class ControllerLeave
 
     public function index(): void
     {
+        if (!PermissionHelper::can('leave', 'view')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            return;
+        }
         $page    = (int)($_GET['paging_options']['page'] ?? 1);
         $perPage = (int)($_GET['paging_options']['per_page'] ?? 5);
 
@@ -45,6 +51,11 @@ class ControllerLeave
     //create
     public function create(): void
     {
+        if (!PermissionHelper::can('leave', 'view')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            return;
+        }
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: POST');
@@ -72,6 +83,11 @@ class ControllerLeave
     //approve
          public function approve(): void
     {
+        if (!PermissionHelper::can('leave', 'view')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            return;
+        }
 
         $input = json_decode(file_get_contents('php://input'), true);
         $uuid = $input['uuid'] ?? '';
@@ -104,6 +120,11 @@ class ControllerLeave
     //reject
     public function reject(): void
 {
+    if (!PermissionHelper::can('leave', 'view')) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Forbidden']);
+        return;
+    }
     $input = json_decode(file_get_contents('php://input'), true);
 
     $uuid   = $input['uuid'] ?? '';

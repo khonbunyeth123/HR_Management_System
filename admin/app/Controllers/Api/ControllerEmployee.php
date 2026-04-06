@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Services\EmployeeService;
+use App\Helpers\PermissionHelper;
 
 class ControllerEmployee
 {
@@ -41,13 +42,24 @@ class ControllerEmployee
     // List all employees
     public function index(): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $employees = $this->service->list();
+        $currentRank = PermissionHelper::getRoleRank();
+        $employees = array_values(array_filter($employees, function ($e) use ($currentRank) {
+            $targetRank = PermissionHelper::getRoleRank((int) ($e['role_id'] ?? 0));
+            return $targetRank <= $currentRank;
+        }));
         $this->jsonSuccess($employees);
     }
 
     // Show single employee by ID
     public function show(int $id): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $employee = $this->service->show($id);
         if (!$employee) {
             $this->jsonError("Employee not found", 404);
@@ -58,6 +70,9 @@ class ControllerEmployee
     // Create employee
     public function store(): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $payload = json_decode(file_get_contents('php://input'), true);
         if (!$payload) $this->jsonError('Invalid JSON payload', 400);
 
@@ -68,6 +83,9 @@ class ControllerEmployee
     // Update employee
     public function update(int $id): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $payload = json_decode(file_get_contents('php://input'), true);
         if (!$payload) {
             $this->jsonError('Invalid JSON payload', 400);
@@ -80,6 +98,9 @@ class ControllerEmployee
      //Delate employee
     public function delete(int $id): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $this->service->delete($id, $this->authUserId());
         $this->jsonSuccess(null, 'Employee deleted');
     }
@@ -97,6 +118,9 @@ class ControllerEmployee
     // Delete employee
     public function destroy(): void
     {
+        if (!PermissionHelper::can('employee', 'view')) {
+            $this->jsonError('Forbidden', 403);
+        }
         $payload = json_decode(file_get_contents('php://input'), true);
         if (!$payload || !isset($payload['id'])) {
             $this->jsonError('Missing employee ID', 400);

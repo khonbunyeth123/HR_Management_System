@@ -182,9 +182,15 @@ class User
                 $where .= " AND status_id = ?";
                 $params[] = $filters['status_id'];
             }
-            if (isset($filters['role'])) {
-                $where .= " AND role = ?";
-                $params[] = $filters['role'];
+            if (isset($filters['role_id'])) {
+                $where .= " AND role_id = ?";
+                $params[] = $filters['role_id'];
+            } elseif (isset($filters['role'])) {
+                $roleId = $this->getRoleIdByName($filters['role']);
+                if ($roleId !== null) {
+                    $where .= " AND role_id = ?";
+                    $params[] = $roleId;
+                }
             }
             if (isset($filters['search'])) {
                 $where .= " AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?)";
@@ -224,10 +230,23 @@ class User
      */
     public function getByRole(string $role)
     {
-        $query = "SELECT * FROM {$this->table} WHERE role = ? AND deleted_at IS NULL ORDER BY created_at DESC";
+        $query = "SELECT u.* 
+                  FROM {$this->table} u
+                  LEFT JOIN tbl_roles r ON u.role_id = r.id
+                  WHERE LOWER(r.name) = LOWER(?)
+                    AND u.deleted_at IS NULL
+                  ORDER BY u.created_at DESC";
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$role]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function getRoleIdByName(string $role): ?int
+    {
+        $stmt = $this->pdo->prepare("SELECT id FROM tbl_roles WHERE LOWER(name) = LOWER(?) LIMIT 1");
+        $stmt->execute([$role]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row && isset($row['id']) ? (int) $row['id'] : null;
     }
 
     /**

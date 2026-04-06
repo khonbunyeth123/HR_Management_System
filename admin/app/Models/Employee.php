@@ -19,7 +19,10 @@ class Employee
     public function getAll(): array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM {$this->table}
+            SELECT e.*, u.role_id, r.name AS role_name
+            FROM {$this->table} e
+            LEFT JOIN tbl_users u ON e.user_id = u.id
+            LEFT JOIN tbl_roles r ON u.role_id = r.id
             WHERE deleted_at IS NULL
             ORDER BY id DESC
         ");

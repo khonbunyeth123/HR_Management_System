@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Attendance;
+use App\Helpers\PermissionHelper;
 
 class ControllerAttendance
 {
@@ -37,6 +38,13 @@ class ControllerAttendance
     public function show(): void
     {
         try {
+            if (!PermissionHelper::can('attendance', 'view')) {
+                $this->sendJson([
+                    'success' => false,
+                    'message' => 'Forbidden'
+                ], 403);
+                return;
+            }
             // Pagination
             $page = isset($_GET['paging_options']['page']) ? (int)$_GET['paging_options']['page'] : 1;
             $perPage = isset($_GET['paging_options']['per_page']) ? (int)$_GET['paging_options']['per_page'] : 18;

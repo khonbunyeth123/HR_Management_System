@@ -26,7 +26,7 @@ $isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
 $page           = $_GET['page'] ?? 'dashboard';
 
 // If not logged in and trying to access protected pages, redirect to login
-$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
+$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user', 'roles', 'permissions'];
 
 if (!$isLoggedIn && in_array($page, $protectedPages)) {
     header('Location: /login.php');
@@ -43,6 +43,51 @@ if ($isLoggedIn && $page === 'login') {
 $baseDir = __DIR__;
 $layoutDir = $baseDir . '/../resources/views/layouts';
 $viewDir = $baseDir . '/../resources/views';
+$pageFile = $viewDir . '/' . $page . '.php';
+$isAjax = isset($_GET['ajax']) && $_GET['ajax'] == '1';
+require_once __DIR__ . '/../app/Helpers/PermissionHelper.php';
+use App\Helpers\PermissionHelper;
+
+$pagePermissionMap = [
+    'dashboard' => ['dashboard', 'view'],
+    'attendance' => ['attendance', 'view'],
+    'employee' => ['employee', 'view'],
+    'leave' => ['leave', 'view'],
+    'audits' => ['audits', 'view'],
+    'report' => ['report', 'view'],
+    'report/report_daily' => ['report', 'view_daily'],
+    'report/report_summary' => ['report', 'view_summary'],
+    'report/report_detail' => ['report', 'view_detail'],
+    'report/report_top_employee' => ['report', 'view_top'],
+    'user' => ['user', 'view'],
+    'roles' => ['roles', 'view'],
+    'permissions' => ['permissions', 'view'],
+];
+
+if (isset($pagePermissionMap[$page])) {
+    [$mod, $act] = $pagePermissionMap[$page];
+    if (!PermissionHelper::can($mod, $act)) {
+        if ($isAjax) {
+            http_response_code(403);
+            exit;
+        }
+        echo '<div class="text-center text-gray-500 mt-10"><h1>Permission denied</h1></div>';
+        exit;
+    }
+}
+
+if ($isAjax) {
+    if (!$isLoggedIn && in_array($page, $protectedPages)) {
+        http_response_code(401);
+        exit;
+    }
+    if (file_exists($pageFile)) {
+        include $pageFile;
+    } else {
+        echo '<div class="text-center text-gray-500 mt-10"><h1>Page not found</h1></div>';
+    }
+    exit;
+}
 
 ?>
 <!DOCTYPE html>
@@ -62,6 +107,9 @@ $viewDir = $baseDir . '/../resources/views';
 <body class="bg-gray-100">
 
 <?php if ($isLoggedIn): ?>
+    <script>
+        window.__currentRoleName = <?= json_encode($_SESSION['role'] ?? '') ?>;
+    </script>
     <!-- Logged In Layout -->
     <div class="flex flex-col min-h-screen">
         <!-- Navbar (Full Width) -->
@@ -85,11 +133,9 @@ $viewDir = $baseDir . '/../resources/views';
                 ?>
                 
                 <!-- Page Content -->
-                <div class="flex-1 overflow-y-auto">
+                <div class="flex-1 overflow-y-auto" id="content">
                     <?php
                     // Load the appropriate page
-                    $pageFile = $viewDir . '/' . $page . '.php';
-                    
                     if (file_exists($pageFile)) {
                         include $pageFile;
                     } else {

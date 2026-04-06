@@ -17,7 +17,7 @@ class UserService
     private function checkPermission(string $module, string $action)
     {
         if (!FormPermissionHelper::can($module, $action)) {
-            throw new \Exception("You do not have permission to $action $module");
+            throw new \Exception("You do not have permission to $action $module", 403);
         }
         error_log("DEBUG: Checking permission $action $module - bypassed for testing");
     }
