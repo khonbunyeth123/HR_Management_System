@@ -19,7 +19,6 @@ class UserService
         if (!FormPermissionHelper::can($module, $action)) {
             throw new \Exception("You do not have permission to $action $module");
         }
-        error_log("DEBUG: Checking permission $action $module - bypassed for testing");
     }
 
     public function getAllUsers(int $page = 1, int $per_page = 18, array $filters = [], array $sorts = [])

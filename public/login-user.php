@@ -1,5 +1,6 @@
 <?php
 session_start();
+
 // Load .env file
 require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
@@ -35,9 +36,13 @@ try {
 
     // Get database connection
     $db = \App\Core\Database::getInstance();
-    
-    // Query user by email
-    $query = "SELECT id, uuid, username, full_name, email, password, role_id, status_id FROM tbl_users WHERE email = ? LIMIT 1";
+
+    // Query user by email (include role name for RBAC)
+    $query = "SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.password, u.role_id, u.status_id, r.name AS role_name
+              FROM tbl_users u
+              LEFT JOIN tbl_roles r ON r.id = u.role_id
+              WHERE u.email = ?
+              LIMIT 1";
     $result = $db->query($query, [$email]);
 
     if (empty($result)) {
@@ -47,7 +52,7 @@ try {
     $user = $result[0];
 
     // Check if user is active
-    if ($user['status_id'] != 1) {
+    if ((int)$user['status_id'] !== 1) {
         jsonResponse(false, 'Your account has been disabled', [], 403);
     }
 
@@ -55,6 +60,9 @@ try {
     if (!password_verify($password, $user['password'])) {
         jsonResponse(false, 'Invalid email or password', [], 401);
     }
+
+    // Prevent session fixation
+    session_regenerate_id(true);
 
     // Set session variables
     $_SESSION['login'] = true;
@@ -64,6 +72,22 @@ try {
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['email'] = $user['email'];
     $_SESSION['role_id'] = (int)$user['role_id'];
+    $_SESSION['role'] = $user['role_name'] ?? '';
+
+    // Load permission slugs into session cache (module.action)
+    $permQuery = "SELECT CONCAT(p.module, '.', p.action) AS permission_slug
+                  FROM tbl_role_permissions rp
+                  INNER JOIN tbl_permissions p ON p.id = rp.permission_id
+                  WHERE rp.role_id = ?
+                    AND p.status_id = 1
+                    AND p.deleted_at IS NULL";
+    $permRows = $db->query($permQuery, [(int)$user['role_id']]);
+
+    $permissions = array_map(
+        static fn(array $row): string => strtolower((string)$row['permission_slug']),
+        $permRows
+    );
+    $_SESSION['permissions'] = array_values(array_unique($permissions));
 
     // Update last login
     $updateQuery = "UPDATE tbl_users SET login_session = ?, updated_at = NOW() WHERE id = ?";
@@ -79,7 +103,8 @@ try {
     jsonResponse(true, 'Login successful', [
         'user_id' => $user['id'],
         'username' => $user['username'],
-        'email' => $user['email']
+        'email' => $user['email'],
+        'role' => $user['role_name'] ?? null,
     ], 200);
 
 } catch (\Exception $e) {

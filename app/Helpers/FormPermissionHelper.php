@@ -9,6 +9,11 @@ class FormPermissionHelper
         $userId = self::getUserId();
         if (!$userId) return false;
 
+        // FIX: If you are Admin, skip the DB check and allow access
+        if (self::isAdmin()) {
+            return true;
+        }
+
         $db = Database::getInstance()->getConnection();
         
         $query = "

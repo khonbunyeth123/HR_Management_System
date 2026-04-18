@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Attendance;
+use Ramsey\Uuid\Uuid;
+
+class AttendanceService
+{
+    private Attendance $model;
+
+    public function __construct()
+    {
+        $this->model = new Attendance(); // Initialize the Attendance model
+    }
+
+    public function getPaginatedRecords(int $page, int $perPage, array $filters): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $statusId = null;
+        foreach ($filters as $filter) {
+            if ($filter['field'] === 'status_id') {
+                $statusId = $filter['value'];
+            }
+        }
+        $records = $this->model->getList($perPage, $offset, $statusId);
+        $total = $this->model->countAll($statusId);
+
+        return [
+            'records' => $records,
+            'total' => $total
+        ];
+    }
+
+
+     public function scan(int $employeeId): array
+    {
+        $date = date('Y-m-d');
+        $time = date('H:i:s');
+
+        $count = $this->model->getTodayScanCount($employeeId, $date);
+
+        if ($count >= 4) {
+            return ['error' => 'Already completed today'];
+        }
+
+        $nextCheckType = $count + 1;
+
+        if ($this->model->existsScan($employeeId, $date, $nextCheckType)) {
+            return ['error' => 'Already scanned'];
+        }
+
+        $checkType = $this->model->getCheckType($nextCheckType);
+
+        if (!$checkType) {
+            return ['error' => 'Invalid check type'];
+        }
+        $this->model->insertScan([
+            'uuid' => Uuid::uuid4()->toString(),
+            'employee_id' => $employeeId,
+            'date' => $date,
+            'check_time' => $time,
+            'check_type_id' => $nextCheckType
+        ]);
+
+        return [
+            'success' => true,
+            'scan_type' => $nextCheckType,
+            'label' => $checkType['name'],
+            'time' => $time,
+            'standard_time' => $checkType['standard_time']
+        ];
+    }
+} 

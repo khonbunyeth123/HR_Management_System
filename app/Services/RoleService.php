@@ -8,10 +8,12 @@ use Exception;
 class RoleService
 {
     private $roleModel;
+    private PermissionService $permissionService;
 
     public function __construct()
     {
         $this->roleModel = new Role();
+        $this->permissionService = new PermissionService();
     }
 
     /**
@@ -353,9 +355,7 @@ class RoleService
      */
     public function userHasPermission($userId, $permissionSlug)
     {
-        // This would typically query the user's role and check permissions
-        // Implementation depends on your user model structure
-        return true; // Placeholder
+        return $this->permissionService->userHasPermission((int) $userId, (string) $permissionSlug);
     }
 
     /**
@@ -377,3 +377,5 @@ class RoleService
         return $grouped;
     }
 }
+
+

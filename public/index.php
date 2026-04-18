@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../app/Helpers/PermissionHelper.php';
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -22,7 +23,7 @@ if ($uri === '') {
 }
 
 /* ================= API ROUTING ================= */
-// If API request → go to api routes
+// If API request -> go to api routes
 if (strpos($uri, '/api/') === 0) {
     require_once __DIR__ . '/../routes/api.php';
     exit;
@@ -37,16 +38,125 @@ $isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
 
 $page = $_GET['page'] ?? 'dashboard';
 
-$protectedPages = ['dashboard', 'employee', 'attendance', 'leave', 'audits', 'report', 'user'];
+$pagePermissions = [
+    'dashboard' => ['dashboard.view'],
+    'attendance' => ['attendance.view'],
+    'employee' => ['employee.view', 'employees.view'],
+    'leave' => ['leave.view'],
+    'report' => ['report.view'],
+    'report/report_daily' => ['report.view_daily', 'report.view'],
+    'report/report_summary' => ['report.view_summary', 'report.view'],
+    'report/report_detail' => ['report.view_detail', 'report.view'],
+    'report/report_top_employee' => ['report.view_top', 'report.view'],
+    'user' => ['user.view', 'users.view'],
+    'roles' => ['role.view', 'roles.view'],
+    'permissions' => ['permission.view', 'permissions.view'],
+    'audits' => ['audits.view', 'audit.view'],
+];
+
+$protectedPages = [
+    'dashboard',
+    'employee',
+    'attendance',
+    'leave',
+    'audits',
+    'report',
+    'report/report_daily',
+    'report/report_summary',
+    'report/report_detail',
+    'report/report_top_employee',
+    'user',
+    'roles',
+    'permissions',
+];
+
+$canAccessSlugs = static function (array $slugs): bool {
+    if (function_exists('hasAnyPermissionSlugs')) {
+        return hasAnyPermissionSlugs($slugs);
+    }
+
+    foreach ($slugs as $slug) {
+        if (is_string($slug) && hasPermissionSlug($slug)) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+$canAccessPage = static function (string $pageName) use ($pagePermissions, $canAccessSlugs): bool {
+    if (!isset($pagePermissions[$pageName])) {
+        return true;
+    }
+
+    $slugs = $pagePermissions[$pageName];
+    $slugs = is_array($slugs) ? $slugs : [$slugs];
+
+    return $canAccessSlugs($slugs);
+};
+
+$findFirstAccessiblePage = static function () use ($pagePermissions, $canAccessSlugs): ?string {
+    foreach ($pagePermissions as $candidate => $permissionSlugs) {
+        $slugs = is_array($permissionSlugs) ? $permissionSlugs : [$permissionSlugs];
+        if ($canAccessSlugs($slugs)) {
+            return $candidate;
+        }
+    }
+
+    return null;
+};
+
+$isProtectedPage = in_array($page, $protectedPages, true) || isset($pagePermissions[$page]);
 
 /* ================= AUTH CHECK ================= */
-if (!$isLoggedIn && in_array($page, $protectedPages)) {
+if (!$isLoggedIn && $isProtectedPage) {
     header('Location: /login.php');
     exit;
 }
 
 if ($isLoggedIn && $page === 'login') {
-    header('Location: /index.php?page=dashboard');
+    $homePage = $findFirstAccessiblePage() ?? 'dashboard';
+    header('Location: /index.php?page=' . urlencode($homePage));
+    exit;
+}
+
+/* ================= PAGE-LEVEL RBAC CHECK ================= */
+if ($isLoggedIn && $isProtectedPage && !$canAccessPage($page)) {
+    $homePage = $findFirstAccessiblePage();
+
+    if ($homePage !== null && $homePage !== $page) {
+        header('Location: /index.php?page=' . urlencode($homePage));
+        exit;
+    }
+
+    http_response_code(403);
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Access Denied</title>
+        <style>
+            body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+            .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+            .card { background: #fff; border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+            h1 { margin: 0 0 12px; font-size: 24px; }
+            p { margin: 0; line-height: 1.5; }
+            a { display: inline-block; margin-top: 16px; text-decoration: none; color: #1d4ed8; }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <div class="card">
+                <h1>403 - Access Denied</h1>
+                <p>You do not have permission to access this page.</p>
+                <a href="/index.php?page=dashboard">Go to dashboard</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    <?php
     exit;
 }
 
@@ -119,3 +229,4 @@ $viewDir = $baseDir . '/../resources/views';
 
 </body>
 </html>
+

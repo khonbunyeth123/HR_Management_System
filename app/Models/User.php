@@ -17,8 +17,7 @@ class User
     // Get user by ID
     public function getById(int $id)
     {
-        $stmt = $this->pdo->prepare("
-            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
+        $stmt = $this->pdo->prepare("\n            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
             FROM tbl_users u
             LEFT JOIN tbl_roles r ON u.role_id = r.id
             WHERE u.id = ? AND u.deleted_at IS NULL
@@ -52,8 +51,7 @@ class User
         $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
 
         // Data
-        $stmt = $this->pdo->prepare("
-            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
+        $stmt = $this->pdo->prepare("\n            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
             FROM tbl_users u
             LEFT JOIN tbl_roles r ON u.role_id = r.id
             $where
@@ -70,12 +68,11 @@ class User
     public function create(array $data)
     {
         try {
-            $uuid = bin2hex(random_bytes(18));
+            $uuid = $this->generateUuid();
 
             error_log("User Model - Creating user with username: " . $data['username']);
 
-            $stmt = $this->pdo->prepare("
-                INSERT INTO tbl_users (uuid, username, full_name, email, password, role_id, status_id, created_at, created_by)
+            $stmt = $this->pdo->prepare("\n                INSERT INTO tbl_users (uuid, username, full_name, email, password, role_id, status_id, created_at, created_by)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
             ");
 
@@ -97,7 +94,7 @@ class User
 
             error_log("User Model - User created with ID: " . $this->pdo->lastInsertId());
 
-            return $this->getById($this->pdo->lastInsertId());
+            return $this->getById((int) $this->pdo->lastInsertId());
 
         } catch (\Exception $e) {
             error_log("User Model - Create exception: " . $e->getMessage());
@@ -111,7 +108,6 @@ class User
         $updates = [];
         $params = [];
 
-        // Update basic fields
         foreach (['full_name','email','role_id','status_id'] as $field) {
             if (isset($data[$field])) {
                 $updates[] = "$field = ?";
@@ -119,7 +115,6 @@ class User
             }
         }
 
-        // ✅ NEW: Handle password update
         if (!empty($data['password'])) {
             $updates[] = "password = ?";
             $params[] = password_hash($data['password'], PASSWORD_BCRYPT);
@@ -140,6 +135,7 @@ class User
 
         return $this->getById($id);
     }
+
     // Soft delete user
     public function delete(int $id, $deleted_by = null)
     {
@@ -151,8 +147,7 @@ class User
     // Get permissions for a user
     public function getPermissions(int $userId)
     {
-        $stmt = $this->pdo->prepare("
-            SELECT p.module, p.action
+        $stmt = $this->pdo->prepare("\n            SELECT p.module, p.action
             FROM tbl_role_permissions rp
             JOIN tbl_permissions p ON rp.permission_id = p.id
             JOIN tbl_users u ON u.role_id = rp.role_id
@@ -160,5 +155,14 @@ class User
         ");
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function generateUuid(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }

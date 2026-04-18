@@ -42,12 +42,23 @@ class ControllerUser
     public function create()
     {
         try {
-            $full_name = $_POST['full_name'] ?? '';
-            $username = $_POST['username'] ?? '';
-            $email = $_POST['email'] ?? '';
-            $password = $_POST['password'] ?? '';
-            $role_id = $_POST['role_id'] ?? '';
-            $status_id = isset($_POST['status_id']) ? (int)$_POST['status_id'] : 1;
+            $rawInput = file_get_contents('php://input');
+            $jsonInput = json_decode($rawInput, true);
+            $input = is_array($jsonInput) ? $jsonInput : $_POST;
+
+            if (empty($input) && !empty($rawInput)) {
+                parse_str($rawInput, $parsed);
+                if (is_array($parsed)) {
+                    $input = $parsed;
+                }
+            }
+
+            $full_name = $input['full_name'] ?? '';
+            $username = $input['username'] ?? '';
+            $email = $input['email'] ?? '';
+            $password = $input['password'] ?? '';
+            $role_id = $input['role_id'] ?? '';
+            $status_id = isset($input['status_id']) ? (int)$input['status_id'] : 1;
 
             $full_name = trim($full_name);
             $username = trim($username);

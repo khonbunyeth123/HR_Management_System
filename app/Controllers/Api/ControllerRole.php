@@ -17,31 +17,22 @@ class ControllerRole
         $this->response = new Response();
     }
 
-    /**
-     * GET /api/roles
-     * Get all roles with optional filtering
-     */
     public function index()
     {
         try {
             $filters = [];
-            
-            // Apply status filter if provided
+
             if (!empty($_GET['status'])) {
                 $filters['status'] = $_GET['status'];
             }
 
-            // Search query
             $search = $_GET['search'] ?? '';
-
             $roles = $this->roleService->getAllRoles($filters);
 
-            // Apply search if provided
             if (!empty($search)) {
                 $roles = $this->roleService->searchRoles($search, $filters);
             }
 
-            // Enrich roles with permission count
             $roles = array_map(function ($role) {
                 return $this->formatRoleForResponse($role);
             }, $roles);
@@ -56,10 +47,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/roles/{id}
-     * Get a single role with all permissions
-     */
     public function show($id = null)
     {
         try {
@@ -72,7 +59,7 @@ class ControllerRole
             }
 
             $role = $this->roleService->getRoleWithPermissions($id);
-            
+
             return $this->response->success([
                 'data' => $role
             ]);
@@ -81,14 +68,9 @@ class ControllerRole
         }
     }
 
-    /**
-     * POST /api/roles
-     * Create a new role
-     */
     public function store()
     {
         try {
-            // Check permission (implement based on your auth system)
             $this->checkPermission('roles.manage');
 
             $input = $this->getJsonInput();
@@ -105,10 +87,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * PUT /api/roles/{id}
-     * Update a role
-     */
     public function update($id = null)
     {
         try {
@@ -126,16 +104,16 @@ class ControllerRole
 
             $result = $this->roleService->updateRole($id, $input);
 
+            if (isset($input['permissions']) && (int) ($_SESSION['role_id'] ?? 0) === (int) $id && function_exists('loadSessionPermissions')) {
+                loadSessionPermissions();
+            }
+
             return $this->response->success($result);
         } catch (Exception $e) {
             return $this->response->error($e->getMessage(), $e->getCode() ?: 500);
         }
     }
 
-    /**
-     * DELETE /api/roles/{id}
-     * Delete a role
-     */
     public function destroy($id = null)
     {
         try {
@@ -157,10 +135,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * POST /api/roles/{id}/accept
-     * Accept/approve a pending role
-     */
     public function accept($id = null)
     {
         try {
@@ -182,10 +156,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/roles/stats
-     * Get role statistics
-     */
     public function stats()
     {
         try {
@@ -199,10 +169,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/permissions
-     * Get all available permissions
-     */
     public function permissions()
     {
         try {
@@ -217,10 +183,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/permissions/grouped
-     * Get permissions grouped by module
-     */
     public function permissionsGrouped()
     {
         try {
@@ -234,10 +196,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/roles/{id}/permissions
-     * Get permissions for a specific role
-     */
     public function rolePermissions($id = null)
     {
         try {
@@ -264,10 +222,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * POST /api/roles/{id}/permissions
-     * Update permissions for a role
-     */
     public function updateRolePermissions($id = null)
     {
         try {
@@ -292,6 +246,10 @@ class ControllerRole
                 'permissions' => $permissions
             ]);
 
+            if ((int) ($_SESSION['role_id'] ?? 0) === (int) $id && function_exists('loadSessionPermissions')) {
+                loadSessionPermissions();
+            }
+
             return $this->response->success(array_merge($result, [
                 'role_id' => $id,
                 'permissions' => $permissions
@@ -301,10 +259,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * GET /api/roles/search
-     * Search roles by name or description
-     */
     public function search()
     {
         try {
@@ -335,10 +289,6 @@ class ControllerRole
         }
     }
 
-    /**
-     * PATCH /api/roles/{id}/status
-     * Update role status
-     */
     public function updateStatus($id = null)
     {
         try {
@@ -369,11 +319,6 @@ class ControllerRole
         }
     }
 
-    // ─── PRIVATE HELPER METHODS ───────────────────────────────
-
-    /**
-     * Get JSON input from request body
-     */
     private function getJsonInput()
     {
         $input = file_get_contents('php://input');
@@ -381,23 +326,40 @@ class ControllerRole
         return is_array($data) ? $data : [];
     }
 
-    /**
-     * Check if user has permission
-     * Implement based on your authentication system
-     */
     private function checkPermission($permission)
     {
-        // TODO: Implement actual permission checking based on your auth system
-        // For now, this is a placeholder
-        // Example:
-        // if (!$this->roleService->userHasPermission($_SESSION['user_id'], $permission)) {
-        //     throw new Exception('Unauthorized', 403);
-        // }
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $isLoggedIn = isset($_SESSION['login']) && $_SESSION['login'] === true;
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+
+        if (!$isLoggedIn || $userId <= 0) {
+            throw new Exception('Unauthorized', 401);
+        }
+
+        $roleName = strtolower((string) ($_SESSION['role'] ?? $_SESSION['role_name'] ?? ''));
+        if ($roleName === 'admin' || (int) ($_SESSION['role_id'] ?? 0) === 1) {
+            return;
+        }
+
+        $aliases = [(string) $permission];
+        if ($permission === 'roles.manage') {
+            $aliases = ['roles.manage', 'role.create', 'role.update', 'role.delete'];
+        } elseif ($permission === 'roles.view') {
+            $aliases = ['roles.view', 'role.view'];
+        }
+
+        foreach ($aliases as $slug) {
+            if ($this->roleService->userHasPermission($userId, $slug)) {
+                return;
+            }
+        }
+
+        throw new Exception('Forbidden', 403);
     }
 
-    /**
-     * Format role data for API response
-     */
     private function formatRoleForResponse($role)
     {
         return [
@@ -409,16 +371,13 @@ class ControllerRole
             'status'           => $role['status'],
             'status_id'        => $role['status_id'],
             'user_count'       => $role['user_count'] ?? 0,
-            'permission_count' => $role['permission_count'] ?? 0,  // ✅ ADD THIS
+            'permission_count' => $role['permission_count'] ?? 0,
             'permissions'      => $role['permissions'] ?? [],
             'created_at'       => $role['created_at'],
             'updated_at'       => $role['updated_at'],
         ];
     }
 
-    /**
-     * Generate slug from text
-     */
     private function generateSlug($text)
     {
         $slug = strtolower(trim($text));

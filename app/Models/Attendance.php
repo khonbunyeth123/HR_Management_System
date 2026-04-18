@@ -29,15 +29,15 @@ class Attendance
      */
     public function getPaginated(int $page = 1, int $perPage = 18, array $filters = []): array
     {
-        $offset = ($page - 1) * $perPage;
+        $offset   = ($page - 1) * $perPage;
         $statusId = $filters['status_id'] ?? null;
 
         $records = $this->getList($perPage, $offset, $statusId);
-        $total = $this->countAll($statusId);
+        $total   = $this->countAll($statusId);
 
         return [
             'records' => $records,
-            'total' => $total
+            'total'   => $total
         ];
     }
 
@@ -46,13 +46,25 @@ class Attendance
      */
     public function getList(int $limit, int $offset, ?int $statusId): array
     {
-        $sql = "SELECT * FROM tbl_attendance_records WHERE 1";
+        $sql = "
+            SELECT 
+                a.*,
+                e.employee_id AS emp_code,
+                e.full_name,
+                ct.name AS check_type_name
+            FROM tbl_attendance_records a
+            JOIN tbl_employees e 
+                ON a.employee_id = e.id
+            JOIN tbl_check_types ct
+                ON a.check_type_id = ct.id
+            WHERE 1
+        ";
 
         if ($statusId !== null) {
-            $sql .= " AND status_id = :status_id";
+            $sql .= " AND a.status_id = :status_id";
         }
 
-        $sql .= " ORDER BY check_time DESC LIMIT :limit OFFSET :offset";
+        $sql .= " ORDER BY a.check_time DESC LIMIT :limit OFFSET :offset";
 
         $stmt = $this->db->prepare($sql);
 
@@ -60,7 +72,7 @@ class Attendance
             $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
         }
 
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
         $stmt->execute();
@@ -89,40 +101,6 @@ class Attendance
 
         return (int)$stmt->fetchColumn();
     }
-
-    /**
-     * Record a check-in for an employee
-     */
-    // public function checkIn(int $employeeId): bool
-    // {
-    //     try {
-    //         $sql = "INSERT INTO tbl_attendance_records (uuid, employee_id, date, check_time, check_type_id, status_id, created_at)
-    //                 VALUES (UUID(), :employee_id, CURDATE(), CURTIME(), 1, 1, NOW())";
-    //         $stmt = $this->db->prepare($sql);
-    //         $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
-    //         return $stmt->execute();
-    //     } catch (\Exception $e) {
-    //         error_log("Attendance checkIn error: " . $e->getMessage());
-    //         return false;
-    //     }
-    // }
-
-    /**
-     * Record a check-out for an employee
-     */
-    // public function checkOut(int $employeeId): bool
-    // {
-    //     try {
-    //         $sql = "INSERT INTO tbl_attendance_records (uuid, employee_id, date, check_time, check_type_id, status_id, created_at)
-    //                 VALUES (UUID(), :employee_id, CURDATE(), CURTIME(), 2, 1, NOW())";
-    //         $stmt = $this->db->prepare($sql);
-    //         $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
-    //         return $stmt->execute();
-    //     } catch (\Exception $e) {
-    //         error_log("Attendance checkOut error: " . $e->getMessage());
-    //         return false;
-    //     }
-    // }
 
     /**
      * Get today's attendance for an employee
@@ -159,7 +137,7 @@ class Attendance
     {
         $stmt = $this->db->prepare("
             SELECT id FROM tbl_attendance_records
-            WHERE employee_id=? AND date=? AND check_type_id=? AND deleted_at IS NULL
+            WHERE employee_id = ? AND date = ? AND check_type_id = ? AND deleted_at IS NULL
         ");
         $stmt->execute([$employeeId, $date, $checkTypeId]);
         return (bool) $stmt->fetch();
@@ -167,24 +145,38 @@ class Attendance
 
     public function insertScan(array $data): bool
     {
-        $stmt = $this->db->prepare("
-            INSERT INTO tbl_attendance_records
-            (uuid, employee_id, date, check_time, check_type_id, status_id, created_at)
-            VALUES (?,?,?,?,?,1,NOW())
-        ");
+        try {
+            $sql = "
+                INSERT INTO tbl_attendance_records
+                (uuid, employee_id, date, check_time, check_type_id, status_id, created_at)
+                VALUES (:uuid, :employee_id, :date, :check_time, :check_type_id, 1, NOW())
+            ";
 
-        return $stmt->execute([
-            $data['uuid'],
-            $data['employee_id'],
-            $data['date'],
-            $data['check_time'],
-            $data['check_type_id']
-        ]);
+            $stmt = $this->db->prepare($sql);
+
+            $success = $stmt->execute([
+                ':uuid'          => $data['uuid'],
+                ':employee_id'   => $data['employee_id'],
+                ':date'          => $data['date'],
+                ':check_time'    => $data['check_time'],
+                ':check_type_id' => $data['check_type_id'],
+            ]);
+
+            if (!$success) {
+                error_log(json_encode($stmt->errorInfo()));
+            }
+
+            return $success;
+
+        } catch (\Throwable $e) {
+            error_log("Insert Scan Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function getCheckType(int $id): array|false
     {
-        $stmt = $this->db->prepare("SELECT * FROM tbl_check_types WHERE id=? AND deleted_at IS NULL");
+        $stmt = $this->db->prepare("SELECT * FROM tbl_check_types WHERE id = ? AND deleted_at IS NULL");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
