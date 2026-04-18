@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Attendance;
 use Ramsey\Uuid\Uuid;
 
-class AtendanceService
+class AttendanceService
 {
     private Attendance $model;
 

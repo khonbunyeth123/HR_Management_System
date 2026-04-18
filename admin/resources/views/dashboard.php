@@ -1,4 +1,4 @@
-<div class="w-full h-full">
+<div class="w-full">
     <div class="bg-white shadow-lg p-4">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
 

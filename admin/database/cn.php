@@ -8,8 +8,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php'; // Load composer packages
 use Dotenv\Dotenv;
-use PDO;
-use PDOException;
 
 // Load .env from project root (adjust path if needed)
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));

@@ -7,357 +7,162 @@ use PDO;
 
 class User
 {
-    protected $table = 'tbl_users';
-    protected $pdo;
+    private $pdo;
 
     public function __construct()
     {
         $this->pdo = Database::getInstance()->getConnection();
     }
 
-    /**
-     * Get all users
-     */
-    public function all()
+    // Get user by ID
+    public function getById(int $id)
     {
-        $query = "SELECT * FROM {$this->table} WHERE deleted_at IS NULL";
-        return $this->query($query);
+        $stmt = $this->pdo->prepare("\n            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
+            FROM tbl_users u
+            LEFT JOIN tbl_roles r ON u.role_id = r.id
+            WHERE u.id = ? AND u.deleted_at IS NULL
+            LIMIT 1
+        ");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Get user by ID
-     */
-    public function find(int $id)
+    // Get all users with optional filters, pagination
+    public function getAll(int $offset = 0, int $limit = 18, array $filters = [], array $sorts = [])
     {
-        $query = "SELECT * FROM {$this->table} WHERE id = $id AND deleted_at IS NULL LIMIT 1";
-        $result = $this->query($query);
-        return !empty($result) ? $result[0] : null;
-    }
+        $where = "WHERE u.deleted_at IS NULL";
+        $params = [];
 
-    /**
-     * Get user by UUID
-     */
-    public function findByUUID(string $uuid)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE uuid = ? AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$uuid]);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result) ? $result[0] : null;
-    }
-
-    /**
-     * Get user by username
-     */
-    public function findByUsername(string $username)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE username = ? AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$username]);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result) ? $result[0] : null;
-    }
-
-    /**
-     * Get user by email
-     */
-    public function findByEmail(string $email)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE email = ? AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$email]);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result) ? $result[0] : null;
-    }
-
-    /**
-     * Check if username exists
-     */
-    public function usernameExists(string $username, int $excludeId = null)
-    {
-        $query = "SELECT id FROM {$this->table} WHERE username = ? AND deleted_at IS NULL";
-        if ($excludeId) {
-            $query .= " AND id != ?";
-            $params = [$username, $excludeId];
-        } else {
-            $params = [$username];
+        if (!empty($filters['search'])) {
+            $where .= " AND (u.username LIKE ? OR u.full_name LIKE ? OR u.email LIKE ?)";
+            $search = "%{$filters['search']}%";
+            $params = array_merge($params, [$search, $search, $search]);
         }
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($params);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result);
-    }
 
-    /**
-     * Check if email exists
-     */
-    public function emailExists(string $email, int $excludeId = null)
-    {
-        $query = "SELECT id FROM {$this->table} WHERE email = ? AND deleted_at IS NULL";
-        if ($excludeId) {
-            $query .= " AND id != ?";
-            $params = [$email, $excludeId];
-        } else {
-            $params = [$email];
+        $orderBy = "ORDER BY u.created_at DESC";
+        if (!empty($sorts['property']) && in_array($sorts['property'], ['id','username','full_name','email','role_id','status_id','created_at'])) {
+            $dir = strtoupper($sorts['direction'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+            $orderBy = "ORDER BY u.{$sorts['property']} $dir";
         }
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($params);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result);
+
+        // Total count
+        $countStmt = $this->pdo->prepare("SELECT COUNT(*) as total FROM tbl_users u $where");
+        $countStmt->execute($params);
+        $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+
+        // Data
+        $stmt = $this->pdo->prepare("\n            SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.role_id, u.status_id, u.created_at, r.name as role_name
+            FROM tbl_users u
+            LEFT JOIN tbl_roles r ON u.role_id = r.id
+            $where
+            $orderBy
+            LIMIT ?, ?
+        ");
+        $stmt->execute(array_merge($params, [$offset, $limit]));
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['data' => $users, 'total' => $total];
     }
 
-    /**
-     * Create user
-     */
+    // Create user
     public function create(array $data)
     {
-        $columns = implode(', ', array_keys($data));
-        $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        $query = "INSERT INTO {$this->table} ($columns) VALUES ($placeholders)";
-        
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute(array_values($data));
-        
-        return $this->pdo->lastInsertId();
+        try {
+            $uuid = $this->generateUuid();
+
+            error_log("User Model - Creating user with username: " . $data['username']);
+
+            $stmt = $this->pdo->prepare("\n                INSERT INTO tbl_users (uuid, username, full_name, email, password, role_id, status_id, created_at, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+            ");
+
+            $result = $stmt->execute([
+                $uuid,
+                $data['username'],
+                $data['full_name'],
+                $data['email'],
+                password_hash($data['password'], PASSWORD_BCRYPT),
+                $data['role_id'],
+                $data['status_id'] ?? 1,
+                $data['created_by'] ?? null
+            ]);
+
+            if (!$result) {
+                error_log("User Model - Insert failed: " . json_encode($stmt->errorInfo()));
+                throw new \Exception("Failed to insert user: " . $stmt->errorInfo()[2]);
+            }
+
+            error_log("User Model - User created with ID: " . $this->pdo->lastInsertId());
+
+            return $this->getById((int) $this->pdo->lastInsertId());
+
+        } catch (\Exception $e) {
+            error_log("User Model - Create exception: " . $e->getMessage());
+            throw $e;
+        }
     }
 
-    /**
-     * Update user
-     */
+    // Update user
     public function update(int $id, array $data)
     {
-        $columns = array_keys($data);
-        $setClause = implode(', ', array_map(fn($col) => "$col = ?", $columns));
-        $query = "UPDATE {$this->table} SET $setClause WHERE id = ? AND deleted_at IS NULL";
-        
-        $values = array_values($data);
-        $values[] = $id;
-        
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute($values);
-    }
-
-    /**
-     * Delete user (soft delete)
-     */
-    public function delete(int $id, $deletedBy = null)
-    {
-        if ($deletedBy) {
-            $query = "UPDATE {$this->table} SET deleted_at = NOW(), deleted_by = ? WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
-            return $stmt->execute([$deletedBy, $id]);
-        } else {
-            $query = "UPDATE {$this->table} SET deleted_at = NOW() WHERE id = ?";
-            $stmt = $this->pdo->prepare($query);
-            return $stmt->execute([$id]);
-        }
-    }
-
-    /**
-     * Permanently delete user (hard delete)
-     */
-    public function forceDelete(int $id)
-    {
-        $query = "DELETE FROM {$this->table} WHERE id = ?";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([$id]);
-    }
-
-    /**
-     * Get paginated users
-     */
-    public function paginate(int $page = 1, int $perPage = 18, array $filters = [])
-    {
-        if ($page < 1) $page = 1;
-        if ($perPage < 1) $perPage = 18;
-
-        $offset = ($page - 1) * $perPage;
-
-        // Build where clause
-        $where = "WHERE deleted_at IS NULL";
+        $updates = [];
         $params = [];
-        
-        if (!empty($filters)) {
-            if (isset($filters['status_id'])) {
-                $where .= " AND status_id = ?";
-                $params[] = $filters['status_id'];
-            }
-            if (isset($filters['role'])) {
-                $where .= " AND role = ?";
-                $params[] = $filters['role'];
-            }
-            if (isset($filters['search'])) {
-                $where .= " AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?)";
-                $search = "%{$filters['search']}%";
-                $params[] = $search;
-                $params[] = $search;
-                $params[] = $search;
+
+        foreach (['full_name','email','role_id','status_id'] as $field) {
+            if (isset($data[$field])) {
+                $updates[] = "$field = ?";
+                $params[] = $data[$field];
             }
         }
 
-        // Get total count
-        $countQuery = "SELECT COUNT(*) as total FROM {$this->table} $where";
-        $stmt = $this->pdo->prepare($countQuery);
-        $stmt->execute($params);
-        $countResult = $stmt->fetch(PDO::FETCH_ASSOC);
-        $total = (int)($countResult['total'] ?? 0);
+        if (!empty($data['password'])) {
+            $updates[] = "password = ?";
+            $params[] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
 
-        // Get paginated data
-        $query = "SELECT * FROM {$this->table} $where ORDER BY created_at DESC LIMIT $offset, $perPage";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute($params);
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($updates)) return $this->getById($id);
 
-        return [
-            'data' => $data,
-            'pagination' => [
-                'page' => $page,
-                'per_page' => $perPage,
-                'total' => $total,
-                'total_pages' => ceil($total / $perPage)
-            ]
-        ];
-    }
+        $updates[] = "updated_at = NOW()";
+        if (isset($data['updated_by'])) {
+            $updates[] = "updated_by = ?";
+            $params[] = $data['updated_by'];
+        }
 
-    /**
-     * Get users by role
-     */
-    public function getByRole(string $role)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE role = ? AND deleted_at IS NULL ORDER BY created_at DESC";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$role]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Get active users
-     */
-    public function getActive()
-    {
-        $query = "SELECT * FROM {$this->table} WHERE status_id = 1 AND deleted_at IS NULL ORDER BY created_at DESC";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Get inactive users
-     */
-    public function getInactive()
-    {
-        $query = "SELECT * FROM {$this->table} WHERE status_id = 0 AND deleted_at IS NULL ORDER BY created_at DESC";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Get deleted users
-     */
-    public function getDeleted()
-    {
-        $query = "SELECT * FROM {$this->table} WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Count total users
-     */
-    public function count()
-    {
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE deleted_at IS NULL";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int)($result['total'] ?? 0);
-    }
-
-    /**
-     * Count active users
-     */
-    public function countActive()
-    {
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE status_id = 1 AND deleted_at IS NULL";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int)($result['total'] ?? 0);
-    }
-
-    /**
-     * Count inactive users
-     */
-    public function countInactive()
-    {
-        $query = "SELECT COUNT(*) as total FROM {$this->table} WHERE status_id = 0 AND deleted_at IS NULL";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return (int)($result['total'] ?? 0);
-    }
-
-    /**
-     * Search users
-     */
-    public function search(string $searchQuery)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE deleted_at IS NULL AND (full_name LIKE ? OR username LIKE ? OR email LIKE ?) ORDER BY created_at DESC";
-        $search = "%$searchQuery%";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$search, $search, $search]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Get user with login session
-     */
-    public function getWithLoginSession(string $sessionId)
-    {
-        $query = "SELECT * FROM {$this->table} WHERE login_session = ? AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->pdo->prepare($query);
-        $stmt->execute([$sessionId]);
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return !empty($result) ? $result[0] : null;
-    }
-
-    /**
-     * Update login session
-     */
-    public function updateLoginSession(int $id, string $sessionId)
-    {
-        $query = "UPDATE {$this->table} SET login_session = ? WHERE id = ?";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([$sessionId, $id]);
-    }
-
-    /**
-     * Clear login session
-     */
-    public function clearLoginSession(int $id)
-    {
-        $query = "UPDATE {$this->table} SET login_session = NULL WHERE id = ?";
-        $stmt = $this->pdo->prepare($query);
-        return $stmt->execute([$id]);
-    }
-
-    /**
-     * Get table name
-     */
-    public function getTableName()
-    {
-        return $this->table;
-    }
-
-    /**
-     * Execute raw query
-     */
-    protected function query(string $sql)
-    {
+        $params[] = $id;
+        $sql = "UPDATE tbl_users SET " . implode(', ', $updates) . " WHERE id = ? AND deleted_at IS NULL";
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
+
+        return $this->getById($id);
+    }
+
+    // Soft delete user
+    public function delete(int $id, $deleted_by = null)
+    {
+        $sql = "UPDATE tbl_users SET deleted_at = NOW(), deleted_by = ? WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$deleted_by, $id]);
+    }
+
+    // Get permissions for a user
+    public function getPermissions(int $userId)
+    {
+        $stmt = $this->pdo->prepare("\n            SELECT p.module, p.action
+            FROM tbl_role_permissions rp
+            JOIN tbl_permissions p ON rp.permission_id = p.id
+            JOIN tbl_users u ON u.role_id = rp.role_id
+            WHERE u.id = ? AND p.status_id = 1
+        ");
+        $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function generateUuid(): string
+    {
+        $data = random_bytes(16);
+        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }

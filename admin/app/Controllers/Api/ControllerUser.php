@@ -15,24 +15,14 @@ class ControllerUser
         $this->userService = new UserService();
     }
 
-    /**
-     * Get all users with pagination
-     * GET /api/users/show
-     */
     public function show()
     {
         try {
-            // Get pagination parameters
-            $page = isset($_GET['paging_options']['page']) ? (int)$_GET['paging_options']['page'] : 1;
-            $per_page = isset($_GET['paging_options']['per_page']) ? (int)$_GET['paging_options']['per_page'] : 18;
-
-            // Get filters
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $per_page = isset($_GET['per_page']) ? (int)$_GET['per_page'] : 18;
             $filters = isset($_GET['filters']) ? $_GET['filters'] : [];
-
-            // Get sorting parameters
             $sorts = isset($_GET['sorts']) ? $_GET['sorts'] : [];
 
-            // Call service
             $result = $this->userService->getAllUsers($page, $per_page, $filters, $sorts);
 
             Response::paginated(
@@ -49,27 +39,35 @@ class ControllerUser
         }
     }
 
-    /**
-     * Create a new user
-     * POST /api/users/create
-     */
     public function create()
     {
         try {
-            // Get POST data
-            $full_name = isset($_POST['full_name']) ? trim($_POST['full_name']) : '';
-            $username = isset($_POST['username']) ? trim($_POST['username']) : '';
-            $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-            $password = isset($_POST['password']) ? $_POST['password'] : '';
-            $role = isset($_POST['role']) ? trim($_POST['role']) : '';
-            $status_id = isset($_POST['status_id']) ? (int)$_POST['status_id'] : 1;
+            $rawInput = file_get_contents('php://input');
+            $jsonInput = json_decode($rawInput, true);
+            $input = is_array($jsonInput) ? $jsonInput : $_POST;
 
-            // Get current user ID (from session or auth)
-            $created_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            if (empty($input) && !empty($rawInput)) {
+                parse_str($rawInput, $parsed);
+                if (is_array($parsed)) {
+                    $input = $parsed;
+                }
+            }
 
-            // Validation
+            $full_name = $input['full_name'] ?? '';
+            $username = $input['username'] ?? '';
+            $email = $input['email'] ?? '';
+            $password = $input['password'] ?? '';
+            $role_id = $input['role_id'] ?? '';
+            $status_id = isset($input['status_id']) ? (int)$input['status_id'] : 1;
+
+            $full_name = trim($full_name);
+            $username = trim($username);
+            $email = trim($email);
+            $password = trim($password);
+            $role_id = trim($role_id);
+
             $errors = [];
-            
+
             if (empty($full_name)) {
                 $errors['full_name'] = 'Full name is required';
             }
@@ -84,41 +82,48 @@ class ControllerUser
                 $errors['email'] = 'Invalid email format';
             }
 
-            if (empty($password) || strlen($password) < 6) {
+            if (empty($password)) {
+                $errors['password'] = 'Password is required';
+            } elseif (strlen($password) < 6) {
                 $errors['password'] = 'Password must be at least 6 characters';
             }
 
-            if (empty($role)) {
-                $errors['role'] = 'Role is required';
+            if (empty($role_id)) {
+                $errors['role_id'] = 'Role is required';
             }
 
             if (!empty($errors)) {
-                Response::validationError($errors, 'Validation failed');
+                http_response_code(422);
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Validation failed', 'errors' => $errors]);
+                return;
             }
 
-            // Call service to create user
-            $user = $this->userService->createUser(
-                $full_name,
-                $username,
-                $email,
-                $password,
-                $role,
-                $status_id,
-                $created_by
-            );
+            $created_by = $_SESSION['user_id'] ?? null;
 
-            Response::created($user, 'User created successfully');
+            $data = [
+                'full_name' => $full_name,
+                'username' => $username,
+                'email' => $email,
+                'password' => $password,
+                'role_id' => (int)$role_id,
+                'status_id' => $status_id,
+                'created_by' => $created_by
+            ];
+
+            $user = $this->userService->createUser($data);
+
+            http_response_code(201);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'User created successfully', 'data' => $user]);
 
         } catch (\Exception $e) {
-            error_log("ControllerUser create error: " . $e->getMessage());
-            Response::error($e->getMessage(), 400);
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 
-    /**
-     * Get single user by ID
-     * GET /api/users/{id}
-     */
     public function getUserById(int $id)
     {
         try {
@@ -140,30 +145,33 @@ class ControllerUser
         }
     }
 
-    /**
-     * Update user
-     * PUT /api/users/{id}
-     */
-    public function update(int $id)
+    public function update()
     {
         try {
+            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+
+            $id = isset($input['id']) ? (int)$input['id'] : 0;
+
             if ($id <= 0) {
                 Response::validationError(['id' => 'Invalid user ID']);
             }
 
-            // Parse JSON or form data
-            $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+            $full_name  = isset($input['full_name'])  ? trim($input['full_name'])  : '';
+            $email      = isset($input['email'])       ? trim($input['email'])      : '';
+            $role_id    = isset($input['role_id'])     ? trim($input['role_id'])    : '';
+            $status_id  = isset($input['status_id'])   ? (int)$input['status_id']  : null;
 
-            $full_name = isset($input['full_name']) ? trim($input['full_name']) : '';
-            $email = isset($input['email']) ? trim($input['email']) : '';
-            $role = isset($input['role']) ? trim($input['role']) : '';
-            $status_id = isset($input['status_id']) ? (int)$input['status_id'] : null;
-
-            // Get current user ID (from session or auth)
             $updated_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
-            // Call service to update user
-            $user = $this->userService->updateUser($id, $full_name, $email, $role, $status_id, $updated_by);
+            $data = [
+                'full_name'  => $full_name,
+                'email'      => $email,
+                'role_id'    => $role_id,
+                'status_id'  => $status_id,
+                'updated_by' => $updated_by
+            ];
+
+            $user = $this->userService->updateUser($id, $data);
 
             Response::success($user, 'User updated successfully');
 
@@ -173,19 +181,37 @@ class ControllerUser
         }
     }
 
-    /**
-     * Delete user
-     * DELETE /api/users/{id}
-     */
-    public function delete(int $id)
+    public function delete()
     {
         try {
-            if ($id <= 0) {
-                Response::validationError(['id' => 'Invalid user ID']);
+            // Get raw input
+            $rawInput = file_get_contents("php://input");
+
+            // Try JSON first, fallback to form-urlencoded
+            $data = json_decode($rawInput, true);
+            if (empty($data)) {
+                parse_str($rawInput, $data);
             }
 
-            // Get current user ID (from session or auth)
-            $deleted_by = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            // Fallback to $_POST
+            if (empty($data)) {
+                $data = $_POST;
+            }
+
+            // Validate id exists before casting
+            if (empty($data['id'])) {
+                Response::validationError(['id' => 'User ID is required']);
+                return;
+            }
+
+            $id = (int)$data['id'];
+
+            if ($id <= 0) {
+                Response::validationError(['id' => 'Invalid user ID']);
+                return;
+            }
+
+            $deleted_by = $_SESSION['user_id'] ?? null;
 
             $this->userService->deleteUser($id, $deleted_by);
 

@@ -48,4 +48,25 @@ class Database
     {
         return $this->pdo;
     }
+
+    public function query(string $sql, array $params = []): array
+    {
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            throw new PDOException('Query failed: ' . $e->getMessage());
+        }
+    }
+
+    public function execute(string $sql, array $params = []): bool
+    {
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            throw new PDOException('Execute failed: ' . $e->getMessage());
+        }
+    }
 }

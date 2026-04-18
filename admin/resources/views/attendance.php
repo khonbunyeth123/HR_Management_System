@@ -20,8 +20,8 @@
             <select id="checkTypeFilter"
                 class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
                 <option value="">All Check Types</option>
-                <option value="1">Check In</option>
-                <option value="2">Check Out</option>
+                <option value="check-in">Check In</option>
+                <option value="check-out">Check Out</option>
             </select>
             <input type="date" id="dateFilter"
                 class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
@@ -57,35 +57,48 @@
         <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-center gap-2"></div>
     </div>
     </div>
-    <!-- Header -->
-    
 </div>
 
 <script>
     let currentPage = 1;
-    let totalPages = 1;
-    let allRecords = [];
-    const perPage = 18;
+    let totalPages  = 1;
+    let allRecords  = [];
+    const perPage   = 18;
 
-    // helpers
-    function getCheckTypeLabel(typeId) { return typeId == 1 ? 'Check In' : 'Check Out'; }
-    function getCheckTypeColor(typeId) { return typeId == 1 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'; }
-    function getStatusBadge(statusId) { 
-        return statusId == 1 
-            ? '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">Active</span>' 
-            : '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">Inactive</span>'; 
+    /**
+     * Determine if a check type name is "check-in" or "check-out"
+     * Based on the name from tbl_check_types (e.g. "Check-in 1", "Check-in 2")
+     */
+    function isCheckIn(checkTypeName) {
+        return checkTypeName.toLowerCase().includes('check-in');
+    }
+
+    function getCheckTypeLabel(checkTypeName) {
+        return isCheckIn(checkTypeName) ? 'Check In' : 'Check Out';
+    }
+
+    function getCheckTypeColor(checkTypeName) {
+        return isCheckIn(checkTypeName)
+            ? 'bg-green-100 text-green-700'
+            : 'bg-orange-100 text-orange-700';
+    }
+
+    function getStatusBadge(statusId) {
+        return statusId == 1
+            ? '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">Active</span>'
+            : '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">Inactive</span>';
     }
 
     // fetch attendance
     function loadAttendance(page = 1) {
         const searchInput = document.getElementById("searchInput").value;
-        const checkType = document.getElementById("checkTypeFilter").value;
-        const date = document.getElementById("dateFilter").value;
+        const checkType   = document.getElementById("checkTypeFilter").value; // "check-in" | "check-out" | ""
+        const date        = document.getElementById("dateFilter").value;
 
         const params = new URLSearchParams({
-            "paging_options[page]": page,
+            "paging_options[page]":     page,
             "paging_options[per_page]": perPage,
-            "filters[status_id]": 1
+            "filters[status_id]":       1
         });
 
         fetch("/api/attendance/show?" + params.toString())
@@ -97,16 +110,25 @@
                     allRecords = result.data.attendance_records;
 
                     // apply frontend filters
-                    let filtered = allRecords.filter(rec => 
-                        (rec.employee_id.toString().includes(searchInput) || rec.date.includes(searchInput)) &&
-                        (!checkType || rec.check_type_id == checkType) &&
-                        (!date || rec.date === date)
-                    );
+                    let filtered = allRecords.filter(rec => {
+                        const matchSearch = (
+                            (rec.emp_code && rec.emp_code.toLowerCase().includes(searchInput.toLowerCase())) ||
+                            rec.date.includes(searchInput)
+                        );
+
+                        // filter by check-in or check-out using check_type_name from DB
+                        const matchType = !checkType ||
+                            rec.check_type_name.toLowerCase().includes(checkType);
+
+                        const matchDate = !date || rec.date === date;
+
+                        return matchSearch && matchType && matchDate;
+                    });
 
                     renderTable(filtered);
 
                     const total = result.pagination.total;
-                    totalPages = result.pagination.total_pages;
+                    totalPages  = result.pagination.total_pages;
                     currentPage = page;
                     document.getElementById("totalCount").textContent = total + " Records";
 
@@ -116,9 +138,10 @@
                 }
             })
             .catch(err => {
-                document.getElementById("attendanceTableBody").innerHTML = `<tr><td colspan="6" class="px-4 py-6 text-center text-red-500">
-                    <iconify-icon icon="mdi:alert-circle"></iconify-icon> Error loading data
-                </td></tr>`;
+                document.getElementById("attendanceTableBody").innerHTML = `
+                    <tr><td colspan="6" class="px-4 py-6 text-center text-red-500">
+                        <iconify-icon icon="mdi:alert-circle"></iconify-icon> Error loading data
+                    </td></tr>`;
                 console.error(err);
             });
     }
@@ -126,6 +149,7 @@
     // render table
     function renderTable(records) {
         const tbody = document.getElementById("attendanceTableBody");
+
         if (!records.length) {
             tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No attendance records found</td></tr>';
             return;
@@ -133,10 +157,14 @@
 
         tbody.innerHTML = records.map(rec => `
             <tr class="hover:bg-indigo-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-gray-900">#${rec.employee_id}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">#${rec.emp_code}</td>
                 <td class="px-4 py-3 text-gray-600 text-sm">${new Date(rec.date).toLocaleDateString()}</td>
                 <td class="px-4 py-3 font-mono text-sm font-semibold text-indigo-600">${rec.check_time}</td>
-                <td class="px-4 py-3"><span class="${getCheckTypeColor(rec.check_type_id)} px-2 py-1 rounded text-xs font-semibold">${getCheckTypeLabel(rec.check_type_id)}</span></td>
+                <td class="px-4 py-3">
+                    <span class="${getCheckTypeColor(rec.check_type_name)} px-2 py-1 rounded text-xs font-semibold">
+                        ${getCheckTypeLabel(rec.check_type_name)}
+                    </span>
+                </td>
                 <td class="px-4 py-3">${getStatusBadge(rec.status_id)}</td>
                 <td class="px-4 py-3 text-gray-500 text-xs">${new Date(rec.created_at).toLocaleDateString()}</td>
             </tr>
@@ -160,9 +188,9 @@
     }
 
     // filter events
-    document.getElementById("searchInput").addEventListener("input", () => loadAttendance(1));
+    document.getElementById("searchInput").addEventListener("input",  () => loadAttendance(1));
     document.getElementById("checkTypeFilter").addEventListener("change", () => loadAttendance(1));
-    document.getElementById("dateFilter").addEventListener("change", () => loadAttendance(1));
+    document.getElementById("dateFilter").addEventListener("change",  () => loadAttendance(1));
 
     // initial load
     loadAttendance();

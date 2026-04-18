@@ -1,147 +1,114 @@
 <?php
 session_start();
-header('Content-Type: application/json');
 
-// Get your existing database connection
-require_once __DIR__ . '/../database/cn.php';
+// Load .env file
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
 
-// Only accept POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
+// Database connection
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../app/Core/Database.php';
+
+// Response helper
+function jsonResponse($success, $message, $data = [], $code = 200) {
+    header('Content-Type: application/json');
+    http_response_code($code);
     echo json_encode([
-        'dpl' => false,
-        'success' => false,
-        'message' => 'Method not allowed'
+        'success' => $success,
+        'message' => $message,
+        'data' => $data,
+        'dpl' => $success // For compatibility with your frontend
     ]);
     exit;
 }
 
 try {
-    // Get email and password
-    $email = trim($_POST['email'] ?? '');
-    $password = trim($_POST['password'] ?? '');
-    $remember = isset($_POST['remember']) && $_POST['remember'] == 1;
+    // Get POST data
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $remember = isset($_POST['remember']) ? (bool)$_POST['remember'] : false;
 
     // Validate input
     if (empty($email) || empty($password)) {
-        http_response_code(400);
-        echo json_encode([
-            'dpl' => false,
-            'success' => false,
-            'message' => 'Email and password are required'
-        ]);
-        exit;
+        jsonResponse(false, 'Email and password are required', [], 400);
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        echo json_encode([
-            'dpl' => false,
-            'success' => false,
-            'message' => 'Invalid email format'
-        ]);
-        exit;
+    // Get database connection
+    $db = \App\Core\Database::getInstance();
+
+    // Query user by email (include role name for RBAC)
+    $query = "SELECT u.id, u.uuid, u.username, u.full_name, u.email, u.password, u.role_id, u.status_id, r.name AS role_name
+              FROM tbl_users u
+              LEFT JOIN tbl_roles r ON r.id = u.role_id
+              WHERE u.email = ?
+              LIMIT 1";
+    $result = $db->query($query, [$email]);
+
+    if (empty($result)) {
+        jsonResponse(false, 'Invalid email or password', [], 401);
     }
 
-    // Query the database for the user
-    $query = "SELECT id, uuid, username, password, full_name, email, role, status_id FROM tbl_users WHERE email = :email AND deleted_at IS NULL LIMIT 1";
-    $stmt = $cn->prepare($query);
-    $stmt->execute([':email' => $email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $result[0];
 
-    if (!$user) {
-        http_response_code(401);
-        echo json_encode([
-            'dpl' => false,
-            'success' => false,
-            'message' => 'Invalid email or password'
-        ]);
-        exit;
+    // Check if user is active
+    if ((int)$user['status_id'] !== 1) {
+        jsonResponse(false, 'Your account has been disabled', [], 403);
     }
 
-    // Check if account is active
-    if ($user['status_id'] != 1) {
-        http_response_code(403);
-        echo json_encode([
-            'dpl' => false,
-            'success' => false,
-            'message' => 'Account is inactive. Please contact administrator.'
-        ]);
-        exit;
-    }
-
-    // Verify password using bcrypt
+    // Verify password
     if (!password_verify($password, $user['password'])) {
-        http_response_code(401);
-        echo json_encode([
-            'dpl' => false,
-            'success' => false,
-            'message' => 'Invalid email or password'
-        ]);
-        exit;
+        jsonResponse(false, 'Invalid email or password', [], 401);
     }
 
-    // Generate session token
-    $session_token = bin2hex(random_bytes(32));
-
-    // Update login session in database
-    $update_query = "UPDATE tbl_users SET login_session = :session_token, updated_at = NOW() WHERE id = :id";
-    $update_stmt = $cn->prepare($update_query);
-    $update_stmt->execute([
-        ':session_token' => $session_token,
-        ':id' => $user['id']
-    ]);
+    // Prevent session fixation
+    session_regenerate_id(true);
 
     // Set session variables
     $_SESSION['login'] = true;
-    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_id'] = (int)$user['id'];
     $_SESSION['uuid'] = $user['uuid'];
     $_SESSION['username'] = $user['username'];
     $_SESSION['full_name'] = $user['full_name'];
     $_SESSION['email'] = $user['email'];
-    $_SESSION['role'] = $user['role'];
-    $_SESSION['session_token'] = $session_token;
+    $_SESSION['role_id'] = (int)$user['role_id'];
+    $_SESSION['role'] = $user['role_name'] ?? '';
 
-    // Set remember me cookie if requested
+    // Load permission slugs into session cache (module.action)
+    $permQuery = "SELECT CONCAT(p.module, '.', p.action) AS permission_slug
+                  FROM tbl_role_permissions rp
+                  INNER JOIN tbl_permissions p ON p.id = rp.permission_id
+                  WHERE rp.role_id = ?
+                    AND p.status_id = 1
+                    AND p.deleted_at IS NULL";
+    $permRows = $db->query($permQuery, [(int)$user['role_id']]);
+
+    $permissions = array_map(
+        static fn(array $row): string => strtolower((string)$row['permission_slug']),
+        $permRows
+    );
+    $_SESSION['permissions'] = array_values(array_unique($permissions));
+
+    // Update last login
+    $updateQuery = "UPDATE tbl_users SET login_session = ?, updated_at = NOW() WHERE id = ?";
+    $db->query($updateQuery, [session_id(), $user['id']]);
+
+    // Handle "Remember Me"
     if ($remember) {
-        setcookie('remember_token', $session_token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
-        $_SESSION['remember'] = true;
+        // Set cookie for 30 days
+        $token = bin2hex(random_bytes(32));
+        setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/', '', false, true);
     }
 
-    // Return success response
-    http_response_code(200);
-    echo json_encode([
-        'dpl' => true,
-        'success' => true,
-        'message' => 'Login successful',
-        'user' => [
-            'id' => $user['id'],
-            'uuid' => $user['uuid'],
-            'username' => $user['username'],
-            'full_name' => $user['full_name'],
-            'email' => $user['email'],
-            'role' => $user['role']
-        ]
-    ]);
-    exit;
+    jsonResponse(true, 'Login successful', [
+        'user_id' => $user['id'],
+        'username' => $user['username'],
+        'email' => $user['email'],
+        'role' => $user['role_name'] ?? null,
+    ], 200);
 
-} catch (PDOException $e) {
-    error_log('Login error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'dpl' => false,
-        'success' => false,
-        'message' => 'Database error occurred'
-    ]);
-    exit;
-} catch (Exception $e) {
-    error_log('Login error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'dpl' => false,
-        'success' => false,
-        'message' => 'An error occurred. Please try again.'
-    ]);
-    exit;
+} catch (\Exception $e) {
+    error_log("Login error: " . $e->getMessage());
+    jsonResponse(false, 'An error occurred during login', [], 500);
 }
 ?>
