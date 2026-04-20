@@ -93,4 +93,29 @@ class ControllerAttendance
             'message' => $message,
         ], $statusCode);
     }
+    
+    public function checkin(): void
+    {
+        $data    = $this->service->getCheckinPageData();
+        $message = '';
+        $msgType = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $employeeId = intval($_POST['employee_id'] ?? 0);
+
+            if (!$employeeId) {
+                $message = 'Please select your name.';
+                $msgType = 'error';
+            } else {
+                $result  = $this->service->checkin($employeeId);
+                $message = $result['error'] ?? $result['message'];
+                $msgType = $result['type'];
+            }
+        }
+
+        $slot      = $data['slot'];
+        $employees = $data['employees'];
+
+        require __DIR__ . '/../../../resources/views/checkin.php';
+    }
 }

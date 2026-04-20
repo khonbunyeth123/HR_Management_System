@@ -71,4 +71,33 @@ class AttendanceService
             'standard_time' => $checkType['standard_time']
         ];
     }
+
+    public function getCheckinPageData(): array
+    {
+        return [
+            'employees' => $this->model->getActiveEmployees(),
+            'slot'      => $this->model->getSlotByHour(),
+        ];
+    }
+
+    public function checkin(int $employeeId): array
+    {
+        $slot = $this->model->getSlotByHour();
+
+        if ($slot['slot'] === 0) {
+            return ['error' => 'Attendance is only allowed during office hours.', 'type' => 'warning'];
+        }
+
+        $result = $this->scan($employeeId);
+
+        if (isset($result['error'])) {
+            return ['error' => $result['error'], 'type' => 'warning'];
+        }
+
+        return [
+            'success' => true,
+            'message' => $result['label'] . ' recorded at ' . $result['time'],
+            'type'    => 'success'
+        ];
+    }
 } 

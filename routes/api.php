@@ -25,6 +25,10 @@ $router->get('/api/attendance/show',     'ControllerAttendance@show');
 $router->post('/api/attendance/checkin', 'ControllerAttendance@checkIn');
 $router->post('/api/attendance/checkout','ControllerAttendance@checkOut');
 
+$router->get('/attendance/checkin',  'ControllerAttendance@checkin');
+$router->post('/attendance/checkin', 'ControllerAttendance@checkin');
+
+
 /* ================= EMPLOYEE ROUTES ================= */
 $router->get('/api/employees',       'ControllerEmployee@index');
 $router->get('/api/employees/show',  'ControllerEmployee@index');

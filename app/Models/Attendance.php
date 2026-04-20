@@ -180,4 +180,25 @@ class Attendance
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function getActiveEmployees(): array
+    {
+        $stmt = $this->db->query("
+            SELECT id, employee_id, full_name 
+            FROM tbl_employees 
+            WHERE status_id = 1 AND deleted_at IS NULL 
+            ORDER BY full_name
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getSlotByHour(): array
+    {
+        $hour = (int) date('H');
+        if ($hour >= 7  && $hour < 12) return ['slot' => 1, 'label' => 'Morning Check-in',   'check_type_id' => 1];
+        if ($hour >= 12 && $hour < 13) return ['slot' => 2, 'label' => 'Morning Check-out',  'check_type_id' => 2];
+        if ($hour >= 14 && $hour < 18) return ['slot' => 3, 'label' => 'Afternoon Check-in', 'check_type_id' => 3];
+        if ($hour >= 18 && $hour <= 21) return ['slot' => 4, 'label' => 'Afternoon Check-out','check_type_id' => 4];
+        return ['slot' => 0, 'label' => 'Outside office hours', 'check_type_id' => 0];
+    }
 }
