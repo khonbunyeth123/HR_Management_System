@@ -175,6 +175,10 @@ class Router
             return;
         }
 
+        if ($this->isPublicRoute()) {
+            return;
+        }
+
         if (!$this->isLoggedIn()) {
             $this->sendJson([
                 'success' => false,
@@ -196,6 +200,17 @@ class Router
         }
     }
 
+    private function isPublicRoute(): bool
+    {
+        $publicRoutes = [
+            '/api/auth/login',
+            '/api/auth/logout',
+        ];
+
+        return in_array($this->route, $publicRoutes, true);
+    }
+
+
     private function isApiRoute(): bool
     {
         return strpos($this->route, '/api/') === 0;
@@ -203,7 +218,42 @@ class Router
 
     private function isLoggedIn(): bool
     {
-        return isset($_SESSION['login']) && $_SESSION['login'] === true && !empty($_SESSION['user_id']);
+        // Check session (web)
+        if (isset($_SESSION['login']) && $_SESSION['login'] === true && !empty($_SESSION['user_id'])) {
+            return true;
+        }
+
+        // Check Bearer token (mobile)
+        $headers = getallheaders();
+        $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        if (str_starts_with($auth, 'Bearer ')) {
+            $token = trim(substr($auth, 7));
+            if (!empty($token)) {
+                return $this->validateToken($token);
+            }
+        }
+
+        return false;
+    }
+
+    private function validateToken(string $token): bool
+    {
+        try {
+            $db = \App\Core\Database::getInstance()->getConnection();
+            $stmt = $db->prepare('SELECT id, username, role_id FROM tbl_users WHERE login_session = :token AND status_id = 1 AND deleted_at IS NULL LIMIT 1');
+            $stmt->execute([':token' => $token]);
+            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if ($user) {
+                $_SESSION['user_id']  = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role_id']  = $user['role_id'];
+                $_SESSION['login']    = true;
+                return true;
+            }
+        } catch (\Exception $e) {
+            error_log('Token validation error: ' . $e->getMessage());
+        }
+        return false;
     }
 
     private function userHasAnyPermission(array $permissionSlugs): bool

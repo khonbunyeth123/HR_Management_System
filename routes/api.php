@@ -14,6 +14,12 @@ use App\Core\Router;
 // Create router instance
 $router = new Router();
 
+/* ================= AUTH ROUTES ================= */
+$router->post('/api/auth/login',  'ControllerAuth@login');
+$router->post('/api/auth/logout', 'ControllerAuth@logout');
+$router->get('/api/auth/me',      'ControllerAuth@me');
+
+
 /* ================= DASHBOARD ROUTES ================= */
 $router->get('/api/dashboard/summary',       'ControllerDashboard@summary');
 $router->get('/api/dashboard/department',    'ControllerDashboard@department');
