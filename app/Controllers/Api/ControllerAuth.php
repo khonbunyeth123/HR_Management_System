@@ -38,4 +38,4 @@ class ControllerAuth
         $result = $this->authService->me();
         Response::json($result, $result['code']);
     }
-}
+}   
