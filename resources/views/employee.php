@@ -209,10 +209,11 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">User ID <span class="font-normal text-gray-400">(optional)</span></label>
-                        <input type="number" id="user_id"
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                        <input type="password" id="password"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="Leave empty if none">
+                            placeholder="Required for new employee login">
+                        <p class="text-xs text-gray-500 mt-2" id="passwordHelp">Set the mobile login password for this employee.</p>
                     </div>
 
                     <div class="md:col-span-2">
@@ -344,7 +345,8 @@ const positionInput    = document.getElementById('position');
 const departmentInput  = document.getElementById('department');
 const dateHiredInput   = document.getElementById('date_hired');
 const statusIdInput    = document.getElementById('status_id');
-const userIdInput      = document.getElementById('user_id');
+const passwordInput    = document.getElementById('password');
+const passwordHelp     = document.getElementById('passwordHelp');
 
 const photoInput       = document.getElementById('photo');
 const photoPreview     = document.getElementById('photoPreview');
@@ -618,7 +620,7 @@ function normalizeGender(value) {
 function formatEmployeeCode(value) {
     const n = Number(value);
     if (!Number.isInteger(n) || n <= 0) return '';
-    return `EMP${String(n).padStart(5, '0')}`;
+    return String(n);
 }
 
 function normalizeEmployeeRecord(raw) {
@@ -629,7 +631,7 @@ function normalizeEmployeeRecord(raw) {
 
     return {
         id: e.id ?? '',
-        employee_code: e.employee_id ?? formatEmployeeCode(e.id),
+        employee_code: formatEmployeeCode(e.id),
         username: e.username ?? e.user_name ?? '',
         first_name: firstName,
         last_name: lastName,
@@ -643,7 +645,6 @@ function normalizeEmployeeRecord(raw) {
         department: e.department ?? '',
         date_hired: e.date_hired ?? e.hire_date ?? '',
         status_id: e.status_id ?? e.status ?? 1,
-        user_id: e.user_id ?? e.userId ?? '',
         photo: e.photo ?? e.avatar ?? null,
         uuid: e.uuid ?? '',
     };
@@ -666,7 +667,7 @@ function fillEmployeeForm(rawEmployee) {
     departmentInput.value   = e.department ?? '';
     dateHiredInput.value    = toDateInputValue(e.date_hired);
     statusIdInput.value     = String(e.status_id ?? 1);
-    userIdInput.value       = e.user_id ?? '';
+    passwordInput.value     = '';
 
     resetPhotoUI();
     if (e.photo) {
@@ -679,10 +680,21 @@ function fillEmployeeForm(rawEmployee) {
     }
 }
 
+function setPasswordMode(isCreate) {
+    passwordInput.required = isCreate;
+    passwordInput.placeholder = isCreate
+        ? 'Required for new employee login'
+        : 'Leave blank to keep current password';
+    passwordHelp.textContent = isCreate
+        ? 'Set the mobile login password for this employee.'
+        : 'Leave blank if you do not want to change the employee password.';
+}
+
 function openCreateModal() {
     employeeForm.reset();
     employeeIdInput.value = '';
     employeeCodeInput.value = '';
+    setPasswordMode(true);
     document.getElementById('modalTitle').textContent = 'Add New Employee';
     document.getElementById('submitButtonText').textContent = 'Save Employee';
     resetPhotoUI();
@@ -720,6 +732,7 @@ async function openEditModal(id) {
 
     document.getElementById('modalTitle').textContent = 'Edit Employee';
     document.getElementById('submitButtonText').textContent = 'Update Employee';
+    setPasswordMode(false);
     employeeModal.classList.remove('hidden');
 }
 
@@ -745,8 +758,8 @@ employeeForm.addEventListener('submit', async e => {
     const id = employeeIdInput.value;
 
     const payload = {
-        user_id:    userIdInput.value   ? Number(userIdInput.value) : null,
         username:   usernameInput.value.trim(),
+        password:   passwordInput.value,
         first_name: firstNameInput.value.trim(),
         last_name:  lastNameInput.value.trim(),
         full_name:  (firstNameInput.value.trim() + ' ' + lastNameInput.value.trim()).trim(),

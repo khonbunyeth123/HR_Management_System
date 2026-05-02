@@ -186,6 +186,8 @@ class Router
             ], 401);
         }
 
+        $this->ensureRequiredAuthType();
+
         $requiredPermissions = $this->resolveRequiredPermissions($handler);
         if (empty($requiredPermissions)) {
             return;
@@ -204,7 +206,9 @@ class Router
     {
         $publicRoutes = [
             '/api/auth/login',
-            '/api/auth/logout',
+            '/api/auth/admin/login',
+            '/api/auth/employee/login',
+            '/api/attendance/qr',
         ];
 
         return in_array($this->route, $publicRoutes, true);
@@ -219,11 +223,17 @@ class Router
     private function isLoggedIn(): bool
     {
         // Check session (web)
-        if (isset($_SESSION['login']) && $_SESSION['login'] === true && !empty($_SESSION['user_id'])) {
-            return true;
+        if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
+            if (!empty($_SESSION['user_id']) && ($_SESSION['auth_type'] ?? 'user') === 'user') {
+                return true;
+            }
+
+            if (!empty($_SESSION['employee_id']) && ($_SESSION['auth_type'] ?? '') === 'employee') {
+                return true;
+            }
         }
 
-        // Check Bearer token (mobile)
+        // Check Bearer token (API/mobile)
         $headers = getallheaders();
         $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         if (str_starts_with($auth, 'Bearer ')) {
@@ -239,25 +249,96 @@ class Router
     private function validateToken(string $token): bool
     {
         try {
-            $db = \App\Core\Database::getInstance()->getConnection();
-            $stmt = $db->prepare('SELECT id, username, role_id FROM tbl_users WHERE login_session = :token AND status_id = 1 AND deleted_at IS NULL LIMIT 1');
-            $stmt->execute([':token' => $token]);
-            $user = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if ($user) {
-                $_SESSION['user_id']  = $user['id'];
+            $authModel = new \App\Models\Auth();
+            $tokenRow = $authModel->findAccessToken($token);
+            if (!$tokenRow) {
+                return false;
+            }
+
+            $authType = (string) ($tokenRow['tokenable_type'] ?? '');
+            $identityId = (int) ($tokenRow['tokenable_id'] ?? 0);
+
+            if ($authType === 'user') {
+                $user = $authModel->getAdminById($identityId);
+                if (!$user) {
+                    return false;
+                }
+
+                $_SESSION['user_id'] = (int) $user['id'];
+                $_SESSION['employee_id'] = null;
+                $_SESSION['uuid'] = $user['uuid'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['role_id']  = $user['role_id'];
-                $_SESSION['login']    = true;
+                $_SESSION['full_name'] = $user['full_name'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role_name'] ?? null;
+                $_SESSION['role_id'] = $user['role_id'] ?? null;
+                $_SESSION['auth_type'] = 'user';
+                $_SESSION['access_token'] = $token;
+                $_SESSION['login'] = true;
+                $authModel->touchAccessToken((int) $tokenRow['id']);
+                return true;
+            }
+
+            if ($authType === 'employee') {
+                $employee = $authModel->getEmployeeById($identityId);
+                if (!$employee) {
+                    return false;
+                }
+
+                $_SESSION['user_id'] = null;
+                $_SESSION['employee_id'] = (int) $employee['id'];
+                $_SESSION['uuid'] = $employee['uuid'];
+                $_SESSION['username'] = $employee['username'];
+                $_SESSION['full_name'] = $employee['full_name'];
+                $_SESSION['email'] = $employee['email'];
+                $_SESSION['role'] = null;
+                $_SESSION['role_id'] = null;
+                $_SESSION['auth_type'] = 'employee';
+                $_SESSION['access_token'] = $token;
+                $_SESSION['login'] = true;
+                $authModel->touchAccessToken((int) $tokenRow['id']);
                 return true;
             }
         } catch (\Exception $e) {
             error_log('Token validation error: ' . $e->getMessage());
         }
+
         return false;
+    }
+
+    private function ensureRequiredAuthType(): void
+    {
+        $requiredAuthType = $this->resolveRequiredAuthType();
+        if ($requiredAuthType === null) {
+            return;
+        }
+
+        $currentAuthType = $_SESSION['auth_type'] ?? null;
+        if ($currentAuthType === $requiredAuthType) {
+            return;
+        }
+
+        // Backward compatibility for existing admin web sessions that predate
+        // the explicit auth_type split.
+        if ($requiredAuthType === 'user' && $currentAuthType === null && !empty($_SESSION['user_id'])) {
+            return;
+        }
+
+        $this->sendJson([
+            'success' => false,
+            'message' => 'Forbidden. Invalid account type for this route.',
+            'required_auth_type' => $requiredAuthType,
+        ], 403);
     }
 
     private function userHasAnyPermission(array $permissionSlugs): bool
     {
+        if (($this->route === '/api/attendance/scan')
+            && (($_SESSION['auth_type'] ?? '') === 'employee')
+            && !empty($_SESSION['employee_id'])) {
+            return true;
+        }
+
         $normalized = [];
         foreach ($permissionSlugs as $slug) {
             if (!is_string($slug)) {
@@ -325,11 +406,30 @@ class Router
         };
     }
 
+    private function resolveRequiredAuthType(): ?string
+    {
+        if (!$this->isApiRoute() || $this->isPublicRoute()) {
+            return null;
+        }
+
+        return match (true) {
+            $this->route === '/api/auth/logout'           => null,
+            $this->route === '/api/attendance/scan',
+            $this->route === '/api/auth/employee/me',
+            $this->route === '/api/leave/create',
+            $this->route === '/api/attendance/history',
+            $this->route === '/api/leave/history'         => 'employee',
+            $this->route === '/api/leave/list'            => null,
+            default                                       => 'user',
+        };
+    }
+
     private function permissionsForAttendanceAction(string $action): array
     {
         return match ($action) {
             'show', 'today' => ['attendance.view'],
             'checkIn', 'checkOut', 'scan' => ['attendance.update', 'attendance.create'],
+            'history' => [],
             default => ['attendance.view'],
         };
     }
@@ -348,10 +448,10 @@ class Router
     private function permissionsForLeaveAction(string $action): array
     {
         return match ($action) {
-            'index' => ['leave.view'],
-            'create' => ['leave.create'],
-            'approve', 'reject' => ['leave.update', 'leave.approve', 'leave.reject'],
-            default => ['leave.view'],
+            'index'              => [],
+            'create'             => [],
+            'approve', 'reject'  => ['leave.update', 'leave.approve', 'leave.reject'],
+            default              => [],
         };
     }
 

@@ -79,16 +79,19 @@ class AttendanceService
             'slot'      => $this->model->getSlotByHour(),
         ];
     }
-
     public function checkin(int $employeeId): array
     {
+        error_log("=== CHECKIN DEBUG === employee_id: " . $employeeId);
+
         $slot = $this->model->getSlotByHour();
+        error_log("SLOT: " . json_encode($slot));
 
         if ($slot['slot'] === 0) {
             return ['error' => 'Attendance is only allowed during office hours.', 'type' => 'warning'];
         }
 
         $result = $this->scan($employeeId);
+        error_log("SCAN RESULT: " . json_encode($result));
 
         if (isset($result['error'])) {
             return ['error' => $result['error'], 'type' => 'warning'];
@@ -98,6 +101,19 @@ class AttendanceService
             'success' => true,
             'message' => $result['label'] . ' recorded at ' . $result['time'],
             'type'    => 'success'
+        ];
+    }
+
+    public function getHistory(int $employeeId, int $page, int $perPage): array
+    {
+        $offset  = ($page - 1) * $perPage;
+        $records = $this->model->getByEmployeeId($employeeId, $perPage, $offset);
+        $total   = $this->model->countByEmployeeId($employeeId);
+
+        return [
+            'records'     => $records,
+            'total'       => $total,
+            'total_pages' => (int)ceil($total / $perPage),
         ];
     }
 } 

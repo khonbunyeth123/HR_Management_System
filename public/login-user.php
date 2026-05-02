@@ -73,6 +73,8 @@ try {
     $_SESSION['email'] = $user['email'];
     $_SESSION['role_id'] = (int)$user['role_id'];
     $_SESSION['role'] = $user['role_name'] ?? '';
+    $_SESSION['auth_type'] = 'user';
+    $_SESSION['employee_id'] = null;
 
     // Load permission slugs into session cache (module.action)
     $permQuery = "SELECT CONCAT(p.module, '.', p.action) AS permission_slug

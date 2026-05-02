@@ -49,13 +49,13 @@ class Attendance
         $sql = "
             SELECT 
                 a.*,
-                e.employee_id AS emp_code,
+                CAST(e.id AS CHAR) AS emp_code,
                 e.full_name,
                 ct.name AS check_type_name
             FROM tbl_attendance_records a
-            JOIN tbl_employees e 
+            LEFT JOIN tbl_employees e 
                 ON a.employee_id = e.id
-            JOIN tbl_check_types ct
+            LEFT JOIN tbl_check_types ct
                 ON a.check_type_id = ct.id
             WHERE 1
         ";
@@ -181,10 +181,44 @@ class Attendance
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function findActiveEmployeeByUuid(string $uuid): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, uuid, full_name
+            FROM tbl_employees
+            WHERE uuid = :uuid
+              AND status_id = 1
+              AND deleted_at IS NULL
+            LIMIT 1
+        ");
+        $stmt->bindValue(':uuid', $uuid);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function findActiveEmployeeById(int $employeeId): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT id, uuid, full_name
+            FROM tbl_employees
+            WHERE id = :employee_id
+              AND status_id = 1
+              AND deleted_at IS NULL
+            LIMIT 1
+        ");
+        $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
     public function getActiveEmployees(): array
     {
         $stmt = $this->db->query("
-            SELECT id, employee_id, full_name 
+            SELECT id, full_name 
             FROM tbl_employees 
             WHERE status_id = 1 AND deleted_at IS NULL 
             ORDER BY full_name
@@ -200,5 +234,41 @@ class Attendance
         if ($hour >= 14 && $hour < 18) return ['slot' => 3, 'label' => 'Afternoon Check-in', 'check_type_id' => 3];
         if ($hour >= 18 && $hour <= 21) return ['slot' => 4, 'label' => 'Afternoon Check-out','check_type_id' => 4];
         return ['slot' => 0, 'label' => 'Outside office hours', 'check_type_id' => 0];
+    }
+
+    public function getByEmployeeId(int $employeeId, int $limit, int $offset): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                a.uuid,
+                a.date,
+                a.check_time,
+                ct.name AS check_type_name,
+                a.status_id,
+                a.created_at
+            FROM tbl_attendance_records a
+            LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
+            WHERE a.employee_id = :employee_id
+            AND a.deleted_at IS NULL
+            ORDER BY a.check_time DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit',       $limit,      PDO::PARAM_INT);
+        $stmt->bindValue(':offset',      $offset,     PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countByEmployeeId(int $employeeId): int
+    {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) FROM tbl_attendance_records
+            WHERE employee_id = :employee_id
+            AND deleted_at IS NULL
+        ");
+        $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
     }
 }

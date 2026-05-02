@@ -59,7 +59,7 @@
       <?php foreach ($employees as $emp): ?>
         <option value="<?= $emp['id'] ?>"
           <?= (isset($_POST['employee_id']) && $_POST['employee_id'] == $emp['id']) ? 'selected' : '' ?>>
-          <?= htmlspecialchars($emp['full_name']) ?> (#<?= htmlspecialchars($emp['employee_id']) ?>)
+          <?= htmlspecialchars($emp['full_name']) ?> (#<?= htmlspecialchars((string) $emp['id']) ?>)
         </option>
       <?php endforeach; ?>
     </select>

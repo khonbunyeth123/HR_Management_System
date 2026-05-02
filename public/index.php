@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Phnom_Penh');   
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../app/Helpers/PermissionHelper.php';
 
@@ -204,6 +205,23 @@ $viewDir = $baseDir . '/../resources/views';
                     $pageFile = $viewDir . '/' . $page . '.php';
 
                     if (file_exists($pageFile)) {
+                    // Inject employee data for attendance view
+                 if ($page === 'attendance') {
+                    if (!empty($_SESSION['employee_id'])) {
+                        $pdo = \App\Core\Database::getInstance()->getConnection();
+                        $stmt = $pdo->prepare("
+                            SELECT id, full_name
+                            FROM tbl_employees
+                            WHERE id = ? AND deleted_at IS NULL
+                            LIMIT 1
+                        ");
+                        $stmt->execute([$_SESSION['employee_id']]);
+                        $employee = $stmt->fetch(\PDO::FETCH_ASSOC) ?? [
+                            'id'        => 0,
+                            'full_name' => $_SESSION['full_name'] ?? '',
+                        ];
+                    }
+                }
                         include $pageFile;
                     } else {
                         echo '<div class="text-center text-gray-500 mt-10"><h1>Page not found</h1></div>';
@@ -229,4 +247,3 @@ $viewDir = $baseDir . '/../resources/views';
 
 </body>
 </html>
-

@@ -151,21 +151,23 @@
                     <td class="px-4 py-3 text-gray-500 text-xs">${new Date(rec.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
                     <td class="px-4 py-3">
                     ${rec.status_id == 0 ? `
-                            <button
-                                onclick="approveLeave('${rec.uuid}', 1)"
-                                class="inline-flex items-center justify-center text-green-600 hover:text-green-800 mr-3"
-                                title="Approve"
-                            >
-                                <iconify-icon icon="mdi:check-circle" style="font-size:20px;"></iconify-icon>
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    onclick="approveLeave('${rec.uuid}')"
+                                    class="inline-flex items-center gap-1 rounded-md bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-200"
+                                    title="Approve"
+                                >
+                                    <span>Approve</span>
+                                </button>
 
-                            <button
-                                onclick="rejectLeave('${rec.uuid}')"
-                                class="inline-flex items-center justify-center text-red-600 hover:text-red-800"
-                                title="Reject"
-                            >
-                                <iconify-icon icon="mdi:close-circle" style="font-size:20px;"></iconify-icon>
-                            </button>
+                                <button
+                                    onclick="rejectLeave('${rec.uuid}')"
+                                    class="inline-flex items-center gap-1 rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200"
+                                    title="Reject"
+                                >
+                                    <span>Reject</span>
+                                </button>
+                            </div>
                         ` : `
                             <span class="text-gray-400">—</span>
                         `}

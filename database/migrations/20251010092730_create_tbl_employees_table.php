@@ -12,11 +12,17 @@ final class CreateTblEmployeesTable extends AbstractMigration
         $table = $this->table('tbl_employees');
         $table
             ->addColumn('uuid', 'char', ['length' => 36])
-            ->addColumn('user_id', 'integer', ['null' => true]) // link to tbl_users if needed
+            ->addColumn('photo', 'string', ['limit' => 255, 'null' => true])
             ->addColumn('username', 'string', ['limit' => 50]) // username
+            ->addColumn('password', 'string', ['limit' => 255, 'null' => true])
             ->addColumn('first_name', 'string', ['limit' => 50])
             ->addColumn('last_name', 'string', ['limit' => 50])
             ->addColumn('full_name', 'string', ['limit' => 100])
+            ->addColumn('gender', 'string', ['limit' => 10, 'null' => true])
+            ->addColumn('email', 'string', ['limit' => 100, 'null' => true])
+            ->addColumn('phone', 'string', ['limit' => 20, 'null' => true])
+            ->addColumn('address', 'text', ['null' => true])
+            ->addColumn('dob', 'date', ['null' => true])
             ->addColumn('position', 'string', ['limit' => 50])
             ->addColumn('department', 'string', ['limit' => 50])
             ->addColumn('date_hired', 'date')
@@ -35,11 +41,12 @@ final class CreateTblEmployeesTable extends AbstractMigration
         $employeeData = [
             [
                 'uuid' => bin2hex(random_bytes(16)),
-                'user_id' => 1, // assuming admin user exists
                 'username' => 'admin',
+                'password' => password_hash('admin123', PASSWORD_BCRYPT),
                 'first_name' => 'Admin',
                 'last_name' => 'User',
                 'full_name' => 'Admin User',
+                'email' => 'admin@example.com',
                 'position' => 'System Administrator',
                 'department' => 'IT',
                 'date_hired' => date('Y-m-d'),

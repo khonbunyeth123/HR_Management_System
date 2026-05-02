@@ -15,9 +15,13 @@ use App\Core\Router;
 $router = new Router();
 
 /* ================= AUTH ROUTES ================= */
-$router->post('/api/auth/login',  'ControllerAuth@login');
-$router->post('/api/auth/logout', 'ControllerAuth@logout');
-$router->get('/api/auth/me',      'ControllerAuth@me');
+$router->post('/api/auth/login',            'ControllerAuth@login');
+$router->post('/api/auth/admin/login',      'ControllerAuth@adminLogin');
+$router->post('/api/auth/employee/login',   'ControllerAuth@employeeLogin');
+$router->post('/api/auth/logout',           'ControllerAuth@logout');
+$router->get('/api/auth/me',                'ControllerAuth@me');
+$router->get('/api/auth/admin/me',          'ControllerAuth@adminMe');
+$router->get('/api/auth/employee/me',       'ControllerAuth@employeeMe');
 
 
 /* ================= DASHBOARD ROUTES ================= */
@@ -26,11 +30,10 @@ $router->get('/api/dashboard/department',    'ControllerDashboard@department');
 $router->get('/api/dashboard/recent-leaves', 'ControllerDashboard@recentLeaves');
 
 /* ================= ATTENDANCE ROUTES ================= */
-$router->get('/api/attendance/today',    'ControllerAttendance@today');
+$router->post('/api/attendance/scan',    'ControllerAttendance@scan');
 $router->get('/api/attendance/show',     'ControllerAttendance@show');
-$router->post('/api/attendance/checkin', 'ControllerAttendance@checkIn');
-$router->post('/api/attendance/checkout','ControllerAttendance@checkOut');
-
+$router->post('/api/attendance/checkin', 'ControllerAttendance@checkin');
+$router->get('/api/attendance/qr', 'ControllerAttendance@qr');
 $router->get('/attendance/checkin',  'ControllerAttendance@checkin');
 $router->post('/attendance/checkin', 'ControllerAttendance@checkin');
 
@@ -49,6 +52,10 @@ $router->post('/api/leave/create',   'ControllerLeave@create');
 $router->post('/api/leave/approve',  'ControllerLeave@approve');
 $router->post('/api/leave/reject',   'ControllerLeave@reject');
 
+/* ================= HISTORY ROUTES (Mobile) ================= */
+$router->get('/api/attendance/history', 'ControllerAttendance@history');
+$router->get('/api/leave/history',      'ControllerLeave@history');
+
 /* ================= REPORT ROUTES ================= */
 $router->get('/api/report/daily',         'ControllerReport@dailyList');
 $router->get('/api/report/summary',       'ControllerReport@summary');
@@ -56,8 +63,6 @@ $router->get('/api/report/detailed',      'ControllerReport@detailedList');
 $router->get('/api/report/top-employees', 'ControllerReport@topEmployees');
 
 /* ================= USER ROUTES ================= */
-
-
 $router->get('/api/users',          'ControllerUser@show');
 $router->get('/api/users/show',     'ControllerUser@show');
 $router->post('/api/users/create',  'ControllerUser@create');
@@ -77,7 +82,6 @@ $router->patch('/api/roles/{id}/status','ControllerRole@updateStatus');
 // Role → Permission relations (via RoleController)
 $router->get('/api/roles/{id}/permissions',  'ControllerRole@rolePermissions');
 $router->post('/api/roles/{id}/permissions', 'ControllerRole@updateRolePermissions');
-
 // HTML view
 $router->get('/roles',            'ControllerRole@show');
 $router->post('/roles/create',    'ControllerRole@create');

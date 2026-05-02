@@ -1,0 +1,746 @@
+    ->             if ($this->db->inTransaction()) {
+    ->                 $this->db->rollBack();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '} catch (
+            if ($this->db->inTransaction()) {
+                $this->d' at line 1
+to generate employee ID.');            }
+    ->             throw $e;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            throw $e' at line 1
+to generate employee ID.');        }
+    ->     }
+    -> 
+    ->     public function update(int $id, array $data): bool
+    ->     {
+    ->         $allowedColumns = [
+    ->             'photo', 'user_id', 'username', 'first_name', 'last_name', 'full_name',
+    ->             'position', 'department', 'date_hired', 'status_id', 'updated_by'
+    ->         ];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $a' at line 1
+to generate employee ID.');
+to generate employee ID.');        if ($this->hasColumn('gender'))  $allowedColumns[] = 'gender';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('gender'))  $allowedColumns[] = 'gender'' at line 1
+to generate employee ID.');        if ($this->hasColumn('email'))   $allowedColumns[] = 'email';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('email'))   $allowedColumns[] = 'email'' at line 1
+to generate employee ID.');        if ($this->hasColumn('phone'))   $allowedColumns[] = 'phone';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('phone'))   $allowedColumns[] = 'phone'' at line 1
+to generate employee ID.');        if ($this->hasColumn('address')) $allowedColumns[] = 'address';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('address')) $allowedColumns[] = 'address'' at line 1
+to generate employee ID.');        if ($this->hasColumn('dob'))     $allowedColumns[] = 'dob';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('dob'))     $allowedColumns[] = 'dob'' at line 1
+to generate employee ID.');
+to generate employee ID.');        $set    = [];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$set    = []' at line 1
+to generate employee ID.');        $params = ['id' => $id];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$params = ['id' => $id]' at line 1
+to generate employee ID.');
+to generate employee ID.');        foreach ($allowedColumns as $column) {
+    ->             if (!array_key_exists($column, $data)) {
+    ->                 continue;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'foreach ($allowedColumns as $column) {
+            if (!array_key_exists($column' at line 1
+to generate employee ID.');            }
+    ->             $set[] = "{$column} = :{$column}";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            $set[] = "{$column} = :{$column}"' at line 1
+to generate employee ID.');            if (in_array($column, ['user_id', 'status_id', 'updated_by'], true)) {
+    ->                 $params[$column] = ($data[$column] === '' || $data[$column] === null)
+    ->                     ? null : (int) $data[$column];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (in_array($column, ['user_id', 'status_id', 'updated_by'], true)) {
+         ' at line 1
+to generate employee ID.');            } else {
+    ->                 $params[$column] = ($data[$column] === '') ? null : $data[$column];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '} else {
+                $params[$column] = ($data[$column] === '') ? null : $da' at line 1
+to generate employee ID.');            }
+    ->         }
+    -> 
+    ->         if (empty($set)) {
+    ->             return true;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        }
+
+        if (empty($set)) {
+            return true' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $set[] = 'updated_at = NOW()';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $set[] = 'updated_at = NOW()'' at line 1
+to generate employee ID.');
+to generate employee ID.');        $stmt = $this->db->prepare(
+    ->             "UPDATE {$this->table} SET " . implode(', ', $set) . " WHERE id = :id AND deleted_at IS NULL"
+    ->         );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET " . implode('' at line 1
+to generate employee ID.');
+to generate employee ID.');        return $stmt->execute($params);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $stmt->execute($params)' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     public function Delete(int $id, int $userId): bool
+    ->     {
+    ->         $stmt = $this->db->prepare("
+    ">             UPDATE {$this->table}
+    ">             SET deleted_at = NOW(), deleted_by = ?
+    ">             WHERE id = ?
+    ">         ");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    public function Delete(int $id, int $userId): bool
+    {
+        $stmt = ' at line 1
+to generate employee ID.');        return $stmt->execute([$userId, $id]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $stmt->execute([$userId, $id])' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function ensureUuid(array $row): array
+    ->     {
+    ->         $uuid = isset($row['uuid']) ? trim((string) $row['uuid']) : '';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function ensureUuid(array $row): array
+    {
+        $uuid = isse' at line 1
+to generate employee ID.');        if ($uuid !== '') {
+    ->             return $row;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($uuid !== '') {
+            return $row' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $generated = $this->generateUuid();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $generated = $this->generateUuid()' at line 1
+to generate employee ID.');
+to generate employee ID.');        if (isset($row['id'])) {
+    ->             $stmt = $this->db->prepare(
+    ->                 "UPDATE {$this->table} SET uuid = :uuid WHERE id = :id AND (uuid IS NULL OR uuid = '')"
+    ->             );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (isset($row['id'])) {
+            $stmt = $this->db->prepare(
+               ' at line 1
+to generate employee ID.');            $stmt->execute(['uuid' => $generated, 'id' => (int) $row['id']]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt->execute(['uuid' => $generated, 'id' => (int) $row['id']])' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $row['uuid'] = $generated;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $row['uuid'] = $generated' at line 1
+to generate employee ID.');        return $row;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $row' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function hasColumn(string $column): bool
+    ->     {
+    ->         if ($this->tableColumns === null) {
+    ->             $this->tableColumns = [];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function hasColumn(string $column): bool
+    {
+        if ($this-' at line 1
+to generate employee ID.');            $stmt = $this->db->query("SHOW COLUMNS FROM {$this->table}");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt = $this->db->query("SHOW COLUMNS FROM {$this->table}")' at line 1
+to generate employee ID.');            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+    ->                 if (!empty($col['Field'])) {
+    ->                     $this->tableColumns[$col['Field']] = true;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+                if (!empty' at line 1
+to generate employee ID.');                }
+    ->             }
+    ->         }
+    -> 
+    ->         return isset($this->tableColumns[$column]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            }
+        }
+
+        return isset($this->tableColumns[$column])' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function generateUuid(): string
+    ->     {
+    ->         $data    = random_bytes(16);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function generateUuid(): string
+    {
+        $data    = random_b' at line 1
+to generate employee ID.');        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$data[6] = chr((ord($data[6]) & 0x0f) | 0x40)' at line 1
+to generate employee ID.');        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$data[8] = chr((ord($data[8]) & 0x3f) | 0x80)' at line 1
+to generate employee ID.');
+to generate employee ID.');        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4))' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function buildEmployeeId(int $id): string
+    ->     {
+    ->         return 'EMP' . str_pad((string) $id, 5, '0', STR_PAD_LEFT);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function buildEmployeeId(int $id): string
+    {
+        return 'E' at line 1
+to generate employee ID.');    }
+    -> ^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');yeth@KhonBunyeth:~/project_doorstep/backend$ cat app/Models/Employee.php
+    -> <?php
+    -> declare(strict_types=1);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'yeth@KhonBunyeth:~/project_doorstep/backend$ cat app/Models/Employee.php
+<?php
+d' at line 1
+to generate employee ID.');
+to generate employee ID.');namespace App\Models;
+ERROR: 
+Unknown command '\M'.
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'namespace App\Models' at line 1
+to generate employee ID.');
+to generate employee ID.');use PDO;
+ERROR 1049 (42000): Unknown database 'PDO'
+to generate employee ID.');use App\Core\Database;
+Charset is not found
+    -> 
+    -> class Employee
+    -> {
+    ->     private PDO $db;
+ERROR 1049 (42000): Unknown database 'App
+
+class'
+to generate employee ID.');    private string $table = 'tbl_employees';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'private string $table = 'tbl_employees'' at line 1
+to generate employee ID.');    private ?array $tableColumns = null;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'private ?array $tableColumns = null' at line 1
+to generate employee ID.');
+to generate employee ID.');    public function __construct()
+    ->     {
+    ->         $this->db = Database::getInstance()->getConnection();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'public function __construct()
+    {
+        $this->db = Database::getInstance()-' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     public function getAll(): array
+    ->     {
+    ->         $stmt = $this->db->prepare("
+    ">             SELECT * FROM {$this->table}
+    ">             WHERE deleted_at IS NULL
+    ">             ORDER BY id DESC
+    ">         ");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    public function getAll(): array
+    {
+        $stmt = $this->db->prepare(' at line 1
+to generate employee ID.');        $stmt->execute();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt->execute()' at line 1
+to generate employee ID.');        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$rows = $stmt->fetchAll(PDO::FETCH_ASSOC)' at line 1
+to generate employee ID.');
+to generate employee ID.');        if ($this->hasColumn('uuid')) {
+    ->             foreach ($rows as $index => $row) {
+    ->                 $rows[$index] = $this->ensureUuid($row);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('uuid')) {
+            foreach ($rows as $index => $row) {
+' at line 1
+to generate employee ID.');            }
+    ->         }
+    -> 
+    ->         return $rows;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        }
+
+        return $rows' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     public function getById(int $id): ?array
+    ->     {
+    ->         $stmt = $this->db->prepare("
+    ">             SELECT * FROM {$this->table}
+    ">             WHERE id = :id AND deleted_at IS NULL
+    ">             LIMIT 1
+    ">         ");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    public function getById(int $id): ?array
+    {
+        $stmt = $this->db-' at line 1
+to generate employee ID.');        $stmt->execute(['id' => $id]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt->execute(['id' => $id])' at line 1
+to generate employee ID.');        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null' at line 1
+to generate employee ID.');
+to generate employee ID.');        if (!$row) {
+    ->             return null;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (!$row) {
+            return null' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         if ($this->hasColumn('uuid')) {
+    ->             $row = $this->ensureUuid($row);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        if ($this->hasColumn('uuid')) {
+            $row = $this->ensureUuid(' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         return $row;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        return $row' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     public function create(array $data): bool
+    ->     {
+    ->         $requiredKeys = [
+    ->             'username', 'first_name', 'last_name', 'full_name',
+    ->             'position', 'department', 'date_hired', 'status_id', 'created_at'
+    ->         ];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    public function create(array $data): bool
+    {
+        $requiredKeys = [' at line 1
+to generate employee ID.');
+to generate employee ID.');        foreach ($requiredKeys as $key) {
+    ->             if (!array_key_exists($key, $data)) {
+    ->                 throw new \InvalidArgumentException("Missing required field: $key");
+ERROR: 
+Unknown command '\I'.
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'foreach ($requiredKeys as $key) {
+            if (!array_key_exists($key, $data)' at line 1
+to generate employee ID.');            }
+    ->         }
+    -> 
+    ->         // Build params WITHOUT uuid — uuid is added below only if the column exists
+    ->         $params = [
+    ->             'photo'      => (!empty($data['photo']) && is_string($data['photo'])) ? $data['photo'] : null,
+    ->             'user_id'    => (array_key_exists('user_id', $data) && $data['user_id'] !== '' && $data['user_id'] !== null)
+    ->                                 ? (int) $data['user_id'] : null,
+    ->             'username'   => (string) $data['username'],
+    ->             'first_name' => (string) $data['first_name'],
+    ->             'last_name'  => (string) $data['last_name'],
+    ->             'full_name'  => (string) $data['full_name'],
+    ->             'position'   => (string) $data['position'],
+    ->             'department' => (string) $data['department'],
+    ->             'date_hired' => (string) $data['date_hired'],
+    ->             'status_id'  => (int)    $data['status_id'],
+    ->             'created_at' => (string) $data['created_at'],
+    ->             'created_by' => (array_key_exists('created_by', $data) && $data['created_by'] !== '' && $data['created_by'] !== null)
+    ->                                 ? (int) $data['created_by'] : null,
+    ->         ];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        }
+
+        // Build params WITHOUT uuid — uuid is added below only i' at line 1
+to generate employee ID.');
+to generate employee ID.');        // Only insert uuid if the column actually exists in the table
+    ->         if ($this->hasColumn('uuid')) {
+    ->             $params['uuid'] = !empty($data['uuid']) ? (string) $data['uuid'] : $this->generateUuid();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '// Only insert uuid if the column actually exists in the table
+        if ($this' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         if ($this->hasColumn('employee_id') && array_key_exists('employee_id', $data)) {
+    ->             $employeeId = trim((string) $data['employee_id']);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        if ($this->hasColumn('employee_id') && array_key_exists('employee_id'' at line 1
+to generate employee ID.');            $params['employee_id'] = ($employeeId === '') ? null : $employeeId;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$params['employee_id'] = ($employeeId === '') ? null : $employeeId' at line 1
+to generate employee ID.');        }
+    ->         if ($this->hasColumn('gender') && array_key_exists('gender', $data)) {
+    ->             $params['gender'] = ($data['gender'] === '') ? null : (string) $data['gender'];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        if ($this->hasColumn('gender') && array_key_exists('gender', $data)) {' at line 1
+to generate employee ID.');        }
+    ->         if ($this->hasColumn('email') && array_key_exists('email', $data)) {
+    ->             $params['email'] = ($data['email'] === '') ? null : (string) $data['email'];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        if ($this->hasColumn('email') && array_key_exists('email', $data)) {
+ ' at line 1
+to generate employee ID.');        }
+    ->         if ($this->hasColumn('phone') && array_key_exists('phone', $data)) {
+    ->             $params['phone'] = ($data['phone'] === '') ? null : (string) $data['phone'];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        if ($this->hasColumn('phone') && array_key_exists('phone', $data)) {
+ ' at line 1
+to generate employee ID.');        }
+    ->         if ($this->hasColumn('address') && array_key_exists('address', $data)) {
+    ->             $params['address'] = ($data['address'] === '') ? null : (string) $data['address'];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        if ($this->hasColumn('address') && array_key_exists('address', $data))' at line 1
+to generate employee ID.');        }
+    ->         if ($this->hasColumn('dob') && array_key_exists('dob', $data)) {
+    ->             $params['dob'] = ($data['dob'] === '') ? null : (string) $data['dob'];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        if ($this->hasColumn('dob') && array_key_exists('dob', $data)) {
+     ' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $autoGenerateEmployeeId = $this->hasColumn('employee_id')
+    ->             && (!array_key_exists('employee_id', $params) || $params['employee_id'] === null);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $autoGenerateEmployeeId = $this->hasColumn('employee_id')
+           ' at line 1
+to generate employee ID.');
+to generate employee ID.');        if ($autoGenerateEmployeeId) {
+    ->             unset($params['employee_id']);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($autoGenerateEmployeeId) {
+            unset($params['employee_id'])' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $insertColumns = array_keys($params);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $insertColumns = array_keys($params)' at line 1
+to generate employee ID.');        $placeholders  = array_map(static fn(string $col) => ':' . $col, $insertColumns);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$placeholders  = array_map(static fn(string $col) => ':' . $col, $insertColumns)' at line 1
+to generate employee ID.');        $sql = "INSERT INTO {$this->table} (" . implode(', ', $insertColumns) . ") VALUES (" . implode(', ', $placeholders) . ")";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$sql = "INSERT INTO {$this->table} (" . implode(', ', $insertColumns) . ") VALUE' at line 1
+to generate employee ID.');
+to generate employee ID.');        $stmt = $this->db->prepare($sql);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt = $this->db->prepare($sql)' at line 1
+to generate employee ID.');        $this->db->beginTransaction();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$this->db->beginTransaction()' at line 1
+to generate employee ID.');
+to generate employee ID.');        try {
+    ->             if (!$stmt->execute($params)) {
+    ->                 throw new \RuntimeException('Failed to create employee.');
+PROMPT set to 'to create employee.');'
+    ->             }
+    -> 
+    ->             if ($autoGenerateEmployeeId) {
+    ->                 $newId = (int) $this->db->lastInsertId();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'try {
+            if (!$stmt->execute($params)) {
+                throw new 
+   ' at line 1
+to create employee.');                if ($newId <= 0) {
+    ->                     throw new \RuntimeException('Failed to resolve employee primary key.');
+PROMPT set to 'to resolve employee primary key.');'
+    ->                 }
+    -> 
+    ->                 $generatedEmployeeId = $this->buildEmployeeId($newId);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($newId <= 0) {
+                    throw new 
+                }
+
+           ' at line 1
+to resolve employee primary key.');                $updateStmt = $this->db->prepare(
+    ->                     "UPDATE {$this->table} SET employee_id = :employee_id WHERE id = :id"
+    ->                 );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$updateStmt = $this->db->prepare(
+                    "UPDATE {$this->table} SET' at line 1
+to resolve employee primary key.');                if (!$updateStmt->execute(['employee_id' => $generatedEmployeeId, 'id' => $newId])) {
+    ->                     throw new \RuntimeException('Failed to generate employee ID.');
+PROMPT set to 'to generate employee ID.');'
+    ->                 }
+    ->             }
+    -> 
+    ->             $this->db->commit();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (!$updateStmt->execute(['employee_id' => $generatedEmployeeId, 'id' => $newId' at line 1
+to generate employee ID.');            return true;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return true' at line 1
+to generate employee ID.');        } catch (\Throwable $e) {
+    ->             if ($this->db->inTransaction()) {
+    ->                 $this->db->rollBack();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '} catch (
+            if ($this->db->inTransaction()) {
+                $this->d' at line 1
+to generate employee ID.');            }
+    ->             throw $e;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            throw $e' at line 1
+to generate employee ID.');        }
+    ->     }
+    -> 
+    ->     public function update(int $id, array $data): bool
+    ->     {
+    ->         $allowedColumns = [
+    ->             'photo', 'user_id', 'username', 'first_name', 'last_name', 'full_name',
+    ->             'position', 'department', 'date_hired', 'status_id', 'updated_by'
+    ->         ];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $a' at line 1
+to generate employee ID.');
+to generate employee ID.');        if ($this->hasColumn('gender'))  $allowedColumns[] = 'gender';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('gender'))  $allowedColumns[] = 'gender'' at line 1
+to generate employee ID.');        if ($this->hasColumn('email'))   $allowedColumns[] = 'email';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('email'))   $allowedColumns[] = 'email'' at line 1
+to generate employee ID.');        if ($this->hasColumn('phone'))   $allowedColumns[] = 'phone';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('phone'))   $allowedColumns[] = 'phone'' at line 1
+to generate employee ID.');        if ($this->hasColumn('address')) $allowedColumns[] = 'address';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('address')) $allowedColumns[] = 'address'' at line 1
+to generate employee ID.');        if ($this->hasColumn('dob'))     $allowedColumns[] = 'dob';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($this->hasColumn('dob'))     $allowedColumns[] = 'dob'' at line 1
+to generate employee ID.');
+to generate employee ID.');        $set    = [];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$set    = []' at line 1
+to generate employee ID.');        $params = ['id' => $id];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$params = ['id' => $id]' at line 1
+to generate employee ID.');
+to generate employee ID.');        foreach ($allowedColumns as $column) {
+    ->             if (!array_key_exists($column, $data)) {
+    ->                 continue;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'foreach ($allowedColumns as $column) {
+            if (!array_key_exists($column' at line 1
+to generate employee ID.');            }
+    ->             $set[] = "{$column} = :{$column}";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            $set[] = "{$column} = :{$column}"' at line 1
+to generate employee ID.');            if (in_array($column, ['user_id', 'status_id', 'updated_by'], true)) {
+    ->                 $params[$column] = ($data[$column] === '' || $data[$column] === null)
+    ->                     ? null : (int) $data[$column];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (in_array($column, ['user_id', 'status_id', 'updated_by'], true)) {
+         ' at line 1
+to generate employee ID.');            } else {
+    ->                 $params[$column] = ($data[$column] === '') ? null : $data[$column];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '} else {
+                $params[$column] = ($data[$column] === '') ? null : $da' at line 1
+to generate employee ID.');            }
+    ->         }
+    -> 
+    ->         if (empty($set)) {
+    ->             return true;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+        }
+
+        if (empty($set)) {
+            return true' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $set[] = 'updated_at = NOW()';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $set[] = 'updated_at = NOW()'' at line 1
+to generate employee ID.');
+to generate employee ID.');        $stmt = $this->db->prepare(
+    ->             "UPDATE {$this->table} SET " . implode(', ', $set) . " WHERE id = :id AND deleted_at IS NULL"
+    ->         );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET " . implode('' at line 1
+to generate employee ID.');
+to generate employee ID.');        return $stmt->execute($params);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $stmt->execute($params)' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     public function Delete(int $id, int $userId): bool
+    ->     {
+    ->         $stmt = $this->db->prepare("
+    ">             UPDATE {$this->table}
+    ">             SET deleted_at = NOW(), deleted_by = ?
+    ">             WHERE id = ?
+    ">         ");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    public function Delete(int $id, int $userId): bool
+    {
+        $stmt = ' at line 1
+to generate employee ID.');        return $stmt->execute([$userId, $id]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $stmt->execute([$userId, $id])' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function ensureUuid(array $row): array
+    ->     {
+    ->         $uuid = isset($row['uuid']) ? trim((string) $row['uuid']) : '';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function ensureUuid(array $row): array
+    {
+        $uuid = isse' at line 1
+to generate employee ID.');        if ($uuid !== '') {
+    ->             return $row;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if ($uuid !== '') {
+            return $row' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $generated = $this->generateUuid();
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $generated = $this->generateUuid()' at line 1
+to generate employee ID.');
+to generate employee ID.');        if (isset($row['id'])) {
+    ->             $stmt = $this->db->prepare(
+    ->                 "UPDATE {$this->table} SET uuid = :uuid WHERE id = :id AND (uuid IS NULL OR uuid = '')"
+    ->             );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if (isset($row['id'])) {
+            $stmt = $this->db->prepare(
+               ' at line 1
+to generate employee ID.');            $stmt->execute(['uuid' => $generated, 'id' => (int) $row['id']]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt->execute(['uuid' => $generated, 'id' => (int) $row['id']])' at line 1
+to generate employee ID.');        }
+    -> 
+    ->         $row['uuid'] = $generated;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+        $row['uuid'] = $generated' at line 1
+to generate employee ID.');        return $row;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return $row' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function hasColumn(string $column): bool
+    ->     {
+    ->         if ($this->tableColumns === null) {
+    ->             $this->tableColumns = [];
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function hasColumn(string $column): bool
+    {
+        if ($this-' at line 1
+to generate employee ID.');            $stmt = $this->db->query("SHOW COLUMNS FROM {$this->table}");
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$stmt = $this->db->query("SHOW COLUMNS FROM {$this->table}")' at line 1
+to generate employee ID.');            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+    ->                 if (!empty($col['Field'])) {
+    ->                     $this->tableColumns[$col['Field']] = true;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+                if (!empty' at line 1
+to generate employee ID.');                }
+    ->             }
+    ->         }
+    -> 
+    ->         return isset($this->tableColumns[$column]);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+            }
+        }
+
+        return isset($this->tableColumns[$column])' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function generateUuid(): string
+    ->     {
+    ->         $data    = random_bytes(16);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function generateUuid(): string
+    {
+        $data    = random_b' at line 1
+to generate employee ID.');        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$data[6] = chr((ord($data[6]) & 0x0f) | 0x40)' at line 1
+to generate employee ID.');        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '$data[8] = chr((ord($data[8]) & 0x3f) | 0x80)' at line 1
+to generate employee ID.');
+to generate employee ID.');        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4))' at line 1
+to generate employee ID.');    }
+    -> 
+    ->     private function buildEmployeeId(int $id): string
+    ->     {
+    ->         return 'EMP' . str_pad((string) $id, 5, '0', STR_PAD_LEFT);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '}
+
+    private function buildEmployeeId(int $id): string
+    {
+        return 'E' at line 1
+to generate employee ID.');    }
+    -> ^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');SELECT u.id, u.username, e.id as emp_id, e.full_name 
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;
+ERROR 1046 (3D000): No database selected
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');^C
+to generate employee ID.');SELECT u.id, u.username, e.id as emp_id, e.full_name 
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> LEFT JOIN tbl_employees e ON e.user_id = u.id;SELECT u.id, u.username, e.id as emp_id, e.full_name 
+ERROR 1046 (3D000): No database selected
+    -> FROM tbl_users u 
+    -> Terminal close -- exit!
+Aborted

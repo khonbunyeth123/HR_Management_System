@@ -18,11 +18,29 @@ class ControllerAuth
 
     public function login(): void
     {
-        $data     = json_decode(file_get_contents('php://input'), true);
-        $username = trim($data['username'] ?? '');
-        $password = trim($data['password'] ?? '');
+        $this->adminLogin();
+    }
 
-        $result = $this->authService->login($username, $password);
+    public function adminLogin(): void
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $result = $this->authService->adminLogin($data);
+
+        Response::json($result, $result['code']);
+    }
+
+    public function employeeLogin(): void
+    {
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $result = $this->authService->employeeLogin($data);
 
         Response::json($result, $result['code']);
     }
@@ -35,7 +53,18 @@ class ControllerAuth
 
     public function me(): void
     {
-        $result = $this->authService->me();
+        $this->adminMe();
+    }
+
+    public function adminMe(): void
+    {
+        $result = $this->authService->adminMe();
+        Response::json($result, $result['code']);
+    }
+
+    public function employeeMe(): void
+    {
+        $result = $this->authService->employeeMe();
         Response::json($result, $result['code']);
     }
 }   

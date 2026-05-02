@@ -20,7 +20,7 @@ class Employee
     public function getAll(): array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM {$this->table}
+            SELECT " . $this->selectColumns() . " FROM {$this->table}
             WHERE deleted_at IS NULL
             ORDER BY id DESC
         ");
@@ -39,7 +39,7 @@ class Employee
     public function getById(int $id): ?array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM {$this->table}
+            SELECT " . $this->selectColumns() . " FROM {$this->table}
             WHERE id = :id AND deleted_at IS NULL
             LIMIT 1
         ");
@@ -73,8 +73,6 @@ class Employee
         // Build params WITHOUT uuid — uuid is added below only if the column exists
         $params = [
             'photo'      => (!empty($data['photo']) && is_string($data['photo'])) ? $data['photo'] : null,
-            'user_id'    => (array_key_exists('user_id', $data) && $data['user_id'] !== '' && $data['user_id'] !== null)
-                                ? (int) $data['user_id'] : null,
             'username'   => (string) $data['username'],
             'first_name' => (string) $data['first_name'],
             'last_name'  => (string) $data['last_name'],
@@ -93,10 +91,6 @@ class Employee
             $params['uuid'] = !empty($data['uuid']) ? (string) $data['uuid'] : $this->generateUuid();
         }
 
-        if ($this->hasColumn('employee_id') && array_key_exists('employee_id', $data)) {
-            $employeeId = trim((string) $data['employee_id']);
-            $params['employee_id'] = ($employeeId === '') ? null : $employeeId;
-        }
         if ($this->hasColumn('gender') && array_key_exists('gender', $data)) {
             $params['gender'] = ($data['gender'] === '') ? null : (string) $data['gender'];
         }
@@ -112,12 +106,9 @@ class Employee
         if ($this->hasColumn('dob') && array_key_exists('dob', $data)) {
             $params['dob'] = ($data['dob'] === '') ? null : (string) $data['dob'];
         }
-
-        $autoGenerateEmployeeId = $this->hasColumn('employee_id')
-            && (!array_key_exists('employee_id', $params) || $params['employee_id'] === null);
-
-        if ($autoGenerateEmployeeId) {
-            unset($params['employee_id']);
+        if ($this->hasColumn('password') && array_key_exists('password', $data)) {
+            $password = trim((string) $data['password']);
+            $params['password'] = $password === '' ? null : password_hash($password, PASSWORD_BCRYPT);
         }
 
         $insertColumns = array_keys($params);
@@ -130,21 +121,6 @@ class Employee
         try {
             if (!$stmt->execute($params)) {
                 throw new \RuntimeException('Failed to create employee.');
-            }
-
-            if ($autoGenerateEmployeeId) {
-                $newId = (int) $this->db->lastInsertId();
-                if ($newId <= 0) {
-                    throw new \RuntimeException('Failed to resolve employee primary key.');
-                }
-
-                $generatedEmployeeId = $this->buildEmployeeId($newId);
-                $updateStmt = $this->db->prepare(
-                    "UPDATE {$this->table} SET employee_id = :employee_id WHERE id = :id"
-                );
-                if (!$updateStmt->execute(['employee_id' => $generatedEmployeeId, 'id' => $newId])) {
-                    throw new \RuntimeException('Failed to generate employee ID.');
-                }
             }
 
             $this->db->commit();
@@ -160,7 +136,7 @@ class Employee
     public function update(int $id, array $data): bool
     {
         $allowedColumns = [
-            'photo', 'user_id', 'username', 'first_name', 'last_name', 'full_name',
+            'photo', 'username', 'first_name', 'last_name', 'full_name',
             'position', 'department', 'date_hired', 'status_id', 'updated_by'
         ];
 
@@ -169,6 +145,7 @@ class Employee
         if ($this->hasColumn('phone'))   $allowedColumns[] = 'phone';
         if ($this->hasColumn('address')) $allowedColumns[] = 'address';
         if ($this->hasColumn('dob'))     $allowedColumns[] = 'dob';
+        if ($this->hasColumn('password')) $allowedColumns[] = 'password';
 
         $set    = [];
         $params = ['id' => $id];
@@ -177,11 +154,19 @@ class Employee
             if (!array_key_exists($column, $data)) {
                 continue;
             }
-            $set[] = "{$column} = :{$column}";
-            if (in_array($column, ['user_id', 'status_id', 'updated_by'], true)) {
+            if (in_array($column, ['status_id', 'updated_by'], true)) {
+                $set[] = "{$column} = :{$column}";
                 $params[$column] = ($data[$column] === '' || $data[$column] === null)
                     ? null : (int) $data[$column];
+            } elseif ($column === 'password') {
+                $password = trim((string) $data[$column]);
+                if ($password === '') {
+                    continue;
+                }
+                $set[] = "{$column} = :{$column}";
+                $params[$column] = password_hash($password, PASSWORD_BCRYPT);
             } else {
+                $set[] = "{$column} = :{$column}";
                 $params[$column] = ($data[$column] === '') ? null : $data[$column];
             }
         }
@@ -253,8 +238,22 @@ class Employee
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
-    private function buildEmployeeId(int $id): string
+    private function selectColumns(): string
     {
-        return 'EMP' . str_pad((string) $id, 5, '0', STR_PAD_LEFT);
+        $preferredColumns = [
+            'id', 'uuid', 'photo', 'username', 'first_name', 'last_name', 'full_name',
+            'gender', 'email', 'phone', 'address', 'dob', 'position', 'department',
+            'date_hired', 'status_id', 'created_at', 'created_by', 'updated_at',
+            'updated_by', 'deleted_at', 'deleted_by'
+        ];
+
+        $columns = [];
+        foreach ($preferredColumns as $column) {
+            if ($this->hasColumn($column)) {
+                $columns[] = $column;
+            }
+        }
+
+        return implode(', ', $columns);
     }
 }

@@ -106,18 +106,27 @@ class Leave {
         return $types;
     }
 
-  public function approveLeave(string $uuid, int $statusId): bool
-{
-    $sql = "UPDATE tbl_leave_applications
-            SET status_id = :status_id
-            WHERE uuid = :uuid";
+    public function getLeaveTypeIdByName(string $name): ?int
+    {
+        $stmt = $this->db->prepare("SELECT id FROM tbl_leave_types WHERE name = :name LIMIT 1");
+        $stmt->bindValue(':name', $name);
+        $stmt->execute();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ? (int)$row['id'] : null;
+    }
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
-    $stmt->bindValue(':uuid', $uuid);
+    public function approveLeave(string $uuid, int $statusId): bool
+    {
+        $sql = "UPDATE tbl_leave_applications
+                SET status_id = :status_id
+                WHERE uuid = :uuid";
 
-    return $stmt->execute();
-}
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
+        $stmt->bindValue(':uuid', $uuid);
+
+        return $stmt->execute();
+    }
 
 
     public function rejectLeave(string $uuid, string $remark): bool
@@ -132,9 +141,6 @@ class Leave {
 
         return $stmt->execute();
     }
-
-
-
 
     public function create(int $employee_id, int $leave_type_id, string $start_date, string $end_date, string $reason): array
     {
@@ -154,8 +160,8 @@ class Leave {
             // 3. Insert leave application
             $stmt = $this->db->prepare("
                 INSERT INTO tbl_leave_applications
-                (uuid, employee_id, leave_type_id, start_date, end_date, reason, created_at)
-                VALUES (:uuid, :employee_id, :leave_type_id, :start_date, :end_date, :reason, NOW())
+                (uuid, employee_id, leave_type_id, start_date, end_date, reason, status_id, created_at)
+                VALUES (:uuid, :employee_id, :leave_type_id, :start_date, :end_date, :reason, :status_id, NOW())
             ");
 
             $stmt->bindValue(':uuid', $uuid);
@@ -164,6 +170,7 @@ class Leave {
             $stmt->bindValue(':start_date', $start_date);
             $stmt->bindValue(':end_date', $end_date);
             $stmt->bindValue(':reason', $reason);
+            $stmt->bindValue(':status_id', 0, \PDO::PARAM_INT);
 
             $stmt->execute();
 
@@ -177,5 +184,45 @@ class Leave {
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    public function getByEmployeeId(array $filters, int $limit, int $offset): array
+    {
+        $employeeId = (int)$filters['employee_id'];
+
+        // Count total
+        $countStmt = $this->db->prepare("
+            SELECT COUNT(*) FROM tbl_leave_applications
+            WHERE employee_id = :employee_id
+        ");
+        $countStmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+        $countStmt->execute();
+        $total = (int) $countStmt->fetchColumn();
+
+        // Fetch rows
+        $stmt = $this->db->prepare("
+            SELECT 
+                l.uuid,
+                t.name  AS leave_type,
+                l.start_date,
+                l.end_date,
+                l.reason,
+                l.status_id,
+                l.created_at
+            FROM tbl_leave_applications l
+            INNER JOIN tbl_leave_types t ON l.leave_type_id = t.id
+            WHERE l.employee_id = :employee_id
+            ORDER BY l.created_at DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit',       $limit,      PDO::PARAM_INT);
+        $stmt->bindValue(':offset',      $offset,     PDO::PARAM_INT);
+        $stmt->execute();
+
+        return [
+            'total' => $total,
+            'rows'  => $stmt->fetchAll(PDO::FETCH_ASSOC),
+        ];
     }
 }

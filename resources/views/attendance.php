@@ -1,57 +1,58 @@
 <div class="w-full h-full">
     <div class="bg-white shadow-lg p-4">
 
-
-        <!-- QR Icon Button -->
-        <button onclick="openQRModal()"
-            class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
-            <iconify-icon icon="mdi:qrcode" style="font-size:16px;"></iconify-icon>
-            QR Code
-        </button>
-
-        <!-- QR Modal Overlay -->
-        <div id="qrModal" onclick="closeQRModal(event)"
-            style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-            <div style="background:#fff; border-radius:14px; padding:1.5rem; width:100%; max-width:300px; text-align:center; position:relative;">
-
-                <!-- Header -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                    <p style="font-size:14px; font-weight:600; color:#111827; margin:0;">Attendance QR Code</p>
-                    <button onclick="document.getElementById('qrModal').style.display='none'"
-                        style="width:26px; height:26px; border-radius:50%; border:1px solid #e5e7eb; background:#f9fafb; cursor:pointer; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center;">✕</button>
-                </div>
-
-                <!-- QR -->
-                <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; display:inline-block; margin-bottom:10px;">
-                    <div id="qrcode"></div>
-                </div>
-
-                <!-- URL label -->
-                <p style="font-size:11px; color:#9ca3af; margin-bottom:14px;" id="qrUrlLabel"></p>
-
-                <!-- Buttons -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <button onclick="downloadQR()"
-                        style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#4f46e5; color:#fff;">
-                        ⬇ Download
-                    </button>
-                    <button onclick="printQR()"
-                        style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid #e5e7eb; cursor:pointer; background:#fff; color:#374151;">
-                        🖨 Print
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
-        <style>
-            #qrcode canvas, #qrcode img {
-                width: 160px !important;
-                height: 160px !important;
-            }
-        </style>
-    
         <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+
+            <!-- QR Icon Button -->
+            <button onclick="openQRModal()"
+                class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
+                <iconify-icon icon="mdi:qrcode" style="font-size:16px;"></iconify-icon>
+                QR Code
+            </button>
+
+            <!-- QR Modal Overlay -->
+            <div id="qrModal" onclick="closeQRModal(event)"
+                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                <div style="background:#fff; border-radius:14px; padding:1.5rem; width:100%; max-width:300px; text-align:center; position:relative;">
+
+                    <!-- Header -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <p style="font-size:14px; font-weight:600; color:#111827; margin:0;">Attendance QR Code</p>
+                        <button onclick="document.getElementById('qrModal').style.display='none'"
+                            style="width:26px; height:26px; border-radius:50%; border:1px solid #e5e7eb; background:#f9fafb; cursor:pointer; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center;">✕</button>
+                    </div>
+
+                    <!-- QR -->
+                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; display:inline-block; margin-bottom:10px;">
+                        <div id="qrcode"></div>
+                    </div>
+
+                    <!-- URL label -->
+                    <p style="font-size:11px; color:#9ca3af; margin-bottom:14px;" id="qrUrlLabel"></p>
+
+                    <!-- Buttons -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button onclick="downloadQR()"
+                            style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#4f46e5; color:#fff;">
+                            ⬇ Download
+                        </button>
+                        <button onclick="printQR()"
+                            style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid #e5e7eb; cursor:pointer; background:#fff; color:#374151;">
+                            🖨 Print
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <style>
+                #qrcode canvas, #qrcode img {
+                    width: 160px !important;
+                    height: 160px !important;
+                }
+            </style>
+
+
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <iconify-icon icon="mdi:clock-check" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
@@ -117,18 +118,18 @@
     const perPage   = 18;
 
 
-    const checkinUrl = window.location.origin + '/attendance/checkin';
-    document.getElementById('qrUrlLabel').textContent = checkinUrl;
+    const qrContent = 'DOORSTEP_ATTENDANCE';
+
+    document.getElementById('qrUrlLabel').textContent = 'Scan to record your attendance';
 
     new QRCode(document.getElementById('qrcode'), {
-        text: checkinUrl,
+        text: qrContent,  // ✅ just the number e.g. "1"
         width: 256,
         height: 256,
         colorDark: '#000000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H
     });
-
     function openQRModal() {
         document.getElementById('qrModal').style.display = 'flex';
     }
@@ -149,7 +150,7 @@
         document.body.appendChild(tempDiv);
 
         new QRCode(tempDiv, {
-            text: checkinUrl,
+            text: qrContent,
             width: qrSize,
             height: qrSize,
             colorDark: '#000000',
@@ -308,7 +309,7 @@
                     // apply frontend filters
                     let filtered = allRecords.filter(rec => {
                         const matchSearch = (
-                            (rec.emp_code && rec.emp_code.toLowerCase().includes(searchInput.toLowerCase())) ||
+                            (String(rec.emp_code || '').toLowerCase().includes(searchInput.toLowerCase())) ||
                             rec.date.includes(searchInput)
                         );
 
@@ -353,7 +354,7 @@
 
         tbody.innerHTML = records.map(rec => `
             <tr class="hover:bg-indigo-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-gray-900">#${rec.emp_code}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">${rec.emp_code ? '#' + rec.emp_code : '<span class="text-red-400 text-xs">Unknown (#' + rec.employee_id + ')</span>'}</td>
                 <td class="px-4 py-3 text-gray-600 text-sm">${new Date(rec.date).toLocaleDateString()}</td>
                 <td class="px-4 py-3 font-mono text-sm font-semibold text-indigo-600">${rec.check_time}</td>
                 <td class="px-4 py-3">

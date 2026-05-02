@@ -41,7 +41,6 @@ class LeaveService
         return $this->model->rejectLeave($uuid, $remark);
     }
 
-
     public function create(array $input): array
     {
         // Required fields
@@ -69,4 +68,26 @@ class LeaveService
         );
     }
 
+    public function getLeaveTypeIdByName(string $name): ?int
+    {
+        return $this->model->getLeaveTypeIdByName($name);
+    }
+
+    public function getEmployeeHistory(int $employeeId, int $page, int $perPage): array
+    {
+        if ($page < 1) $page = 1;
+
+        $offset = ($page - 1) * $perPage;
+        $result = $this->model->getByEmployeeId(
+            ['employee_id' => $employeeId],
+            $perPage,
+            $offset
+        );
+
+        return [
+            'rows'        => $result['rows'],
+            'total'       => $result['total'],
+            'total_pages' => (int)ceil($result['total'] / $perPage),
+        ];
+    }
 }
