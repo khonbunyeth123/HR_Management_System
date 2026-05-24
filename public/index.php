@@ -7,13 +7,14 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$appDebug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
+ini_set('display_errors', $appDebug ? '1' : '0');
 
 /* ================= FIX BASE PATH ================= */
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// IMPORTANT: change this if your folder name changes
-$basePath = '/project_doorstep/my_project_3/admin';
+// Base path can be configured per-environment (empty by default)
+$basePath = rtrim((string) ($_ENV['APP_BASE_PATH'] ?? ''), '/');
 
 if (strpos($uri, $basePath) === 0) {
     $uri = substr($uri, strlen($basePath));

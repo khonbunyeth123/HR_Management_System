@@ -62,8 +62,4 @@ class Permission
             throw $e;
         }
     }
-<<<<<<< HEAD:admin/app/Models/Permission.php
 }
-=======
-}
->>>>>>> 63ab6808289b1667a63fc4d3548803e10bc52183:app/Models/Permission.php
