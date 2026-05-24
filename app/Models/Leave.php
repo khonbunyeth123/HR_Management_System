@@ -225,4 +225,16 @@ class Leave {
             'rows'  => $stmt->fetchAll(PDO::FETCH_ASSOC),
         ];
     }
+
+    public function getEmployeeIdByUuid(string $uuid): ?int
+    {
+        $db   = \App\Core\Database::getInstance();
+        $stmt = $db->prepare(
+            'SELECT employee_id FROM tbl_leave_applications WHERE uuid = :uuid LIMIT 1'
+        );
+        $stmt->execute([':uuid' => $uuid]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ? (int)$row['employee_id'] : null;
+    }
+
 }

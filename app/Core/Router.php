@@ -393,6 +393,13 @@ class Router
         $controller = $handler['controller'] ?? '';
         $action = $handler['action'] ?? '';
 
+        // ✅ Employees can view/update their own profile without permissions
+        if ($controller === 'ControllerEmployee'
+            && in_array($action, ['show', 'update'], true)
+            && ($_SESSION['auth_type'] ?? '') === 'employee') {
+            return [];
+        }
+
         return match ($controller) {
             'ControllerDashboard' => ['dashboard.view'],
             'ControllerAttendance' => $this->permissionsForAttendanceAction($action),
@@ -419,6 +426,7 @@ class Router
             $this->route === '/api/leave/create',
             $this->route === '/api/attendance/history',
             $this->route === '/api/leave/history'         => 'employee',
+            preg_match('#^/api/employees/\d+$#', $this->route) === 1 => null,
             $this->route === '/api/leave/list'            => null,
             default                                       => 'user',
         };

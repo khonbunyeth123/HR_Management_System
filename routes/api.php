@@ -22,6 +22,7 @@ $router->post('/api/auth/logout',           'ControllerAuth@logout');
 $router->get('/api/auth/me',                'ControllerAuth@me');
 $router->get('/api/auth/admin/me',          'ControllerAuth@adminMe');
 $router->get('/api/auth/employee/me',       'ControllerAuth@employeeMe');
+$router->post('/api/auth/fcm-token', 'ControllerAuth@saveFcmToken');
 
 
 /* ================= DASHBOARD ROUTES ================= */
