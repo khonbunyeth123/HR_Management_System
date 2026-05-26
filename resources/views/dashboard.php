@@ -1,6 +1,6 @@
 <div class="w-full">
-    <div class="bg-white shadow-lg p-4">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
+    <div class="bg-white shadow-lg p-2">
+        <h1 class="text-xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
 
     <!-- Stats Grid -->
     <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

@@ -1,8 +1,5 @@
-<?php
-// employee.php — Employee Directory Page
-// Connects to your backend API at /api/employees
-?>
-<!DOCTYPE html>
+
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -15,312 +12,315 @@
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
-</head>
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-<div class="p-2">
+</head> -->
+<!-- <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen"> -->
 
-    <!-- ── Header ─────────────────────────────────────── -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <iconify-icon icon="mdi:users-group" style="font-size:24px;color:#4f46e5;"></iconify-icon>
-                    <h1 class="text-lg font-bold text-gray-900">Employee Directory</h1>
+<div class="w-full h-full"> 
+    <div class="p-2">
+
+        <!-- ── Header ─────────────────────────────────────── -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <iconify-icon icon="mdi:users-group" style="font-size:24px;color:#4f46e5;"></iconify-icon>
+                        <h1 class="text-lg font-bold text-gray-900">Employee Directory</h1>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Staff</span>
+                        <button onclick="openCreateModal()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
+                            <iconify-icon icon="mdi:plus-circle"></iconify-icon>
+                            Add Employee
+                        </button>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Staff</span>
-                    <button onclick="openCreateModal()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
-                        <iconify-icon icon="mdi:plus-circle"></iconify-icon>
-                        Add Employee
+
+                <!-- Search & Filter Bar -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex-1 relative">
+                        <iconify-icon icon="mdi:magnify"
+                            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:18px;">
+                        </iconify-icon>
+                        <input type="text" id="searchInput" placeholder="Search by name, employee ID, or username..."
+                            class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                    <select id="departmentFilter"
+                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Departments</option>
+                    </select>
+                    <select id="positionFilter"
+                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Positions</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Table ──────────────────────────────────────── -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold">Emp ID</th>
+                            <th class="px-4 py-3 text-left font-semibold">Name</th>
+                            <th class="px-4 py-3 text-left font-semibold">Username</th>
+                            <th class="px-4 py-3 text-left font-semibold">Phone</th>
+                            <th class="px-4 py-3 text-left font-semibold">Position</th>
+                            <th class="px-4 py-3 text-left font-semibold">Department</th>
+                            <th class="px-4 py-3 text-left font-semibold">Hired</th>
+                            <th class="px-4 py-3 text-left font-semibold">Status</th>
+                            <th class="px-4 py-3 text-center font-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody" class="divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="10" class="px-4 py-6 text-center text-gray-400">
+                                <div class="flex items-center justify-center gap-2">
+                                    <iconify-icon icon="mdi:loading" style="font-size:20px;" class="animate-spin"></iconify-icon>
+                                    Loading...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="paginationContainer" class="p-4 border-t border-gray-200"></div>
+        </div>
+    </div>
+
+    <!-- ── Create / Edit Modal ────────────────────────────── -->
+    <div id="employeeModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-900" id="modalTitle">Add New Employee</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <iconify-icon icon="mdi:close" style="font-size:24px;"></iconify-icon>
+                </button>
+            </div>
+
+            <form id="employeeForm" class="p-6 space-y-5">
+                <input type="hidden" id="employeeId">
+
+                <!-- Personal Information -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <iconify-icon icon="mdi:account" style="font-size:18px;color:#4f46e5;"></iconify-icon>
+                        Personal Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                        <!-- Photo Upload -->
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">Profile Photo</label>
+                            <div class="flex items-center gap-5">
+                                <!-- Avatar Preview -->
+                                <div class="relative flex-shrink-0">
+                                    <img id="photoPreview"
+                                        src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Ccircle cx='48' cy='48' r='48' fill='%23e5e7eb'/%3E%3Ccircle cx='48' cy='38' r='17' fill='%239ca3af'/%3E%3Cellipse cx='48' cy='84' rx='26' ry='22' fill='%239ca3af'/%3E%3C/svg%3E"
+                                        class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 shadow-sm">
+                                    <!-- Remove button -->
+                                    <button type="button" id="removePhotoBtn" onclick="removePhoto()"
+                                        class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center border-2 border-white hover:bg-red-600 transition-colors"
+                                        title="Remove photo">&#x2715;</button>
+                                </div>
+                                <!-- Upload controls -->
+                                <div>
+                                    <label for="photo"
+                                        class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
+                                        <iconify-icon icon="mdi:upload"></iconify-icon>
+                                        Upload Photo
+                                    </label>
+                                    <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" class="hidden">
+                                    <p id="photoHint" class="text-xs text-gray-500 mt-2">JPG, PNG, WEBP (max 2 MB)</p>
+                                    <p id="photoFileName" class="hidden text-xs text-indigo-600 mt-2 font-medium"></p>
+                                    <p id="photoError" class="hidden text-xs text-red-500 mt-2"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
+                            <input type="text" id="first_name" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="John">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
+                            <input type="text" id="last_name" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Doe">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Gender *</label>
+                            <select id="gender" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                                <option value="">Select</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Username *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">@</span>
+                                <input type="text" id="username" required
+                                    class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="johndoe">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Employee ID</label>
+                            <input type="text" id="employee_code" readonly
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                                placeholder="Auto-generated after save">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                            <div class="relative">
+                                <iconify-icon icon="mdi:email-outline"
+                                    style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:16px;">
+                                </iconify-icon>
+                                <input type="email" id="email" required
+                                    class="w-full pl-4 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="john.doe@example.com">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                            <div class="relative">
+                                <iconify-icon icon="mdi:phone-outline"
+                                    style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:16px;">
+                                </iconify-icon>
+                                <input type="text" id="phone"
+                                    class="w-full pl-4 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="012 345 678">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                            <input type="password" id="password"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Required for new employee login">
+                            <p class="text-xs text-gray-500 mt-2" id="passwordHelp">Set the mobile login password for this employee.</p>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
+                            <input type="text" id="address" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="123 Main St, City, State">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth *</label>
+                            <input type="date" id="dob" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Information -->
+                <div>
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <iconify-icon icon="mdi:briefcase" style="font-size:18px;color:#4f46e5;"></iconify-icon>
+                        Job Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Position *</label>
+                            <input type="text" id="position" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Software Engineer">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Department *</label>
+                            <input type="text" id="department" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Engineering">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Date Hired *</label>
+                            <input type="date" id="date_hired" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Status *</label>
+                            <select id="status_id" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="1">Active</option>
+                                <option value="2">Inactive</option>
+                                <option value="3">On Leave</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeModal()"
+                        class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 font-medium">
+                        <iconify-icon icon="mdi:content-save"></iconify-icon>
+                        <span id="submitButtonText">Save Employee</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Delete Confirmation Modal ──────────────────────── -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <iconify-icon icon="mdi:alert" style="font-size:24px;color:#dc2626;"></iconify-icon>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Delete Employee</h3>
+                        <p class="text-sm text-gray-600">This action cannot be undone</p>
+                    </div>
+                </div>
+                <p class="text-gray-700 mb-6">Are you sure you want to delete <strong id="deleteEmployeeName"></strong>?</p>
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeDeleteModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="confirmDelete()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium">
+                        <iconify-icon icon="mdi:delete"></iconify-icon>
+                        Delete
                     </button>
                 </div>
             </div>
-
-            <!-- Search & Filter Bar -->
-            <div class="flex flex-col sm:flex-row gap-2">
-                <div class="flex-1 relative">
-                    <iconify-icon icon="mdi:magnify"
-                        style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:18px;">
-                    </iconify-icon>
-                    <input type="text" id="searchInput" placeholder="Search by name, employee ID, or username..."
-                        class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                <select id="departmentFilter"
-                    class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                    <option value="">All Departments</option>
-                </select>
-                <select id="positionFilter"
-                    class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                    <option value="">All Positions</option>
-                </select>
-            </div>
         </div>
     </div>
 
-    <!-- ── Table ──────────────────────────────────────── -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Emp ID</th>
-                        <th class="px-4 py-3 text-left font-semibold">Name</th>
-                        <th class="px-4 py-3 text-left font-semibold">Username</th>
-                        <th class="px-4 py-3 text-left font-semibold">Phone</th>
-                        <th class="px-4 py-3 text-left font-semibold">Position</th>
-                        <th class="px-4 py-3 text-left font-semibold">Department</th>
-                        <th class="px-4 py-3 text-left font-semibold">Hired</th>
-                        <th class="px-4 py-3 text-left font-semibold">Status</th>
-                        <th class="px-4 py-3 text-center font-semibold">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="employeeTableBody" class="divide-y divide-gray-100">
-                    <tr>
-                        <td colspan="10" class="px-4 py-6 text-center text-gray-400">
-                            <div class="flex items-center justify-center gap-2">
-                                <iconify-icon icon="mdi:loading" style="font-size:20px;" class="animate-spin"></iconify-icon>
-                                Loading...
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="paginationContainer" class="p-4 border-t border-gray-200"></div>
-    </div>
-</div>
-
-<!-- ── Create / Edit Modal ────────────────────────────── -->
-<div id="employeeModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-
-        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-gray-900" id="modalTitle">Add New Employee</h2>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <iconify-icon icon="mdi:close" style="font-size:24px;"></iconify-icon>
-            </button>
-        </div>
-
-        <form id="employeeForm" class="p-6 space-y-5">
-            <input type="hidden" id="employeeId">
-
-            <!-- Personal Information -->
+    <!-- ── Toast Notification ─────────────────────────────── -->
+    <div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
+        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-center gap-3">
+            <iconify-icon id="toastIcon" style="font-size:24px;"></iconify-icon>
             <div>
-                <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <iconify-icon icon="mdi:account" style="font-size:18px;color:#4f46e5;"></iconify-icon>
-                    Personal Information
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    <!-- Photo Upload -->
-                    <div class="md:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">Profile Photo</label>
-                        <div class="flex items-center gap-5">
-                            <!-- Avatar Preview -->
-                            <div class="relative flex-shrink-0">
-                                <img id="photoPreview"
-                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Ccircle cx='48' cy='48' r='48' fill='%23e5e7eb'/%3E%3Ccircle cx='48' cy='38' r='17' fill='%239ca3af'/%3E%3Cellipse cx='48' cy='84' rx='26' ry='22' fill='%239ca3af'/%3E%3C/svg%3E"
-                                    class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 shadow-sm">
-                                <!-- Remove button -->
-                                <button type="button" id="removePhotoBtn" onclick="removePhoto()"
-                                    class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center border-2 border-white hover:bg-red-600 transition-colors"
-                                    title="Remove photo">&#x2715;</button>
-                            </div>
-                            <!-- Upload controls -->
-                            <div>
-                                <label for="photo"
-                                    class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
-                                    <iconify-icon icon="mdi:upload"></iconify-icon>
-                                    Upload Photo
-                                </label>
-                                <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" class="hidden">
-                                <p id="photoHint" class="text-xs text-gray-500 mt-2">JPG, PNG, WEBP (max 2 MB)</p>
-                                <p id="photoFileName" class="hidden text-xs text-indigo-600 mt-2 font-medium"></p>
-                                <p id="photoError" class="hidden text-xs text-red-500 mt-2"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">First Name *</label>
-                        <input type="text" id="first_name" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="John">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name *</label>
-                        <input type="text" id="last_name" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="Doe">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Gender *</label>
-                        <select id="gender" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                            <option value="">Select</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Username *</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">@</span>
-                            <input type="text" id="username" required
-                                class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="johndoe">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Employee ID</label>
-                        <input type="text" id="employee_code" readonly
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-                            placeholder="Auto-generated after save">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:email-outline"
-                                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:16px;">
-                            </iconify-icon>
-                            <input type="email" id="email" required
-                                class="w-full pl-4 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="john.doe@example.com">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:phone-outline"
-                                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:16px;">
-                            </iconify-icon>
-                            <input type="text" id="phone"
-                                class="w-full pl-4 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="012 345 678">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                        <input type="password" id="password"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="Required for new employee login">
-                        <p class="text-xs text-gray-500 mt-2" id="passwordHelp">Set the mobile login password for this employee.</p>
-                    </div>
-
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
-                        <input type="text" id="address" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="123 Main St, City, State">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth *</label>
-                        <input type="date" id="dob" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
+                <p class="font-semibold text-gray-900" id="toastTitle"></p>
+                <p class="text-sm text-gray-600" id="toastMessage"></p>
             </div>
-
-            <!-- Job Information -->
-            <div>
-                <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <iconify-icon icon="mdi:briefcase" style="font-size:18px;color:#4f46e5;"></iconify-icon>
-                    Job Information
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Position *</label>
-                        <input type="text" id="position" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="Software Engineer">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Department *</label>
-                        <input type="text" id="department" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="Engineering">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date Hired *</label>
-                        <input type="date" id="date_hired" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status *</label>
-                        <select id="status_id" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="1">Active</option>
-                            <option value="2">Inactive</option>
-                            <option value="3">On Leave</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2 pt-4 border-t border-gray-200">
-                <button type="button" onclick="closeModal()"
-                    class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
-                    Cancel
-                </button>
-                <button type="submit"
-                    class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 font-medium">
-                    <iconify-icon icon="mdi:content-save"></iconify-icon>
-                    <span id="submitButtonText">Save Employee</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ── Delete Confirmation Modal ──────────────────────── -->
-<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-        <div class="p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <iconify-icon icon="mdi:alert" style="font-size:24px;color:#dc2626;"></iconify-icon>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">Delete Employee</h3>
-                    <p class="text-sm text-gray-600">This action cannot be undone</p>
-                </div>
-            </div>
-            <p class="text-gray-700 mb-6">Are you sure you want to delete <strong id="deleteEmployeeName"></strong>?</p>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeDeleteModal()"
-                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium">
-                    Cancel
-                </button>
-                <button onclick="confirmDelete()"
-                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium">
-                    <iconify-icon icon="mdi:delete"></iconify-icon>
-                    Delete
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ── Toast Notification ─────────────────────────────── -->
-<div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
-    <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-center gap-3">
-        <iconify-icon id="toastIcon" style="font-size:24px;"></iconify-icon>
-        <div>
-            <p class="font-semibold text-gray-900" id="toastTitle"></p>
-            <p class="text-sm text-gray-600" id="toastMessage"></p>
         </div>
     </div>
 </div>
@@ -865,6 +865,6 @@ if ((actionFromQuery || '').toLowerCase() === 'add') {
     openCreateModal();
 }
 </script>
-</body>
-</html>
+<!-- </body> -->
+<!-- </html> -->
 

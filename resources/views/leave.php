@@ -1,6 +1,6 @@
-<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
-
-    <div class="p-4">
+<!-- <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen"></body> -->
+<div class="w-full h-full"> 
+    <div class="p-2">
         <!-- Header with Filters -->
         <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
             <div class="flex flex-col gap-3">
@@ -62,7 +62,7 @@
             <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50"></div>
         </div>
     </div>
-
+</div>
     <script src="/assets/js/pagination.js"></script>
     <script>
         const perPage = 5;
@@ -264,4 +264,4 @@
         // Initial load
         loadLeaveApplications(1);
     </script>
-</body>
+
