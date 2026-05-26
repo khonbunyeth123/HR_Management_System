@@ -1,29 +1,22 @@
 <div class="w-full h-full">
     <div class="bg-white shadow-lg p-4">
-
         <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-
-            <!-- QR Icon Button -->
-            <button onclick="openQRModal()"
-                class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
-                <iconify-icon icon="mdi:qrcode" style="font-size:16px;"></iconify-icon>
-                QR Code
-            </button>
+            
 
             <!-- QR Modal Overlay -->
             <div id="qrModal" onclick="closeQRModal(event)"
-                style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-                <div style="background:#fff; border-radius:14px; padding:1.5rem; width:100%; max-width:300px; text-align:center; position:relative;">
+                style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+                <div style="background:#fff; border-radius:16px; padding:1.25rem; width:100%; max-width:320px; text-align:center; position:relative; border:1px solid #e2e8f0; box-shadow:0 24px 40px rgba(15,23,42,0.22);">
 
                     <!-- Header -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                        <p style="font-size:14px; font-weight:600; color:#111827; margin:0;">Attendance QR Code</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <p style="font-size:14px; font-weight:700; letter-spacing:0.01em; color:#0f172a; margin:0;">Attendance QR Code</p>
                         <button onclick="document.getElementById('qrModal').style.display='none'"
                             style="width:26px; height:26px; border-radius:50%; border:1px solid #e5e7eb; background:#f9fafb; cursor:pointer; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center;">✕</button>
                     </div>
 
                     <!-- QR -->
-                    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:16px; display:inline-block; margin-bottom:10px;">
+                    <div style="background:linear-gradient(160deg,#f8fafc,#eef2ff); border:1px solid #e2e8f0; border-radius:12px; padding:14px; display:inline-block; margin-bottom:10px;">
                         <div id="qrcode"></div>
                     </div>
 
@@ -33,11 +26,11 @@
                     <!-- Buttons -->
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
                         <button onclick="downloadQR()"
-                            style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#4f46e5; color:#fff;">
+                            style="padding:9px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#0f172a; color:#fff;">
                             ⬇ Download
                         </button>
                         <button onclick="printQR()"
-                            style="padding:9px; border-radius:8px; font-size:13px; font-weight:600; border:1px solid #e5e7eb; cursor:pointer; background:#fff; color:#374151;">
+                            style="padding:9px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid #cbd5e1; cursor:pointer; background:#fff; color:#334155;">
                             🖨 Print
                         </button>
                     </div>
@@ -47,67 +40,76 @@
 
             <style>
                 #qrcode canvas, #qrcode img {
-                    width: 160px !important;
-                    height: 160px !important;
+                    width: 180px !important;
+                    height: 180px !important;
+                    border-radius: 10px;
                 }
             </style>
 
 
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <iconify-icon icon="mdi:clock-check" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
-                <h1 class="text-lg font-bold text-gray-900">Attendance Records</h1>
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <iconify-icon icon="mdi:clock-check" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
+                    <h1 class="text-lg font-bold text-gray-900">Attendance Records</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Records</span>
+                    <!-- QR Icon Button -->
+                    <button onclick="openQRModal()"
+                        class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
+                        <iconify-icon icon="mdi:qrcode" style="font-size:16px;"></iconify-icon>
+                        QR Code
+                    </button>
+                </div>
             </div>
-            <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Records</span>
+
+            <!-- Filters -->
+            <div class="flex flex-col sm:flex-row gap-2 mt-4">
+                <div class="flex-1 relative">
+                    <iconify-icon icon="mdi:magnify"
+                        style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:18px;"></iconify-icon>
+                    <input type="text" id="searchInput" placeholder="Search by employee ID or date..."
+                        class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <select id="checkTypeFilter"
+                    class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                    <option value="">All Check Types</option>
+                    <option value="check-in">Check In</option>
+                    <option value="check-out">Check Out</option>
+                </select>
+                <input type="date" id="dateFilter"
+                    class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+            </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-col sm:flex-row gap-2 mt-4">
-            <div class="flex-1 relative">
-                <iconify-icon icon="mdi:magnify"
-                    style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:18px;"></iconify-icon>
-                <input type="text" id="searchInput" placeholder="Search by employee ID or date..."
-                    class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <!-- Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-900 text-white sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold">Employee ID</th>
+                            <th class="px-4 py-3 text-left font-semibold">Date</th>
+                            <th class="px-4 py-3 text-left font-semibold">Check Time</th>
+                            <th class="px-4 py-3 text-left font-semibold">Type</th>
+                            <th class="px-4 py-3 text-left font-semibold">Status</th>
+                            <th class="px-4 py-3 text-left font-semibold">Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody" class="divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-gray-400">
+                                <div class="flex items-center justify-center gap-2">
+                                    <iconify-icon icon="mdi:loading" class="animate-spin" style="font-size:20px;"></iconify-icon>
+                                    Loading...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <select id="checkTypeFilter"
-                class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                <option value="">All Check Types</option>
-                <option value="check-in">Check In</option>
-                <option value="check-out">Check Out</option>
-            </select>
-            <input type="date" id="dateFilter"
-                class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+            <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-center gap-2"></div>
         </div>
-    </div>
-
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-900 text-white sticky top-0">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Employee ID</th>
-                        <th class="px-4 py-3 text-left font-semibold">Date</th>
-                        <th class="px-4 py-3 text-left font-semibold">Check Time</th>
-                        <th class="px-4 py-3 text-left font-semibold">Type</th>
-                        <th class="px-4 py-3 text-left font-semibold">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold">Created</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceTableBody" class="divide-y divide-gray-100">
-                    <tr>
-                        <td colspan="6" class="px-4 py-6 text-center text-gray-400">
-                            <div class="flex items-center justify-center gap-2">
-                                <iconify-icon icon="mdi:loading" class="animate-spin" style="font-size:20px;"></iconify-icon>
-                                Loading...
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-center gap-2"></div>
-    </div>
     </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -116,6 +118,8 @@
     let totalPages  = 1;
     let allRecords  = [];
     const perPage   = 18;
+    const qrDarkColor = '#0f172a';
+    const qrLightColor = '#ffffff';
 
 
     const qrContent = 'DOORSTEP_ATTENDANCE';
@@ -126,8 +130,8 @@
         text: qrContent,  // ✅ just the number e.g. "1"
         width: 256,
         height: 256,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
+        colorDark: qrDarkColor,
+        colorLight: qrLightColor,
         correctLevel: QRCode.CorrectLevel.H
     });
     function openQRModal() {
@@ -153,8 +157,8 @@
             text: qrContent,
             width: qrSize,
             height: qrSize,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
+            colorDark: qrDarkColor,
+            colorLight: qrLightColor,
             correctLevel: QRCode.CorrectLevel.H
         });
 

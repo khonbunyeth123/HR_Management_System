@@ -35,12 +35,15 @@ class Auth
                 r.name AS role_name
             FROM tbl_users u
             LEFT JOIN tbl_roles r ON u.role_id = r.id
-            WHERE (u.username = :identifier OR u.email = :identifier)
+            WHERE (u.username = :username_identifier OR u.email = :email_identifier)
               AND u.status_id = 1
               AND u.deleted_at IS NULL
             LIMIT 1
         ");
-        $stmt->execute([':identifier' => $identifier]);
+        $stmt->execute([
+            ':username_identifier' => $identifier,
+            ':email_identifier'    => $identifier,
+        ]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -56,12 +59,15 @@ class Auth
                 e.email,
                 e.status_id
             FROM tbl_employees e
-            WHERE (e.username = :identifier OR e.email = :identifier)
+            WHERE (e.username = :username_identifier OR e.email = :email_identifier)
               AND e.deleted_at IS NULL
               AND e.status_id = 1
             LIMIT 1
         ");
-        $stmt->execute([':identifier' => $identifier]);
+        $stmt->execute([
+            ':username_identifier' => $identifier,
+            ':email_identifier'    => $identifier,
+        ]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -225,8 +231,7 @@ class Auth
                 e.username,
                 e.full_name,
                 e.email,
-                e.status_id,
-                e.status
+                e.status_id
             FROM tbl_employees e
             WHERE e.id        = :id
               AND e.status_id = 1

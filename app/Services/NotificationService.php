@@ -26,13 +26,13 @@ class NotificationService
     }
     public function saveFcmToken(int $employeeId, string $fcmToken): bool
     {
-        $db = \App\Core\Database::getInstance();
+        $db = \App\Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare('UPDATE tbl_employees SET fcm_token = :fcm_token WHERE id = :id');
         return $stmt->execute([':fcm_token' => $fcmToken, ':id' => $employeeId]);
     }
     private function getFcmToken(int $employeeId): ?string
     {
-        $db = \App\Core\Database::getInstance();
+        $db = \App\Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare('SELECT fcm_token FROM tbl_employees WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $employeeId]);
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
