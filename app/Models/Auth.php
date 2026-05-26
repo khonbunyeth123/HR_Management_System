@@ -16,10 +16,14 @@ class Auth
         $this->db = Database::getInstance()->getConnection();
     }
 
+    // -----------------------------------------------------------------------
+    // User / Employee lookup (login)
+    // -----------------------------------------------------------------------
+
     public function findAdminByIdentifier(string $identifier): array|false
     {
         $stmt = $this->db->prepare("
-            SELECT 
+            SELECT
                 u.id,
                 u.uuid,
                 u.username,
@@ -31,16 +35,13 @@ class Auth
                 r.name AS role_name
             FROM tbl_users u
             LEFT JOIN tbl_roles r ON u.role_id = r.id
-            WHERE (u.username = :username_identifier OR u.email = :email_identifier)
+            WHERE (u.username = :identifier OR u.email = :identifier)
               AND u.status_id = 1
               AND u.deleted_at IS NULL
             LIMIT 1
         ");
-        $stmt->execute([
-            ':username_identifier' => $identifier,
-            ':email_identifier' => $identifier,
-        ]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $stmt->execute([':identifier' => $identifier]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function findEmployeeByIdentifier(string $identifier): array|false
@@ -55,68 +56,140 @@ class Auth
                 e.email,
                 e.status_id
             FROM tbl_employees e
-            WHERE (e.username = :username_identifier OR e.email = :email_identifier)
+            WHERE (e.username = :identifier OR e.email = :identifier)
               AND e.deleted_at IS NULL
               AND e.status_id = 1
             LIMIT 1
         ");
-        $stmt->execute([
-            ':username_identifier' => $identifier,
-            ':email_identifier' => $identifier,
-        ]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        $stmt->execute([':identifier' => $identifier]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function createAccessToken(string $tokenableType, int $tokenableId, string $token, ?string $expiresAt = null): bool
-    {
+    // -----------------------------------------------------------------------
+    // Access tokens
+    // -----------------------------------------------------------------------
+
+    /**
+     * Store a new access token.
+     * Only the SHA-256 hash of the raw token is persisted — the raw token
+     * is never written to the database.
+     */
+    public function createAccessToken(
+        string $tokenableType,
+        int    $tokenableId,
+        string $token,
+        ?string $expiresAt = null
+    ): int {
+        // FIX: hash before storing — raw token never touches the DB
+        $tokenHash = hash('sha256', $token);
+
         $stmt = $this->db->prepare("
-            INSERT INTO tbl_access_tokens (token, tokenable_type, tokenable_id, expires_at, created_at)
-            VALUES (:token, :tokenable_type, :tokenable_id, :expires_at, NOW())
+            INSERT INTO tbl_access_tokens
+                (token, tokenable_type, tokenable_id, expires_at, created_at)
+            VALUES
+                (:token, :tokenable_type, :tokenable_id, :expires_at, NOW())
         ");
-        return $stmt->execute([
-            ':token' => $token,
+
+        $stmt->execute([
+            ':token'          => $tokenHash,
             ':tokenable_type' => $tokenableType,
-            ':tokenable_id' => $tokenableId,
-            ':expires_at' => $expiresAt,
+            ':tokenable_id'   => $tokenableId,
+            ':expires_at'     => $expiresAt,
         ]);
+
+        // FIX: return the new row ID so callers can store it in session instead of the raw token
+        return (int) $this->db->lastInsertId();
     }
 
+    /**
+     * Look up a token row by the raw bearer token.
+     *
+     * FIX 1: compare ONLY the SHA-256 hash — the plain token is never sent
+     *         to the database, eliminating the dual-match vulnerability.
+     * FIX 2: SELECT explicit columns instead of SELECT * so the token hash
+     *         itself is not returned to PHP and cannot leak into session/logs.
+     */
     public function findAccessToken(string $token): ?array
     {
+        // Hash on the PHP side; only the hash hits the DB
+        $tokenHash = hash('sha256', $token);
+
         $stmt = $this->db->prepare("
-            SELECT *
+            SELECT
+                id,
+                tokenable_type,
+                tokenable_id,
+                expires_at,
+                last_used_at,
+                revoked_at,
+                created_at
             FROM tbl_access_tokens
-            WHERE token = :token
+            WHERE token      = :token_hash
               AND revoked_at IS NULL
               AND (expires_at IS NULL OR expires_at > NOW())
             LIMIT 1
         ");
-        $stmt->bindValue(':token', $token);
+        $stmt->bindValue(':token_hash', $tokenHash);
         $stmt->execute();
 
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
 
+    /**
+     * Update the last-used timestamp for an active token.
+     */
     public function touchAccessToken(int $tokenId): void
     {
         $stmt = $this->db->prepare("
             UPDATE tbl_access_tokens
-            SET last_used_at = NOW()
-            WHERE id = :id
+            SET    last_used_at = NOW()
+            WHERE  id = :id
         ");
         $stmt->execute([':id' => $tokenId]);
     }
 
-    public function revokeAccessToken(string $token): bool
+    /**
+     * Revoke a token by its database row ID.
+     *
+     * FIX 3: accept the row ID (integer) instead of the raw token string.
+     *         The Router already stores only the token ID in session, so this
+     *         matches. Revoking by ID is also safer — no token value crosses
+     *         the wire again after initial authentication.
+     */
+    public function revokeAccessToken(int $tokenId): bool
     {
         $stmt = $this->db->prepare("
             UPDATE tbl_access_tokens
-            SET revoked_at = NOW()
-            WHERE token = :token AND revoked_at IS NULL
+            SET    revoked_at = NOW()
+            WHERE  id         = :id
+              AND  revoked_at IS NULL
         ");
-        return $stmt->execute([':token' => $token]);
+        return $stmt->execute([':id' => $tokenId]);
     }
+
+    /**
+     * Revoke ALL active tokens for a given owner (used on logout).
+     * Prefer this over revoking a single token to prevent session fixation.
+     */
+    public function revokeAllTokensFor(string $tokenableType, int $tokenableId): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE tbl_access_tokens
+            SET    revoked_at = NOW()
+            WHERE  tokenable_type = :type
+              AND  tokenable_id   = :id
+              AND  revoked_at     IS NULL
+        ");
+        return $stmt->execute([
+            ':type' => $tokenableType,
+            ':id'   => $tokenableId,
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    // Identity lookup (used after token validation)
+    // -----------------------------------------------------------------------
 
     public function getAdminById(int $id): ?array
     {
@@ -132,7 +205,7 @@ class Auth
                 r.name AS role_name
             FROM tbl_users u
             LEFT JOIN tbl_roles r ON r.id = u.role_id
-            WHERE u.id = :id
+            WHERE u.id        = :id
               AND u.status_id = 1
               AND u.deleted_at IS NULL
             LIMIT 1
@@ -152,9 +225,10 @@ class Auth
                 e.username,
                 e.full_name,
                 e.email,
-                e.status_id
+                e.status_id,
+                e.status
             FROM tbl_employees e
-            WHERE e.id = :id
+            WHERE e.id        = :id
               AND e.status_id = 1
               AND e.deleted_at IS NULL
             LIMIT 1

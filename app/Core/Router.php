@@ -13,50 +13,35 @@ class Router
     public function __construct()
     {
         $this->method = $_SERVER['REQUEST_METHOD'];
-        $this->route = $this->cleanUri();
-        error_log("Router initialized: {$this->method} {$this->route}");
+        $this->route  = $this->cleanUri();
     }
+
+    // -----------------------------------------------------------------------
+    // URI helpers
+    // -----------------------------------------------------------------------
 
     private function cleanUri(): string
     {
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
+        $uri      = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $basePath = rtrim((string) ($_ENV['APP_BASE_PATH'] ?? ''), '/');
 
-        if (strpos($uri, $basePath) === 0) {
+        if ($basePath !== '' && strpos($uri, $basePath) === 0) {
             $uri = substr($uri, strlen($basePath));
         }
 
         $uri = explode('?', $uri)[0];
-        $uri = rtrim($uri, '/') ?: '/';
-
-        return $uri;
+        return rtrim($uri, '/') ?: '/';
     }
 
-    public function get(string $path, string $handler): self
-    {
-        return $this->register('GET', $path, $handler);
-    }
+    // -----------------------------------------------------------------------
+    // Route registration
+    // -----------------------------------------------------------------------
 
-    public function post(string $path, string $handler): self
-    {
-        return $this->register('POST', $path, $handler);
-    }
-
-    public function put(string $path, string $handler): self
-    {
-        return $this->register('PUT', $path, $handler);
-    }
-
-    public function delete(string $path, string $handler): self
-    {
-        return $this->register('DELETE', $path, $handler);
-    }
-
-    public function patch(string $path, string $handler): self
-    {
-        return $this->register('PATCH', $path, $handler);
-    }
+    public function get(string $path, string $handler): self    { return $this->register('GET',    $path, $handler); }
+    public function post(string $path, string $handler): self   { return $this->register('POST',   $path, $handler); }
+    public function put(string $path, string $handler): self    { return $this->register('PUT',    $path, $handler); }
+    public function delete(string $path, string $handler): self { return $this->register('DELETE', $path, $handler); }
+    public function patch(string $path, string $handler): self  { return $this->register('PATCH',  $path, $handler); }
 
     public function any(string $path, string $handler): self
     {
@@ -68,16 +53,12 @@ class Router
 
     private function register(string $method, string $path, string $handler): self
     {
-        if (!isset($this->routes[$method])) {
-            $this->routes[$method] = [];
-        }
-
         $path = rtrim($path, '/') ?: '/';
-        [$controller, $action] = explode('@', $handler);
+        [$controller, $action] = explode('@', $handler, 2);
 
         $this->routes[$method][$path] = [
             'controller' => $controller,
-            'action' => $action,
+            'action'     => $action,
         ];
 
         return $this;
@@ -86,17 +67,19 @@ class Router
     public function resource(string $name, string $controller): self
     {
         $path = "/$name";
-
-        $this->get($path, "$controller@index");
-        $this->get("$path/create", "$controller@create");
-        $this->post($path, "$controller@store");
-        $this->get("$path/{id}", "$controller@show");
-        $this->get("$path/{id}/edit", "$controller@edit");
-        $this->put("$path/{id}", "$controller@update");
-        $this->delete("$path/{id}", "$controller@destroy");
-
+        $this->get($path,              "$controller@index");
+        $this->get("$path/create",     "$controller@create");
+        $this->post($path,             "$controller@store");
+        $this->get("$path/{id}",       "$controller@show");
+        $this->get("$path/{id}/edit",  "$controller@edit");
+        $this->put("$path/{id}",       "$controller@update");
+        $this->delete("$path/{id}",    "$controller@destroy");
         return $this;
     }
+
+    // -----------------------------------------------------------------------
+    // Dispatch
+    // -----------------------------------------------------------------------
 
     public function dispatch(): void
     {
@@ -140,7 +123,7 @@ class Router
             $this->authorizeRoute($handler);
 
             $controllerClass = $this->controllerNamespace . $handler['controller'];
-            $actionMethod = $handler['action'];
+            $actionMethod    = $handler['action'];
 
             if (!class_exists($controllerClass)) {
                 throw new \RuntimeException("Controller not found: $controllerClass");
@@ -152,38 +135,30 @@ class Router
                 throw new \RuntimeException("Action not found: {$handler['controller']}@$actionMethod");
             }
 
-            error_log("Executing route: {$this->method} {$this->route} -> {$handler['controller']}@$actionMethod");
-
             if (!empty($this->parameters)) {
                 call_user_func_array([$controller, $actionMethod], $this->parameters);
             } else {
                 $controller->$actionMethod();
             }
         } catch (\Exception $e) {
+            // FIX: log the real error server-side but never expose it to the client
             error_log("Route execution error: " . $e->getMessage());
-            $this->sendJson([
-                'success' => false,
-                'message' => 'Error processing request',
-                'error' => $e->getMessage()
-            ], 500);
+            $this->sendJson(['success' => false, 'message' => 'Error processing request'], 500);
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Authorization
+    // -----------------------------------------------------------------------
+
     private function authorizeRoute(array $handler): void
     {
-        if (!$this->isApiRoute()) {
-            return;
-        }
-
-        if ($this->isPublicRoute()) {
+        if (!$this->isApiRoute() || $this->isPublicRoute()) {
             return;
         }
 
         if (!$this->isLoggedIn()) {
-            $this->sendJson([
-                'success' => false,
-                'message' => 'Unauthorized. Please log in first.'
-            ], 401);
+            $this->sendJson(['success' => false, 'message' => 'Unauthorized. Please log in first.'], 401);
         }
 
         $this->ensureRequiredAuthType();
@@ -194,11 +169,8 @@ class Router
         }
 
         if (!$this->userHasAnyPermission($requiredPermissions)) {
-            $this->sendJson([
-                'success' => false,
-                'message' => 'Forbidden. You do not have permission for this action.',
-                'required_permissions' => $requiredPermissions
-            ], 403);
+            // FIX: never reveal which permissions are required to a client
+            $this->sendJson(['success' => false, 'message' => 'Forbidden. You do not have permission for this action.'], 403);
         }
     }
 
@@ -214,31 +186,30 @@ class Router
         return in_array($this->route, $publicRoutes, true);
     }
 
-
     private function isApiRoute(): bool
     {
         return strpos($this->route, '/api/') === 0;
     }
 
+    // -----------------------------------------------------------------------
+    // Authentication — session + Bearer token
+    // -----------------------------------------------------------------------
+
     private function isLoggedIn(): bool
     {
-        // Check session (web)
+        // Session-based (web UI)
         if (isset($_SESSION['login']) && $_SESSION['login'] === true) {
-            if (!empty($_SESSION['user_id']) && ($_SESSION['auth_type'] ?? 'user') === 'user') {
-                return true;
-            }
-
-            if (!empty($_SESSION['employee_id']) && ($_SESSION['auth_type'] ?? '') === 'employee') {
-                return true;
-            }
+            if (!empty($_SESSION['user_id'])     && ($_SESSION['auth_type'] ?? '') === 'user')     return true;
+            if (!empty($_SESSION['employee_id']) && ($_SESSION['auth_type'] ?? '') === 'employee') return true;
         }
 
-        // Check Bearer token (API/mobile)
+        // Bearer token (mobile / API)
         $headers = getallheaders();
-        $auth = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $auth    = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+
         if (str_starts_with($auth, 'Bearer ')) {
             $token = trim(substr($auth, 7));
-            if (!empty($token)) {
+            if ($token !== '') {
                 return $this->validateToken($token);
             }
         }
@@ -250,52 +221,69 @@ class Router
     {
         try {
             $authModel = new \App\Models\Auth();
-            $tokenRow = $authModel->findAccessToken($token);
+            $tokenRow  = $authModel->findAccessToken($token);
+
             if (!$tokenRow) {
                 return false;
             }
 
-            $authType = (string) ($tokenRow['tokenable_type'] ?? '');
-            $identityId = (int) ($tokenRow['tokenable_id'] ?? 0);
+            // FIX 1: enforce token expiry
+            if (!empty($tokenRow['expires_at']) && strtotime($tokenRow['expires_at']) < time()) {
+                $authModel->revokeAccessToken((int) $tokenRow['id']);
+                return false;
+            }
+
+            // FIX 2: check token has not been manually revoked
+            if (!empty($tokenRow['revoked']) && (int) $tokenRow['revoked'] === 1) {
+                return false;
+            }
+
+            $authType   = (string) ($tokenRow['tokenable_type'] ?? '');
+            $identityId = (int)    ($tokenRow['tokenable_id']   ?? 0);
 
             if ($authType === 'user') {
                 $user = $authModel->getAdminById($identityId);
-                if (!$user) {
-                    return false;
-                }
+                if (!$user) return false;
 
-                $_SESSION['user_id'] = (int) $user['id'];
-                $_SESSION['employee_id'] = null;
-                $_SESSION['uuid'] = $user['uuid'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role_name'] ?? null;
-                $_SESSION['role_id'] = $user['role_id'] ?? null;
-                $_SESSION['auth_type'] = 'user';
-                $_SESSION['access_token'] = $token;
-                $_SESSION['login'] = true;
+                $_SESSION['user_id']      = (int) $user['id'];
+                $_SESSION['employee_id']  = null;
+                $_SESSION['uuid']         = $user['uuid'];
+                $_SESSION['username']     = $user['username'];
+                $_SESSION['full_name']    = $user['full_name'];
+                $_SESSION['email']        = $user['email'];
+                $_SESSION['role']         = $user['role_name'] ?? null;
+                $_SESSION['role_id']      = $user['role_id']   ?? null;
+                $_SESSION['auth_type']    = 'user';
+                // FIX 3: store only the token DB row ID — never the raw token
+                $_SESSION['access_token_id'] = (int) $tokenRow['id'];
+                $_SESSION['login']        = true;
+
                 $authModel->touchAccessToken((int) $tokenRow['id']);
                 return true;
             }
 
             if ($authType === 'employee') {
                 $employee = $authModel->getEmployeeById($identityId);
-                if (!$employee) {
+                if (!$employee) return false;
+
+                // FIX 4: reject inactive / suspended employees
+                if (isset($employee['status']) && $employee['status'] !== 'active') {
                     return false;
                 }
 
-                $_SESSION['user_id'] = null;
-                $_SESSION['employee_id'] = (int) $employee['id'];
-                $_SESSION['uuid'] = $employee['uuid'];
-                $_SESSION['username'] = $employee['username'];
-                $_SESSION['full_name'] = $employee['full_name'];
-                $_SESSION['email'] = $employee['email'];
-                $_SESSION['role'] = null;
-                $_SESSION['role_id'] = null;
-                $_SESSION['auth_type'] = 'employee';
-                $_SESSION['access_token'] = $token;
-                $_SESSION['login'] = true;
+                $_SESSION['user_id']      = null;
+                $_SESSION['employee_id']  = (int) $employee['id'];
+                $_SESSION['uuid']         = $employee['uuid'];
+                $_SESSION['username']     = $employee['username'];
+                $_SESSION['full_name']    = $employee['full_name'];
+                $_SESSION['email']        = $employee['email'];
+                $_SESSION['role']         = null;
+                $_SESSION['role_id']      = null;
+                $_SESSION['auth_type']    = 'employee';
+                // FIX 3: store only the token DB row ID — never the raw token
+                $_SESSION['access_token_id'] = (int) $tokenRow['id'];
+                $_SESSION['login']        = true;
+
                 $authModel->touchAccessToken((int) $tokenRow['id']);
                 return true;
             }
@@ -306,75 +294,71 @@ class Router
         return false;
     }
 
+    // -----------------------------------------------------------------------
+    // Auth-type enforcement
+    // -----------------------------------------------------------------------
+
     private function ensureRequiredAuthType(): void
     {
         $requiredAuthType = $this->resolveRequiredAuthType();
-        if ($requiredAuthType === null) {
-            return;
-        }
+        if ($requiredAuthType === null) return;
 
         $currentAuthType = $_SESSION['auth_type'] ?? null;
-        if ($currentAuthType === $requiredAuthType) {
-            return;
-        }
+        if ($currentAuthType === $requiredAuthType) return;
 
-        // Backward compatibility for existing admin web sessions that predate
-        // the explicit auth_type split.
+        // Backward compatibility: admin web sessions created before the auth_type split
         if ($requiredAuthType === 'user' && $currentAuthType === null && !empty($_SESSION['user_id'])) {
             return;
         }
 
-        $this->sendJson([
-            'success' => false,
-            'message' => 'Forbidden. Invalid account type for this route.',
-            'required_auth_type' => $requiredAuthType,
-        ], 403);
+        // FIX: do not reveal the required_auth_type to the client
+        $this->sendJson(['success' => false, 'message' => 'Forbidden. Invalid account type for this route.'], 403);
     }
+
+    // -----------------------------------------------------------------------
+    // Permission checks
+    // -----------------------------------------------------------------------
 
     private function userHasAnyPermission(array $permissionSlugs): bool
     {
-        if (($this->route === '/api/attendance/scan')
-            && (($_SESSION['auth_type'] ?? '') === 'employee')
-            && !empty($_SESSION['employee_id'])) {
-            return true;
+        // FIX 5: attendance scan — verify employee is active before bypassing permissions
+        if ($this->route === '/api/attendance/scan'
+            && ($_SESSION['auth_type'] ?? '') === 'employee'
+            && !empty($_SESSION['employee_id'])
+        ) {
+            try {
+                $authModel = new \App\Models\Auth();
+                $employee  = $authModel->getEmployeeById((int) $_SESSION['employee_id']);
+                return $employee && ($employee['status'] ?? '') === 'active';
+            } catch (\Exception $e) {
+                error_log('Attendance scan auth error: ' . $e->getMessage());
+                return false;
+            }
         }
 
         $normalized = [];
         foreach ($permissionSlugs as $slug) {
-            if (!is_string($slug)) {
-                continue;
-            }
-
+            if (!is_string($slug)) continue;
             $slug = strtolower(trim($slug));
-            if ($slug !== '') {
-                $normalized[] = $slug;
-            }
+            if ($slug !== '') $normalized[] = $slug;
         }
 
         $normalized = array_values(array_unique($normalized));
-        if (empty($normalized)) {
-            return true;
-        }
+        if (empty($normalized)) return true;
 
         if (function_exists('hasAnyPermissionSlugs')) {
             return \hasAnyPermissionSlugs($normalized);
         }
 
-        if ($this->isAdminSession()) {
-            return true;
-        }
+        if ($this->isAdminSession()) return true;
 
         $permissions = $_SESSION['permissions'] ?? [];
-        if (!is_array($permissions)) {
-            return false;
-        }
+        if (!is_array($permissions)) return false;
 
-        $permissions = array_map(static fn ($slug) => strtolower((string) $slug), $permissions);
+        $permissions = array_map(static fn ($s) => strtolower((string) $s), $permissions);
 
         foreach ($normalized as $slug) {
-            if (in_array($slug, $permissions, true)) {
-                return true;
-            }
+            if (in_array($slug, $permissions, true)) return true;
         }
 
         return false;
@@ -383,169 +367,176 @@ class Router
     private function isAdminSession(): bool
     {
         $roleName = strtolower((string) ($_SESSION['role'] ?? $_SESSION['role_name'] ?? ''));
-        $roleId = (int) ($_SESSION['role_id'] ?? 0);
-
+        $roleId   = (int) ($_SESSION['role_id'] ?? 0);
         return $roleName === 'admin' || $roleId === 1;
     }
 
     private function resolveRequiredPermissions(array $handler): array
     {
         $controller = $handler['controller'] ?? '';
-        $action = $handler['action'] ?? '';
+        $action     = $handler['action']     ?? '';
 
-        // ✅ Employees can view/update their own profile without permissions
         if ($controller === 'ControllerEmployee'
             && in_array($action, ['show', 'update'], true)
-            && ($_SESSION['auth_type'] ?? '') === 'employee') {
+            && ($_SESSION['auth_type'] ?? '') === 'employee'
+        ) {
             return [];
         }
 
         return match ($controller) {
-            'ControllerDashboard' => ['dashboard.view'],
+            'ControllerDashboard'  => ['dashboard.view'],
             'ControllerAttendance' => $this->permissionsForAttendanceAction($action),
-            'ControllerEmployee' => $this->permissionsForEmployeeAction($action),
-            'ControllerLeave' => $this->permissionsForLeaveAction($action),
-            'ControllerReport' => $this->permissionsForReportAction($action),
-            'ControllerUser' => $this->permissionsForUserAction($action),
-            'ControllerRole' => $this->permissionsForRoleAction($action),
+            'ControllerEmployee'   => $this->permissionsForEmployeeAction($action),
+            'ControllerLeave'      => $this->permissionsForLeaveAction($action),
+            'ControllerReport'     => $this->permissionsForReportAction($action),
+            'ControllerUser'       => $this->permissionsForUserAction($action),
+            'ControllerRole'       => $this->permissionsForRoleAction($action),
             'ControllerPermission' => $this->permissionsForPermissionAction($action),
-            default => [],
+            default                => [],
         };
     }
 
     private function resolveRequiredAuthType(): ?string
     {
-        if (!$this->isApiRoute() || $this->isPublicRoute()) {
-            return null;
-        }
+        if (!$this->isApiRoute() || $this->isPublicRoute()) return null;
 
         return match (true) {
-            $this->route === '/api/auth/logout'           => null,
-            $this->route === '/api/attendance/scan',
-            $this->route === '/api/auth/employee/me',
-            $this->route === '/api/leave/create',
-            $this->route === '/api/attendance/history',
-            $this->route === '/api/leave/history'         => 'employee',
-            preg_match('#^/api/employees/\d+$#', $this->route) === 1 => null,
-            $this->route === '/api/leave/list'            => null,
-            default                                       => 'user',
+            $this->route === '/api/auth/logout'                                => null,
+            $this->route === '/api/attendance/scan'                            => 'employee',
+            $this->route === '/api/auth/employee/me'                           => 'employee',
+            $this->route === '/api/leave/create'                               => 'employee',
+            $this->route === '/api/attendance/history'                         => 'employee',
+            $this->route === '/api/leave/history'                              => 'employee',
+            preg_match('#^/api/employees/\d+$#', $this->route) === 1          => null,
+            $this->route === '/api/leave/list'                                 => null,
+            default                                                            => 'user',
         };
     }
+
+    // -----------------------------------------------------------------------
+    // Per-controller permission maps
+    // -----------------------------------------------------------------------
 
     private function permissionsForAttendanceAction(string $action): array
     {
         return match ($action) {
-            'show', 'today' => ['attendance.view'],
-            'checkIn', 'checkOut', 'scan' => ['attendance.update', 'attendance.create'],
-            'history' => [],
-            default => ['attendance.view'],
+            'show', 'today'                  => ['attendance.view'],
+            'checkIn', 'checkOut', 'scan'    => ['attendance.update', 'attendance.create'],
+            'history'                        => [],
+            default                          => ['attendance.view'],
         };
     }
 
     private function permissionsForEmployeeAction(string $action): array
     {
         return match ($action) {
-            'index', 'show' => ['employee.view', 'employees.view'],
-            'store' => ['employee.create', 'employees.create'],
-            'update' => ['employee.update', 'employees.update'],
-            'delete', 'destroy' => ['employee.delete', 'employees.delete'],
-            default => ['employee.view', 'employees.view'],
+            'index', 'show'        => ['employee.view',   'employees.view'],
+            'store'                => ['employee.create', 'employees.create'],
+            'update'               => ['employee.update', 'employees.update'],
+            'delete', 'destroy'    => ['employee.delete', 'employees.delete'],
+            default                => ['employee.view',   'employees.view'],
         };
     }
 
     private function permissionsForLeaveAction(string $action): array
     {
         return match ($action) {
-            'index'              => [],
-            'create'             => [],
-            'approve', 'reject'  => ['leave.update', 'leave.approve', 'leave.reject'],
-            default              => [],
+            'approve', 'reject' => ['leave.update', 'leave.approve', 'leave.reject'],
+            default             => [],
         };
     }
 
     private function permissionsForReportAction(string $action): array
     {
         return match ($action) {
-            'dailyList' => ['report.view_daily', 'report.view'],
-            'summary' => ['report.view_summary', 'report.view'],
-            'detailedList' => ['report.view_detail', 'report.view'],
-            'topEmployees' => ['report.view_top', 'report.view'],
-            default => ['report.view'],
+            'dailyList'    => ['report.view_daily',   'report.view'],
+            'summary'      => ['report.view_summary', 'report.view'],
+            'detailedList' => ['report.view_detail',  'report.view'],
+            'topEmployees' => ['report.view_top',     'report.view'],
+            default        => ['report.view'],
         };
     }
 
     private function permissionsForUserAction(string $action): array
     {
         return match ($action) {
-            'show', 'getUserById' => ['user.view', 'users.view'],
-            'create' => ['user.create', 'users.create'],
-            'update' => ['user.update', 'users.update'],
-            'delete' => ['user.delete', 'users.delete'],
-            default => ['user.view', 'users.view'],
+            'show', 'getUserById' => ['user.view',   'users.view'],
+            'create'              => ['user.create', 'users.create'],
+            'update'              => ['user.update', 'users.update'],
+            'delete'              => ['user.delete', 'users.delete'],
+            default               => ['user.view',   'users.view'],
         };
     }
 
     private function permissionsForRoleAction(string $action): array
     {
         return match ($action) {
-            'index', 'show', 'stats', 'search', 'permissions', 'permissionsGrouped', 'rolePermissions' => ['role.view', 'roles.view'],
-            'store' => ['role.create', 'roles.manage'],
-            'update', 'accept', 'updateStatus', 'updateRolePermissions' => ['role.update', 'roles.manage'],
-            'destroy' => ['role.delete', 'roles.manage'],
-            default => ['role.view', 'roles.view'],
+            'index', 'show', 'stats', 'search',
+            'permissions', 'permissionsGrouped',
+            'rolePermissions'                        => ['role.view',   'roles.view'],
+            'store'                                  => ['role.create', 'roles.manage'],
+            'update', 'accept', 'updateStatus',
+            'updateRolePermissions'                  => ['role.update', 'roles.manage'],
+            'destroy'                                => ['role.delete', 'roles.manage'],
+            default                                  => ['role.view',   'roles.view'],
         };
     }
 
     private function permissionsForPermissionAction(string $action): array
     {
         return match ($action) {
-            'index', 'show', 'getByCategory', 'getById', 'getCategories', 'getPermissionsByRole', 'checkUserPermission' => ['permission.view', 'permissions.view'],
-            'create' => ['permission.add', 'permission.create', 'permissions.manage'],
-            'update' => ['permission.update', 'permissions.manage'],
-            'delete' => ['permission.delete', 'permissions.manage'],
-            'assignToRole', 'removeFromRole', 'assignMultipleToRole' => ['permission.update', 'permissions.manage'],
-            default => ['permission.view', 'permissions.view'],
+            'index', 'show', 'getByCategory', 'getById',
+            'getCategories', 'getPermissionsByRole',
+            'checkUserPermission'                        => ['permission.view',   'permissions.view'],
+            'create'                                     => ['permission.add',    'permission.create', 'permissions.manage'],
+            'update'                                     => ['permission.update', 'permissions.manage'],
+            'delete'                                     => ['permission.delete', 'permissions.manage'],
+            'assignToRole', 'removeFromRole',
+            'assignMultipleToRole'                       => ['permission.update', 'permissions.manage'],
+            default                                      => ['permission.view',   'permissions.view'],
         };
     }
 
+    // -----------------------------------------------------------------------
+    // Response helpers
+    // -----------------------------------------------------------------------
+
     private function notFound(): void
     {
-        error_log("404 Not Found: {$this->method} {$this->route}");
-
-        $this->sendJson([
-            'success' => false,
-            'message' => 'API endpoint not found',
-            'requested_route' => $this->route,
-            'method' => $this->method
-        ], 404);
+        // FIX 6: never expose the requested route or method to the client
+        $this->sendJson(['success' => false, 'message' => 'Not found'], 404);
     }
 
     private function sendJson(array $data, int $statusCode = 200): void
     {
+        // FIX 7: add security headers on every response
         header('Content-Type: application/json; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Referrer-Policy: strict-origin-when-cross-origin');
         http_response_code($statusCode);
         echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    public function getRoutes(): array
-    {
-        return $this->routes;
-    }
+    // -----------------------------------------------------------------------
+    // Debug helpers (remove or gate behind APP_DEBUG in production)
+    // -----------------------------------------------------------------------
+
+    public function getRoutes(): array { return $this->routes; }
 
     public function printRoutes(): void
     {
-        echo "\n====== Registered Routes ======\n";
+        if (($_ENV['APP_DEBUG'] ?? 'false') !== 'true') return;
 
+        echo "\n====== Registered Routes ======\n";
         foreach ($this->routes as $method => $routes) {
             echo "\n$method:\n";
             foreach ($routes as $path => $handler) {
-                $controller = $handler['controller'];
-                $action = $handler['action'];
-                echo "  $path -> $controller@$action\n";
+                echo "  $path -> {$handler['controller']}@{$handler['action']}\n";
             }
         }
-
         echo "\n";
     }
 }
