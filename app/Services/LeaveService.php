@@ -20,7 +20,7 @@ class LeaveService
     public function leaveTypes(): array { return $this->model->getLeaveTypes(); }
     public function approveLeave(string $uuid): bool
     {
-        $ok = $this->model->approveLeave($uuid, 1, null);
+        $ok = $this->model->approveLeave($uuid, 1);
         if ($ok) {
             $employeeId = $this->model->getEmployeeIdByUuid($uuid);
             if ($employeeId) $this->notificationService->sendLeaveApproved($employeeId);

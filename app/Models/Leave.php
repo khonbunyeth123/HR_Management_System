@@ -228,8 +228,7 @@ class Leave {
 
     public function getEmployeeIdByUuid(string $uuid): ?int
     {
-        $db   = \App\Core\Database::getInstance();
-        $stmt = $db->prepare(
+        $stmt = $this->db->prepare(
             'SELECT employee_id FROM tbl_leave_applications WHERE uuid = :uuid LIMIT 1'
         );
         $stmt->execute([':uuid' => $uuid]);
