@@ -29,27 +29,20 @@ class Report
                 e.department,
                 MAX(CASE WHEN a.check_type_id = 1 THEN a.check_time ELSE NULL END) as check_in_1,
                 MAX(CASE WHEN a.check_type_id = 2 THEN a.check_time ELSE NULL END) as check_out_1,
-                NULL as check_in_2,
-                NULL as check_out_2,
-                'Present' as status
+                MAX(CASE WHEN a.check_type_id = 3 THEN a.check_time ELSE NULL END) as check_in_2,
+                MAX(CASE WHEN a.check_type_id = 4 THEN a.check_time ELSE NULL END) as check_out_2
             FROM tbl_employees e
-            INNER JOIN tbl_attendance_records a
+            LEFT JOIN tbl_attendance_records a
                 ON e.id = a.employee_id
+                AND DATE(a.date) = :date
+                AND a.deleted_at IS NULL
             WHERE e.status_id = 1
+            GROUP BY e.id, e.full_name, e.username, e.position, e.department
+            ORDER BY e.full_name ASC
         ";
 
-        $params = [];
-
-        if ($date) {
-            $sql .= " AND DATE(a.date) = :date";
-            $params['date'] = $date;
-        }
-
-        $sql .= " GROUP BY e.id, e.full_name, e.username, e.position, e.department
-                  ORDER BY e.full_name ASC";
-
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute(['date' => $date ?: date('Y-m-d')]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -90,14 +83,9 @@ class Report
             JOIN (
                 SELECT DATE_ADD(:from1, INTERVAL seq DAY) AS work_date
                 FROM (
-                    SELECT 0 seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
-                    UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7
-                    UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL SELECT 10 UNION ALL SELECT 11
-                    UNION ALL SELECT 12 UNION ALL SELECT 13 UNION ALL SELECT 14 UNION ALL SELECT 15
-                    UNION ALL SELECT 16 UNION ALL SELECT 17 UNION ALL SELECT 18 UNION ALL SELECT 19
-                    UNION ALL SELECT 20 UNION ALL SELECT 21 UNION ALL SELECT 22 UNION ALL SELECT 23
-                    UNION ALL SELECT 24 UNION ALL SELECT 25 UNION ALL SELECT 26 UNION ALL SELECT 27
-                    UNION ALL SELECT 28 UNION ALL SELECT 29 UNION ALL SELECT 30
+                    SELECT (a.i + b.i * 10) AS seq
+                    FROM (SELECT 0 i UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a
+                    CROSS JOIN (SELECT 0 i UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) b
                 ) seqs
                 WHERE DATE_ADD(:from2, INTERVAL seq DAY) <= :to
             ) d

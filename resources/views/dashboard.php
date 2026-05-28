@@ -1,212 +1,160 @@
-<div class="w-full">
-    <div class="bg-white shadow-lg p-2">
-        <h1 class="text-xl font-bold text-gray-800 mb-6 bg-white p-4 rounded-lg shadow">HR Management Dashboard</h1>
-
+<div class="w-full max-w-7xl mx-auto space-y-6">
     <!-- Stats Grid -->
-    <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Loading placeholders -->
-        <div class="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div class="h-10 bg-gray-200 rounded w-3/4"></div>
+        <?php for($i=0; $i<4; $i++): ?>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-pulse">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-slate-100 rounded-xl"></div>
+                <div class="space-y-2">
+                    <div class="h-4 bg-slate-100 rounded w-20"></div>
+                    <div class="h-6 bg-slate-100 rounded w-12"></div>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div class="h-10 bg-gray-200 rounded w-3/4"></div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div class="h-10 bg-gray-200 rounded w-3/4"></div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow animate-pulse">
-            <div class="h-10 bg-gray-200 rounded w-3/4"></div>
-        </div>
+        <?php endfor; ?>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Recent Leave Requests -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <iconify-icon icon="mdi:calendar-clock" width="24"></iconify-icon>
-                Recent Leave Requests
-            </h2>
-            <div id="leaveRequests" class="space-y-3">
-                <div class="text-center text-gray-500 py-4">Loading...</div>
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="iconify text-indigo-500" data-icon="mdi:calendar-clock"></span>
+                    Recent Leave Requests
+                </h2>
+                <a href="?page=leave" class="text-xs font-semibold text-indigo-600 hover:underline">View All</a>
+            </div>
+            <div id="leaveRequests" class="p-6">
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <span class="iconify text-4xl mb-2" data-icon="mdi:loading" data-inline="false"></span>
+                    <p class="text-sm">Loading requests...</p>
+                </div>
             </div>
         </div>
 
         <!-- Departments -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <iconify-icon icon="mdi:office-building" width="24"></iconify-icon>
-                Departments
-            </h2>
-            <div id="departments" class="space-y-4">
-                <div class="text-center text-gray-500 py-4">Loading...</div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span class="iconify text-emerald-500" data-icon="mdi:office-building"></span>
+                    Departments
+                </h2>
+            </div>
+            <div id="departments" class="p-6 space-y-4">
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <span class="iconify text-4xl mb-2" data-icon="mdi:loading" data-inline="false"></span>
+                    <p class="text-sm">Loading departments...</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
-    </div>
-    
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
 
         /* ---------- Helpers ---------- */
 
-        function createStat(icon, value, label, colorClass) {
+        function createStat(icon, value, label, colorClass, bgColor) {
             return `
-            <div class="bg-white p-4 rounded-lg shadow flex items-center gap-4">
-                <iconify-icon icon="${icon}" width="36" class="${colorClass}"></iconify-icon>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all duration-300">
+                <div class="w-12 h-12 ${bgColor} rounded-xl flex items-center justify-center">
+                    <span class="iconify text-2xl ${colorClass}" data-icon="${icon}"></span>
+                </div>
                 <div>
-                    <div class="text-2xl font-bold text-gray-800">${value}</div>
-                    <div class="text-sm text-gray-600">${label}</div>
+                    <div class="text-sm font-medium text-slate-500">${label}</div>
+                    <div class="text-2xl font-bold text-slate-900">${value}</div>
                 </div>
             </div>`;
         }
 
         function createLeaveRequest(req) {
             const statusColors = {
-                'pending': 'bg-yellow-100 text-yellow-800',
-                'approved': 'bg-green-100 text-green-800',
-                'rejected': 'bg-red-100 text-red-800'
+                'pending': 'bg-amber-50 text-amber-600',
+                'approved': 'bg-emerald-50 text-emerald-600',
+                'rejected': 'bg-rose-50 text-rose-600'
             };
-            const statusClass = statusColors[req.status?.toLowerCase()] || 'bg-gray-100 text-gray-800';
+            const statusClass = statusColors[req.status?.toLowerCase()] || 'bg-slate-50 text-slate-500';
             
             return `
-            <div class="border border-gray-200 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="font-semibold text-gray-800">${req.name || 'Unknown'}</div>
-                    <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${req.status || 'N/A'}</span>
+            <div class="flex items-center justify-between p-4 rounded-xl border border-slate-50 hover:bg-slate-50 transition-all group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
+                        ${(req.name || 'U').charAt(0)}
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">${req.name || 'Unknown'}</div>
+                        <div class="text-xs text-slate-500">${req.type || 'N/A'} • ${req.period || ''}</div>
+                    </div>
                 </div>
-                <div class="text-sm text-gray-600">${req.type || 'N/A'}</div>
-                ${req.period ? `<div class="text-xs text-gray-500 mt-1">${req.period}</div>` : ''}
+                <span class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${statusClass}">${req.status || 'N/A'}</span>
             </div>`;
         }
 
         function createDepartment(dept) {
             return `
-            <div class="border border-gray-200 p-4 rounded-lg hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="font-semibold text-gray-800">${dept.name || 'Unknown Department'}</div>
-                        <div class="text-sm text-gray-600 mt-1">
-                            <iconify-icon icon="mdi:account-group" width="16" class="inline"></iconify-icon>
-                            ${dept.count || 0} employees ${dept.percentage ? `(${dept.percentage}%)` : ''}
-                        </div>
-                    </div>
-                    <iconify-icon icon="mdi:chevron-right" width="24" class="text-gray-400"></iconify-icon>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="font-semibold text-slate-700">${dept.name || 'Unknown'}</span>
+                    <span class="text-slate-500">${dept.count || 0}</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5">
+                    <div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${dept.percentage || 0}%"></div>
                 </div>
             </div>`;
         }
 
-        function showError(elementId, message) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `<div class="text-center text-red-500 py-4">${message}</div>`;
-            }
-        }
-
-        function showEmpty(elementId, message) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `<div class="text-center text-gray-500 py-4">${message}</div>`;
-            }
-        }
-
         /* ---------- Dashboard Summary ---------- */
         fetch("/api/dashboard/summary")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(result => {
-                console.log('Summary API Response:', result);
-                
-                // Handle both {success: true, data: {...}} and direct data formats
                 const data = result.success ? result.data : result;
-                
-                if (!data || (result.success === false)) {
-                    showError("statsGrid", "Failed to load statistics");
-                    return;
-                }
+                if (!data || result.success === false) throw new Error("API error");
                 
                 const statsGrid = document.getElementById("statsGrid");
                 statsGrid.innerHTML = `
-                    ${createStat("mdi:account-multiple", data.total_employees || 0, "Total Employees", "text-blue-500")}
-                    ${createStat("mdi:check-circle", data.active_employees || 0, "Active Users", "text-green-500")}
-                    ${createStat("mdi:clock-outline", data.pending_leaves || 0, "Pending Leaves", "text-orange-500")}
-                    ${createStat("mdi:calendar-blank", data.on_leave_today || 0, "On Leave Today", "text-purple-500")}
+                    ${createStat("mdi:account-multiple", data.total_employees || 0, "Employees", "text-blue-500", "bg-blue-50")}
+                    ${createStat("mdi:account-check", data.active_employees || 0, "Active", "text-emerald-500", "bg-emerald-50")}
+                    ${createStat("mdi:clock-alert", data.pending_leaves || 0, "Pending", "text-amber-500", "bg-amber-50")}
+                    ${createStat("mdi:calendar-remove", data.on_leave_today || 0, "On Leave", "text-rose-500", "bg-rose-50")}
                 `;
             })
             .catch(error => {
-                console.error('Error loading dashboard summary:', error);
-                showError("statsGrid", `Error loading statistics: ${error.message}`);
+                console.error(error);
+                window.Toast?.error("Dashboard Error", "Failed to load summary statistics.");
             });
 
         /* ---------- Recent Leaves ---------- */
         fetch("/api/dashboard/recent-leaves")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(result => {
-                console.log('Leave Requests API Response:', result);
-                
                 const div = document.getElementById("leaveRequests");
-                
-                // Handle both {success: true, data: [...]} and direct array formats
-                const data = result.success ? result.data : (Array.isArray(result) ? result : null);
-                
-                if (!data || (result.success === false)) {
-                    showError("leaveRequests", "Failed to load leave requests");
-                    return;
-                }
+                const data = result.success ? result.data : (Array.isArray(result) ? result : []);
                 
                 if (data.length === 0) {
-                    showEmpty("leaveRequests", "No recent leave requests");
+                    div.innerHTML = '<div class="text-center text-slate-400 py-12">No recent leave requests</div>';
                     return;
                 }
                 
-                div.innerHTML = data.map(r => createLeaveRequest(r)).join('');
+                div.innerHTML = `<div class="space-y-2">${data.map(r => createLeaveRequest(r)).join('')}</div>`;
             })
-            .catch(error => {
-                console.error('Error loading leave requests:', error);
-                showError("leaveRequests", `Error loading leave requests: ${error.message}`);
-            });
+            .catch(() => window.Toast?.error("Error", "Failed to load leave requests."));
 
         /* ---------- Departments ---------- */
         fetch("/api/dashboard/department")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(result => {
-                console.log('Departments API Response:', result);
-                
                 const div = document.getElementById("departments");
-                
-                // Handle both {success: true, data: [...]} and direct array formats
-                const data = result.success ? result.data : (Array.isArray(result) ? result : null);
-                
-                if (!data || (result.success === false)) {
-                    showError("departments", "Failed to load departments");
-                    return;
-                }
+                const data = result.success ? result.data : (Array.isArray(result) ? result : []);
                 
                 if (data.length === 0) {
-                    showEmpty("departments", "No departments found");
+                    div.innerHTML = '<div class="text-center text-slate-400 py-12">No department data found</div>';
                     return;
                 }
                 
                 div.innerHTML = data.map(d => createDepartment(d)).join('');
             })
-            .catch(error => {
-                console.error('Error loading departments:', error);
-                showError("departments", `Error loading departments: ${error.message}`);
-            });
+            .catch(() => window.Toast?.error("Error", "Failed to load department data."));
     });
 </script>

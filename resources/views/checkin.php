@@ -1,86 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attendance Check-in</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: #fff; border-radius: 14px; padding: 2rem; width: 100%; max-width: 400px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
-    .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; }
-    .logo span { font-size: 18px; font-weight: 700; color: #1e1b4b; }
-    h2 { font-size: 15px; color: #6b7280; margin-bottom: 1rem; }
-    .slot-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 12px; border-radius: 20px; margin-bottom: 1.25rem; font-weight: 600; }
-    .slot-1 { background: #dbeafe; color: #1e40af; }
-    .slot-2 { background: #fef3c7; color: #92400e; }
-    .slot-3 { background: #d1fae5; color: #065f46; }
-    .slot-4 { background: #ede9fe; color: #5b21b6; }
-    .slot-0 { background: #f3f4f6; color: #6b7280; }
-    label { font-size: 13px; color: #6b7280; display: block; margin-bottom: 6px; }
-    select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; margin-bottom: 1rem; background: #fff; color: #111827; }
-    button[type=submit] { width: 100%; padding: 12px; border-radius: 8px; font-size: 15px; cursor: pointer; border: none; font-weight: 600; background: #4f46e5; color: #fff; }
-    button[type=submit]:disabled { background: #9ca3af; cursor: not-allowed; }
-    .msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 1rem; font-weight: 500; }
-    .msg.success { background: #d1fae5; color: #065f46; }
-    .msg.warning { background: #fef3c7; color: #92400e; }
-    .msg.error   { background: #fee2e2; color: #991b1b; }
-    .time-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 1.25rem; }
-    .ts { font-size: 11px; padding: 6px 8px; border-radius: 6px; background: #f9fafb; border: 1px solid #e5e7eb; color: #9ca3af; text-align: center; }
-    .ts.active { border-color: #4f46e5; color: #4338ca; background: #eef2ff; font-weight: 700; }
-    .ts .type-label { font-size: 10px; display: block; margin-top: 2px; }
-    .clock { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 1rem; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Check-in | Doorstep</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        indigo: {
+                            50: '#f5f7ff',
+                            100: '#ebf0fe',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .soft-shadow {
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
+        }
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-position: right 1rem center;
+            background-repeat: no-repeat;
+            background-size: 1.25rem;
+        }
+    </style>
 </head>
-<body>
-<div class="card">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 text-slate-900">
 
-  <div class="logo">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <rect width="28" height="28" rx="8" fill="#4f46e5"/>
-      <path d="M14 9v5l3 3" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <span>Doorstep</span>
-  </div>
+<div id="toast-container"></div>
 
-  <h2>Attendance Check-in</h2>
-  <span class="slot-badge slot-<?= $slot['slot'] ?>">
-    <?= htmlspecialchars($slot['label']) ?>
-  </span>
+<div class="w-full max-w-[440px]">
+    <!-- Main Card -->
+    <div class="bg-white rounded-[2.5rem] soft-shadow p-10 md:p-12 border border-slate-100 relative overflow-hidden">
+        
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-10">
+            <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 mb-6">
+                <span class="iconify text-3xl text-white" data-icon="mdi:clock-check"></span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 text-center tracking-tight">Check-in</h1>
+            <p class="text-[11px] font-semibold text-slate-400 mt-1.5 uppercase tracking-widest">Doorstep Attendance</p>
+        </div>
 
-  <?php if ($message): ?>
-    <div class="msg <?= htmlspecialchars($msgType) ?>"><?= htmlspecialchars($message) ?></div>
-  <?php endif; ?>
+        <!-- Current Slot Badge -->
+        <div class="flex justify-center mb-8">
+            <?php
+            $slotColors = [
+                1 => 'bg-blue-50 text-blue-600 border-blue-100',
+                2 => 'bg-amber-50 text-amber-600 border-amber-100',
+                3 => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                4 => 'bg-purple-50 text-purple-600 border-purple-100',
+                0 => 'bg-slate-50 text-slate-400 border-slate-100'
+            ];
+            $colorClass = $slotColors[$slot['slot']] ?? $slotColors[0];
+            ?>
+            <div class="px-4 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider <?= $colorClass ?> flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                <?= htmlspecialchars($slot['label']) ?>
+            </div>
+        </div>
 
-  <form method="POST">
-    <label for="employee_id">Select your name</label>
-    <select name="employee_id" id="employee_id" required>
-      <option value="">-- select your name --</option>
-      <?php foreach ($employees as $emp): ?>
-        <option value="<?= $emp['id'] ?>"
-          <?= (isset($_POST['employee_id']) && $_POST['employee_id'] == $emp['id']) ? 'selected' : '' ?>>
-          <?= htmlspecialchars($emp['full_name']) ?> (#<?= htmlspecialchars((string) $emp['id']) ?>)
-        </option>
-      <?php endforeach; ?>
-    </select>
+        <!-- Attendance Form -->
+        <form method="POST" class="space-y-6">
+            <div>
+                <label for="employee_id" class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Your Name</label>
+                <div class="relative">
+                    <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:account-outline"></span>
+                    <select name="employee_id" id="employee_id" required
+                        class="w-full pl-11 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all text-sm font-medium appearance-none">
+                        <option value="">-- select your name --</option>
+                        <?php foreach ($employees as $emp): ?>
+                            <option value="<?= $emp['id'] ?>"
+                                <?= (isset($_POST['employee_id']) && $_POST['employee_id'] == $emp['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($emp['full_name']) ?> (#<?= htmlspecialchars((string) $emp['id']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
 
-    <button type="submit" <?= $slot['slot'] === 0 ? 'disabled' : '' ?>>
-      <?= htmlspecialchars($slot['label']) ?>
-    </button>
-  </form>
+            <button type="submit" 
+                <?= $slot['slot'] === 0 ? 'disabled' : '' ?>
+                class="w-full py-4.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
+                <span class="iconify text-lg" data-icon="mdi:check-circle"></span>
+                Confirm Attendance
+            </button>
+        </form>
 
-  <div class="time-slots">
-    <div class="ts <?= $slot['slot'] === 1 ? 'active' : '' ?>">07:00–11:59<span class="type-label">Check-in 1</span></div>
-    <div class="ts <?= $slot['slot'] === 2 ? 'active' : '' ?>">12:00–12:59<span class="type-label">Check-out 1</span></div>
-    <div class="ts <?= $slot['slot'] === 3 ? 'active' : '' ?>">14:00–17:59<span class="type-label">Check-in 2</span></div>
-    <div class="ts <?= $slot['slot'] === 4 ? 'active' : '' ?>">18:00–21:00<span class="type-label">Check-out 2</span></div>
-  </div>
+        <!-- Time Slots Grid -->
+        <div class="mt-12 grid grid-cols-2 gap-3">
+            <?php
+            $slotsData = [
+                ['time' => '07:00–11:59', 'label' => 'Check-in 1', 'id' => 1],
+                ['time' => '12:00–12:59', 'label' => 'Check-out 1', 'id' => 2],
+                ['time' => '14:00–17:59', 'label' => 'Check-in 2', 'id' => 3],
+                ['time' => '18:00–21:00', 'label' => 'Check-out 2', 'id' => 4],
+            ];
+            foreach ($slotsData as $s):
+                $isActive = $slot['slot'] === $s['id'];
+            ?>
+                <div class="p-3.5 rounded-2xl border <?= $isActive ? 'bg-indigo-50 border-indigo-200' : 'bg-white border-slate-100' ?> transition-all">
+                    <div class="text-[9px] font-bold <?= $isActive ? 'text-indigo-600' : 'text-slate-400' ?> mb-0.5 uppercase tracking-wider"><?= $s['label'] ?></div>
+                    <div class="text-[11px] font-semibold <?= $isActive ? 'text-indigo-900' : 'text-slate-500' ?>"><?= $s['time'] ?></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
 
-  <p class="clock" id="clock"></p>
+        <!-- Minimal Clock -->
+        <div class="mt-10 pt-8 border-t border-slate-50 text-center">
+            <div id="clock" class="text-lg font-bold text-slate-800 tabular-nums tracking-tight"></div>
+            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-1">Server Time</div>
+        </div>
+    </div>
+
+    <!-- Minimal Footer -->
+    <p class="mt-8 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+        &copy; <?= date('Y') ?> Doorstep Technology
+    </p>
 </div>
+
 <script>
-  function tick() { document.getElementById('clock').textContent = new Date().toLocaleString(); }
-  tick(); setInterval(tick, 1000);
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Minimalist Clock ---
+        function tick() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        }
+        tick();
+        setInterval(tick, 1000);
+
+        // --- Toast Messages from PHP ---
+        <?php if ($message): ?>
+            const type = '<?= $msgType === "error" ? "error" : ($msgType === "warning" ? "warning" : "success") ?>';
+            const title = '<?= $msgType === "error" ? "Action Failed" : ($msgType === "warning" ? "Attention" : "Success") ?>';
+            setTimeout(() => {
+                if (window.Toast) {
+                    window.Toast[type](title, '<?= addslashes($message) ?>');
+                }
+            }, 500);
+        <?php endif; ?>
+    });
 </script>
 </body>
 </html>

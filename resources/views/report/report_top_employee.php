@@ -139,7 +139,7 @@ async function loadReport() {
     document.getElementById('recognitionBox').classList.add('hidden');
 
     try {
-        const res  = await fetch(`http://localhost:8080/api/report/top-employees?from=${from}&to=${to}`);
+        const res  = await fetch(`/api/report/top-employees?from=${from}&to=${to}`);
         const json = await res.json();
 
         if (!json.success) {

@@ -1,47 +1,90 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const links = document.querySelectorAll("nav a");
-    const contentDiv = document.getElementById("content");
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Sidebar & Overlay Logic ---
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('sidebarToggle');
 
-    function loadPage(page) {
-        fetch(`index.php?page=${page}&ajax=1`)
-            .then(res => res.text())
-            .then(html => contentDiv.innerHTML = html)
-            .catch(err => console.error(err));
+    if (sidebar && overlay && toggle) {
+        const setSidebarOpen = (isOpen) => {
+            sidebar.classList.toggle('-translate-x-full', !isOpen);
+            overlay.classList.toggle('hidden', !isOpen);
+            toggle.setAttribute('aria-expanded', String(isOpen));
+            toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        };
+
+        toggle.addEventListener('click', () => {
+            setSidebarOpen(sidebar.classList.contains('-translate-x-full'));
+        });
+
+        overlay.addEventListener('click', () => setSidebarOpen(false));
+
+        sidebar.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (window.matchMedia('(max-width: 767px)').matches) {
+                    setSidebarOpen(false);
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setSidebarOpen(false);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.matchMedia('(min-width: 768px)').matches) {
+                overlay.classList.add('hidden');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
     }
 
-    links.forEach(link => {
-        link.addEventListener("click", function (e) {
-            e.preventDefault();
-            const page = this.getAttribute("data-page");
-            loadPage(page);
-            history.pushState(null, '', `?page=${page}`);
-        });
-    });
+    // --- Toast Notification System ---
+    window.Toast = {
+        show: function(title, message, type = 'info', duration = 3000) {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
 
-    // Handle browser back/forward buttons
-    window.addEventListener('popstate', function () {
-        const params = new URLSearchParams(window.location.search);
-        const page = params.get('page') || 'dashboard';
-        loadPage(page);
-    });
-});
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'mdi:check-circle',
+                error: 'mdi:alert-circle',
+                warning: 'mdi:alert',
+                info: 'mdi:information'
+            };
 
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <span class="iconify w-full h-full" data-icon="${icons[type] || icons.info}"></span>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
 
-// Optional: AJAX page loading (for smoother transitions)
-document.querySelectorAll("aside a").forEach(link => {
-    link.addEventListener("click", async e => {
-        e.preventDefault();
-        const url = e.target.getAttribute("href");
-        const res = await fetch(`${url}&ajax=1`);
-        const html = await res.text();
-        document.getElementById("content").innerHTML = html;
-        history.pushState({}, "", url);
-    });
-});
+            container.appendChild(toast);
+            
+            // Force reflow
+            toast.offsetHeight;
+            
+            toast.classList.add('show');
 
-// Handle back/forward navigation
-window.addEventListener("popstate", async () => {
-    const url = location.search + "&ajax=1";
-    const res = await fetch(url);
-    document.getElementById("content").innerHTML = await res.text();
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        },
+        success: function(title, message, duration) { this.show(title, message, 'success', duration); },
+        error: function(title, message, duration) { this.show(title, message, 'error', duration); },
+        warning: function(title, message, duration) { this.show(title, message, 'warning', duration); },
+        info: function(title, message, duration) { this.show(title, message, 'info', duration); }
+    };
 });

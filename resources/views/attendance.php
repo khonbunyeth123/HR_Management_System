@@ -1,398 +1,284 @@
-<div class="w-full h-full p-2">
-    <!-- <div class="bg-white shadow-lg p-4"></div> -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-        
-
-        <!-- QR Modal Overlay -->
-        <div id="qrModal" onclick="closeQRModal(event)"
-            style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
-            <div style="background:#fff; border-radius:16px; padding:1.25rem; width:100%; max-width:320px; text-align:center; position:relative; border:1px solid #e2e8f0; box-shadow:0 24px 40px rgba(15,23,42,0.22);">
-
-                <!-- Header -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                    <p style="font-size:14px; font-weight:700; letter-spacing:0.01em; color:#0f172a; margin:0;">Attendance QR Code</p>
-                    <button onclick="document.getElementById('qrModal').style.display='none'"
-                        style="width:26px; height:26px; border-radius:50%; border:1px solid #e5e7eb; background:#f9fafb; cursor:pointer; font-size:14px; color:#6b7280; display:flex; align-items:center; justify-content:center;">✕</button>
+<div class="w-full max-w-7xl mx-auto space-y-6">
+    <!-- Header Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
+                    <span class="iconify text-2xl text-indigo-600" data-icon="mdi:clock-check"></span>
                 </div>
-
-                <!-- QR -->
-                <div style="background:linear-gradient(160deg,#f8fafc,#eef2ff); border:1px solid #e2e8f0; border-radius:12px; padding:14px; display:inline-block; margin-bottom:10px;">
-                    <div id="qrcode"></div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">Attendance Records</h1>
+                    <p class="text-sm text-slate-500" id="totalCount">0 Records found</p>
                 </div>
-
-                <!-- URL label -->
-                <p style="font-size:11px; color:#9ca3af; margin-bottom:14px;" id="qrUrlLabel"></p>
-
-                <!-- Buttons -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <button onclick="downloadQR()"
-                        style="padding:9px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; background:#0f172a; color:#fff;">
-                        ⬇ Download
-                    </button>
-                    <button onclick="printQR()"
-                        style="padding:9px; border-radius:10px; font-size:13px; font-weight:600; border:1px solid #cbd5e1; cursor:pointer; background:#fff; color:#334155;">
-                        🖨 Print
-                    </button>
-                </div>
-
             </div>
-        </div>
-
-        <style>
-            #qrcode canvas, #qrcode img {
-                width: 180px !important;
-                height: 180px !important;
-                border-radius: 10px;
-            }
-        </style>
-
-
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <iconify-icon icon="mdi:clock-check" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
-                <h1 class="text-lg font-bold text-gray-900">Attendance Records</h1>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Records</span>
-                <!-- QR Icon Button -->
+            
+            <div class="flex items-center gap-2 w-full md:w-auto">
                 <button onclick="openQRModal()"
-                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 cursor-pointer">
-                    <iconify-icon icon="mdi:qrcode" style="font-size:16px;"></iconify-icon>
-                    QR Code
+                    class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-sm shadow-indigo-100">
+                    <span class="iconify text-lg" data-icon="mdi:qrcode"></span>
+                    Generate QR
                 </button>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="flex flex-col sm:flex-row gap-2 mt-4">
-            <div class="flex-1 relative">
-                <iconify-icon icon="mdi:magnify"
-                    style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:18px;"></iconify-icon>
-                <input type="text" id="searchInput" placeholder="Search by employee ID or date..."
-                    class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+            <div class="relative">
+                <span class="iconify absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
+                <input type="text" id="searchInput" placeholder="Search Name, ID or Date..."
+                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm">
             </div>
             <select id="checkTypeFilter"
-                class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all cursor-pointer">
                 <option value="">All Check Types</option>
-                <option value="check-in">Check In</option>
-                <option value="check-out">Check Out</option>
+                <option value="check-in">Check In Only</option>
+                <option value="check-out">Check Out Only</option>
             </select>
             <input type="date" id="dateFilter"
-                class="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all">
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <!-- Table Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-slate-900 text-white sticky top-0">
-                    <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Employee ID</th>
-                        <th class="px-4 py-3 text-left font-semibold">Date</th>
-                        <th class="px-4 py-3 text-left font-semibold">Check Time</th>
-                        <th class="px-4 py-3 text-left font-semibold">Type</th>
-                        <th class="px-4 py-3 text-left font-semibold">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold">Created</th>
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 border-b border-slate-100">
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Employee</th>
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Date</th>
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Time</th>
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Type</th>
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
+                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Log</th>
                     </tr>
                 </thead>
-                <tbody id="attendanceTableBody" class="divide-y divide-gray-100">
+                <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
                     <tr>
-                        <td colspan="6" class="px-4 py-6 text-center text-gray-400">
-                            <div class="flex items-center justify-center gap-2">
-                                <iconify-icon icon="mdi:loading" class="animate-spin" style="font-size:20px;"></iconify-icon>
-                                Loading...
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center gap-2">
+                                <span class="iconify text-3xl animate-spin" data-icon="mdi:loading"></span>
+                                <p class="text-xs font-medium">Loading records...</p>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50 flex justify-center gap-2"></div>
+        <div id="paginationContainer" class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-center gap-2"></div>
     </div>
-    
+
+    <!-- QR Modal Overlay -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform" id="qrModalContent">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-slate-900">Attendance QR</h3>
+                <button onclick="closeQRModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors">✕</button>
+            </div>
+
+            <div class="bg-indigo-50 p-6 rounded-2xl inline-block mb-4 border border-indigo-100">
+                <div id="qrcode" class="rounded-lg overflow-hidden border-4 border-white shadow-sm"></div>
+            </div>
+
+            <p class="text-xs text-slate-500 mb-8" id="qrUrlLabel">Scan to record your attendance</p>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="downloadQR()" class="flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                    <span class="iconify" data-icon="mdi:download"></span> Download
+                </button>
+                <button onclick="printQR()" class="flex items-center justify-center gap-2 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all">
+                    <span class="iconify" data-icon="mdi:printer"></span> Print
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    #qrcode canvas, #qrcode img {
+        width: 200px !important;
+        height: 200px !important;
+        margin: 0 auto;
+    }
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
     let currentPage = 1;
     let totalPages  = 1;
-    let allRecords  = [];
-    const perPage   = 18;
+    const perPage   = 12;
     const qrDarkColor = '#0f172a';
     const qrLightColor = '#ffffff';
-
-
     const qrContent = 'DOORSTEP_ATTENDANCE';
 
-    document.getElementById('qrUrlLabel').textContent = 'Scan to record your attendance';
-
+    // Init QR
     new QRCode(document.getElementById('qrcode'), {
-        text: qrContent,  // ✅ just the number e.g. "1"
+        text: qrContent,
         width: 256,
         height: 256,
         colorDark: qrDarkColor,
         colorLight: qrLightColor,
         correctLevel: QRCode.CorrectLevel.H
     });
+
     function openQRModal() {
-        document.getElementById('qrModal').style.display = 'flex';
+        const modal = document.getElementById('qrModal');
+        const content = document.getElementById('qrModalContent');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => content.classList.replace('scale-90', 'scale-100'), 10);
     }
 
-    function closeQRModal(e) {
-        if (e.target === document.getElementById('qrModal')) {
-            document.getElementById('qrModal').style.display = 'none';
-        }
+    function closeQRModal() {
+        const modal = document.getElementById('qrModal');
+        const content = document.getElementById('qrModalContent');
+        content.classList.replace('scale-100', 'scale-90');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 200);
     }
 
     function generateQRCard(size, callback) {
         const padding = Math.round(size * 0.08);
         const qrSize  = Math.round(size * 0.65);
-
         const tempDiv = document.createElement('div');
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
+        tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
         document.body.appendChild(tempDiv);
 
-        new QRCode(tempDiv, {
-            text: qrContent,
-            width: qrSize,
-            height: qrSize,
-            colorDark: qrDarkColor,
-            colorLight: qrLightColor,
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        new QRCode(tempDiv, { text: qrContent, width: qrSize, height: qrSize, colorDark: qrDarkColor, colorLight: qrLightColor, correctLevel: QRCode.CorrectLevel.H });
 
         setTimeout(() => {
             const qrCanvas = tempDiv.querySelector('canvas');
             if (!qrCanvas) { document.body.removeChild(tempDiv); return; }
-
-            const cardW = size;
-            const cardH = Math.round(size * 1.35);
-
-            const canvas  = document.createElement('canvas');
-            canvas.width  = cardW;
-            canvas.height = cardH;
+            const cardW = size; const cardH = Math.round(size * 1.35);
+            const canvas  = document.createElement('canvas'); canvas.width  = cardW; canvas.height = cardH;
             const ctx     = canvas.getContext('2d');
-
-            // outer bg
-            ctx.fillStyle = '#f3f4f6';
-            ctx.fillRect(0, 0, cardW, cardH);
-
-            // white card
-            ctx.fillStyle = '#ffffff';
-            roundRect(ctx, padding, padding, cardW - padding * 2, cardH - padding * 2, Math.round(size * 0.05));
-            ctx.fill();
-
-            // blue circle
-            const circleX = cardW / 2;
-            const circleY = padding * 2.5;
-            const circleR = Math.round(size * 0.09);
-            ctx.fillStyle = '#3b82f6';
-            ctx.beginPath();
-            ctx.arc(circleX, circleY, circleR, 0, Math.PI * 2);
-            ctx.fill();
-
-            // checkmark
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth   = Math.round(size * 0.018);
-            ctx.lineCap     = 'round';
-            ctx.lineJoin    = 'round';
-            ctx.beginPath();
-            ctx.moveTo(circleX - circleR * 0.4, circleY);
-            ctx.lineTo(circleX - circleR * 0.05, circleY + circleR * 0.38);
-            ctx.lineTo(circleX + circleR * 0.45, circleY - circleR * 0.35);
-            ctx.stroke();
-
-            // title
-            const titleY  = circleY + circleR + Math.round(size * 0.09);
-            const fontSize = Math.round(size * 0.07);
-            ctx.fillStyle = '#111827';
-            ctx.font      = `bold ${fontSize}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText('QR ATTENDANCE', cardW / 2, titleY);
-
-            // QR image
-            const qrX = (cardW - qrSize) / 2;
-            const qrY = titleY + Math.round(size * 0.06);
-            ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-
-            // subtitle
-            const subY    = qrY + qrSize + Math.round(size * 0.07);
-            const subSize = Math.round(size * 0.055);
-            ctx.fillStyle = '#6b7280';
-            ctx.font      = `${subSize}px sans-serif`;
-            ctx.fillText('Scan to check in', cardW / 2, subY);
-
-            document.body.removeChild(tempDiv);
-            callback(canvas);
+            ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, cardW, cardH);
+            ctx.fillStyle = '#ffffff'; roundRect(ctx, padding, padding, cardW - padding * 2, cardH - padding * 2, Math.round(size * 0.05)); ctx.fill();
+            const circleX = cardW / 2; const circleY = padding * 2.5; const circleR = Math.round(size * 0.09);
+            ctx.fillStyle = '#4f46e5'; ctx.beginPath(); ctx.arc(circleX, circleY, circleR, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.round(size * 0.018); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.beginPath(); ctx.moveTo(circleX - circleR * 0.4, circleY); ctx.lineTo(circleX - circleR * 0.05, circleY + circleR * 0.38); ctx.lineTo(circleX + circleR * 0.45, circleY - circleR * 0.35); ctx.stroke();
+            const titleY = circleY + circleR + Math.round(size * 0.09); const fontSize = Math.round(size * 0.07);
+            ctx.fillStyle = '#0f172a'; ctx.font = `bold ${fontSize}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText('ATTENDANCE QR', cardW / 2, titleY);
+            const qrX = (cardW - qrSize) / 2; const qrY = titleY + Math.round(size * 0.06); ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+            const subY = qrY + qrSize + Math.round(size * 0.07); const subSize = Math.round(size * 0.055);
+            ctx.fillStyle = '#64748b'; ctx.font = `${subSize}px sans-serif`; ctx.fillText('Scan to record attendance', cardW / 2, subY);
+            document.body.removeChild(tempDiv); callback(canvas);
         }, 200);
     }
 
     function roundRect(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
     }
 
-    function downloadQR() {
-        generateQRCard(600, (canvas) => {
-            const a = document.createElement('a');
-            a.download = 'attendance-qr.png';
-            a.href = canvas.toDataURL('image/png');
-            a.click();
-        });
-    }
+    function downloadQR() { generateQRCard(800, c => { const a = document.createElement('a'); a.download = 'attendance-qr.png'; a.href = c.toDataURL(); a.click(); }); }
+    function printQR() { generateQRCard(800, c => { const w = window.open('', '_blank'); w.document.write(`<body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f3f4f6;"><img src="${c.toDataURL()}" style="width:400px;"></body>`); w.print(); }); }
 
-    function printQR() {
-        generateQRCard(600, (canvas) => {
-            const win = window.open('', '_blank');
-            win.document.write(`
-                <html><body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f3f4f6;">
-                    <img src="${canvas.toDataURL('image/png')}" style="width:320px;">
-                </body></html>
-            `);
-            win.document.close();
-            win.print();
-        });
-    }
-
-
-
-    /**
-     * Determine if a check type name is "check-in" or "check-out"
-     * Based on the name from tbl_check_types (e.g. "Check-in 1", "Check-in 2")
-     */
-    function isCheckIn(checkTypeName) {
-        return checkTypeName.toLowerCase().includes('check-in');
-    }
-
-    function getCheckTypeLabel(checkTypeName) {
-        return isCheckIn(checkTypeName) ? 'Check In' : 'Check Out';
-    }
-
-    function getCheckTypeColor(checkTypeName) {
-        return isCheckIn(checkTypeName)
-            ? 'bg-green-100 text-green-700'
-            : 'bg-orange-100 text-orange-700';
-    }
-
-    function getStatusBadge(statusId) {
-        return statusId == 1
-            ? '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">Active</span>'
-            : '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">Inactive</span>';
-    }
-
-    // fetch attendance
     function loadAttendance(page = 1) {
         const searchInput = document.getElementById("searchInput").value;
-        const checkType   = document.getElementById("checkTypeFilter").value; // "check-in" | "check-out" | ""
+        const checkType   = document.getElementById("checkTypeFilter").value;
         const date        = document.getElementById("dateFilter").value;
 
         const params = new URLSearchParams({
-            "paging_options[page]":     page,
+            "paging_options[page]": page,
             "paging_options[per_page]": perPage,
-            "filters[status_id]":       1
+            "filters[status_id]": 1
         });
 
         fetch("/api/attendance/show?" + params.toString())
             .then(res => res.json())
             .then(result => {
-                const tbody = document.getElementById("attendanceTableBody");
-
                 if (result.success && result.data) {
-                    allRecords = result.data.attendance_records;
-
-                    // apply frontend filters
-                    let filtered = allRecords.filter(rec => {
-                        const matchSearch = (
-                            (String(rec.emp_code || '').toLowerCase().includes(searchInput.toLowerCase())) ||
+                    let filtered = result.data.attendance_records.filter(rec => {
+                        const matchSearch = !searchInput || (
+                            String(rec.emp_code || '').toLowerCase().includes(searchInput.toLowerCase()) || 
+                            String(rec.full_name || '').toLowerCase().includes(searchInput.toLowerCase()) ||
                             rec.date.includes(searchInput)
                         );
-
-                        // filter by check-in or check-out using check_type_name from DB
-                        const matchType = !checkType ||
-                            rec.check_type_name.toLowerCase().includes(checkType);
-
+                        const matchType = !checkType || rec.check_type_name.toLowerCase().includes(checkType);
                         const matchDate = !date || rec.date === date;
-
                         return matchSearch && matchType && matchDate;
                     });
 
                     renderTable(filtered);
-
-                    const total = result.pagination.total;
-                    totalPages  = result.pagination.total_pages;
-                    currentPage = page;
-                    document.getElementById("totalCount").textContent = total + " Records";
-
-                    renderPagination(totalPages, currentPage);
+                    document.getElementById("totalCount").textContent = `${result.pagination.total} Records found`;
+                    renderPagination(result.pagination.total_pages, page);
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No attendance records found</td></tr>';
+                    throw new Error("No data");
                 }
             })
             .catch(err => {
-                document.getElementById("attendanceTableBody").innerHTML = `
-                    <tr><td colspan="6" class="px-4 py-6 text-center text-red-500">
-                        <iconify-icon icon="mdi:alert-circle"></iconify-icon> Error loading data
-                    </td></tr>`;
-                console.error(err);
+                document.getElementById("attendanceTableBody").innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-rose-500 font-medium">Failed to load records</td></tr>';
+                window.Toast?.error("Fetch Error", "Could not load attendance data.");
             });
     }
 
-    // render table
     function renderTable(records) {
         const tbody = document.getElementById("attendanceTableBody");
-
         if (!records.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-gray-400">No attendance records found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No records matching your filters</td></tr>';
             return;
         }
 
-        tbody.innerHTML = records.map(rec => `
-            <tr class="hover:bg-indigo-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-gray-900">${rec.emp_code ? '#' + rec.emp_code : '<span class="text-red-400 text-xs">Unknown (#' + rec.employee_id + ')</span>'}</td>
-                <td class="px-4 py-3 text-gray-600 text-sm">${new Date(rec.date).toLocaleDateString()}</td>
-                <td class="px-4 py-3 font-mono text-sm font-semibold text-indigo-600">${rec.check_time}</td>
-                <td class="px-4 py-3">
-                    <span class="${getCheckTypeColor(rec.check_type_name)} px-2 py-1 rounded text-xs font-semibold">
-                        ${getCheckTypeLabel(rec.check_type_name)}
+        tbody.innerHTML = records.map(rec => {
+            const isCheckIn = rec.check_type_name.toLowerCase().includes('in');
+            const typeClass = isCheckIn ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600';
+            
+            return `
+            <tr class="hover:bg-slate-50 transition-colors group">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold">
+                            ${(rec.full_name || rec.emp_code || '#').charAt(0)}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                ${rec.full_name || 'N/A'}
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-medium">
+                                ${rec.emp_code ? '#' + rec.emp_code : ''}
+                            </span>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-slate-500">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</td>
+                <td class="px-6 py-4 font-mono font-bold text-indigo-600">${rec.check_time}</td>
+                <td class="px-6 py-4">
+                    <span class="${typeClass} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                        ${isCheckIn ? 'In' : 'Out'}
                     </span>
                 </td>
-                <td class="px-4 py-3">${getStatusBadge(rec.status_id)}</td>
-                <td class="px-4 py-3 text-gray-500 text-xs">${new Date(rec.created_at).toLocaleDateString()}</td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-1.5 text-xs ${rec.status_id == 1 ? 'text-emerald-600' : 'text-slate-400'}">
+                        <span class="w-1.5 h-1.5 rounded-full ${rec.status_id == 1 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                        ${rec.status_id == 1 ? 'Active' : 'Archived'}
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-[10px] text-slate-400 uppercase">${new Date(rec.created_at).toLocaleDateString()}</td>
             </tr>
-        `).join('');
+        `;}).join('');
     }
 
-    // simple pagination
-    function renderPagination(totalPages, currentPage) {
+    function renderPagination(total, current) {
         const container = document.getElementById("paginationContainer");
         container.innerHTML = '';
-
-        if (totalPages <= 1) return;
-
-        for (let i = 1; i <= totalPages; i++) {
+        if (total <= 1) return;
+        
+        for (let i = 1; i <= total; i++) {
             const btn = document.createElement('button');
             btn.textContent = i;
-            btn.className = `px-3 py-1 border rounded ${i === currentPage ? 'bg-indigo-500 text-white' : 'bg-white text-gray-700'}`;
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${i === current ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-indigo-50 border border-slate-100'}`;
             btn.onclick = () => loadAttendance(i);
             container.appendChild(btn);
         }
     }
 
-    // filter events
-    document.getElementById("searchInput").addEventListener("input",  () => loadAttendance(1));
+    document.getElementById("searchInput").addEventListener("input", () => loadAttendance(1));
     document.getElementById("checkTypeFilter").addEventListener("change", () => loadAttendance(1));
-    document.getElementById("dateFilter").addEventListener("change",  () => loadAttendance(1));
-
-    // initial load
+    document.getElementById("dateFilter").addEventListener("change", () => loadAttendance(1));
     loadAttendance();
 </script>

@@ -136,8 +136,28 @@ const PER_PAGE = 10;
   const lastDay  = today.toISOString().split('T')[0];
   document.getElementById('fromDate').value = firstDay;
   document.getElementById('toDate').value   = lastDay;
+  fetchDepartments();
   fetchData();
 })();
+
+async function fetchDepartments() {
+  try {
+    const res = await fetch('/api/employees/departments');
+    const json = await res.json();
+    if (json.success) {
+      const select = document.getElementById('deptFilter');
+      select.innerHTML = '<option value="">All</option>';
+      json.data.forEach(dept => {
+        const opt = document.createElement('option');
+        opt.value = dept;
+        opt.textContent = dept;
+        select.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.error('Failed to fetch departments:', err);
+  }
+}
 
 // ── Fetch from API ──
 async function fetchData() {

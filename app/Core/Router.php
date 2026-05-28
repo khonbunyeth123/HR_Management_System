@@ -181,6 +181,7 @@ class Router
             '/api/auth/admin/login',
             '/api/auth/employee/login',
             '/api/attendance/qr',
+            '/api/attendance/checkin',
         ];
 
         return in_array($this->route, $publicRoutes, true);
@@ -204,8 +205,7 @@ class Router
         }
 
         // Bearer token (mobile / API)
-        $headers = getallheaders();
-        $auth    = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        $auth = $this->getAuthorizationHeader();
 
         if (str_starts_with($auth, 'Bearer ')) {
             $token = trim(substr($auth, 7));
@@ -306,6 +306,29 @@ class Router
         $currentAuthType = $_SESSION['auth_type'] ?? null;
         if ($currentAuthType === $requiredAuthType) return;
 
+        if ($this->route === '/api/attendance/scan') {
+            if ($requiredAuthType === 'employee' && $this->hasValidEmployeeAuth()) {
+                return;
+            }
+
+            if ($requiredAuthType === 'employee' && $currentAuthType === 'user') {
+                // Let the scan endpoint continue to permissions; the controller
+                // still resolves the employee identity and will fail safely if
+                // the employee is inactive or missing.
+                return;
+            }
+        }
+
+        // If the request includes a valid bearer token for the required account
+        // type, let it replace any stale session auth type.
+        $auth = $this->getAuthorizationHeader();
+        if (is_string($auth) && str_starts_with($auth, 'Bearer ')) {
+            $token = trim(substr($auth, 7));
+            if ($token !== '' && $this->validateToken($token) && ($_SESSION['auth_type'] ?? null) === $requiredAuthType) {
+                return;
+            }
+        }
+
         // Backward compatibility: admin web sessions created before the auth_type split
         if ($requiredAuthType === 'user' && $currentAuthType === null && !empty($_SESSION['user_id'])) {
             return;
@@ -313,6 +336,48 @@ class Router
 
         // FIX: do not reveal the required_auth_type to the client
         $this->sendJson(['success' => false, 'message' => 'Forbidden. Invalid account type for this route.'], 403);
+    }
+
+    private function hasValidEmployeeAuth(): bool
+    {
+        if (!empty($_SESSION['employee_id']) && ($_SESSION['auth_type'] ?? '') === 'employee') {
+            return true;
+        }
+
+        $auth = $this->getAuthorizationHeader();
+        if (!is_string($auth) || !str_starts_with($auth, 'Bearer ')) {
+            return false;
+        }
+
+        $token = trim(substr($auth, 7));
+        if ($token === '') {
+            return false;
+        }
+
+        if (!$this->validateToken($token)) {
+            return false;
+        }
+
+        return ($_SESSION['auth_type'] ?? '') === 'employee' && !empty($_SESSION['employee_id']);
+    }
+
+    private function getAuthorizationHeader(): string
+    {
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        if (is_array($headers)) {
+            $auth = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+            if (is_string($auth) && $auth !== '') {
+                return $auth;
+            }
+        }
+
+        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $key) {
+            if (!empty($_SERVER[$key]) && is_string($_SERVER[$key])) {
+                return $_SERVER[$key];
+            }
+        }
+
+        return '';
     }
 
     // -----------------------------------------------------------------------
@@ -329,7 +394,9 @@ class Router
             try {
                 $authModel = new \App\Models\Auth();
                 $employee  = $authModel->getEmployeeById((int) $_SESSION['employee_id']);
-                return $employee && ($employee['status'] ?? '') === 'active';
+                // Employee lookups in this codebase expose `status_id`, not a string `status`.
+                // Treat status_id = 1 as the active employee state so scan requests are allowed.
+                return $employee && (int) ($employee['status_id'] ?? 0) === 1;
             } catch (\Exception $e) {
                 error_log('Attendance scan auth error: ' . $e->getMessage());
                 return false;
@@ -403,6 +470,7 @@ class Router
         return match (true) {
             $this->route === '/api/auth/logout'                                => null,
             $this->route === '/api/attendance/scan'                            => 'employee',
+            $this->route === '/api/attendance/checkin'                        => null,
             $this->route === '/api/auth/employee/me'                           => 'employee',
             $this->route === '/api/leave/create'                               => 'employee',
             $this->route === '/api/attendance/history'                         => 'employee',

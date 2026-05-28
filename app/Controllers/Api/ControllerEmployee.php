@@ -45,6 +45,12 @@ class ControllerEmployee
         $this->jsonSuccess($employees);
     }
 
+    public function departments(): void
+    {
+        $depts = $this->service->getDepartments();
+        $this->jsonSuccess($depts);
+    }
+
     // Show single employee by ID
     public function show(int $id): void
     {

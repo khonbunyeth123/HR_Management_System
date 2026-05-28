@@ -32,6 +32,7 @@ $router->get('/api/dashboard/recent-leaves', 'ControllerDashboard@recentLeaves')
 
 /* ================= ATTENDANCE ROUTES ================= */
 $router->post('/api/attendance/scan',    'ControllerAttendance@scan');
+$router->post('/api/attendance/scan/',   'ControllerAttendance@scan');
 $router->get('/api/attendance/show',     'ControllerAttendance@show');
 $router->post('/api/attendance/checkin', 'ControllerAttendance@checkin');
 $router->get('/api/attendance/qr', 'ControllerAttendance@qr');
@@ -41,6 +42,7 @@ $router->post('/attendance/checkin', 'ControllerAttendance@checkin');
 
 /* ================= EMPLOYEE ROUTES ================= */
 $router->get('/api/employees',       'ControllerEmployee@index');
+$router->get('/api/employees/departments', 'ControllerEmployee@departments');
 $router->get('/api/employees/show',  'ControllerEmployee@index');
 $router->get('/api/employees/{id}',  'ControllerEmployee@show');
 $router->post('/api/employees',      'ControllerEmployee@store');

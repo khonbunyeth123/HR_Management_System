@@ -8,48 +8,56 @@ if (session_status() === PHP_SESSION_NONE) {
 $uname = $_SESSION['uname'] ?? 'User';
 ?>
 <!-- Top Navigation -->
-<nav class="bg-gradient-to-b from-slate-900 to-slate-800 sticky top-0 z-50 w-full">
-  <div class="w-full px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between w-full h-[56px]">
+<nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 w-full border-b border-slate-100">
+  <div class="w-full px-8">
+    <div class="flex items-center justify-between w-full h-[64px]">
 
       <!-- Logo & Brand -->
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-white/10 backdrop-blur-md rounded-lg p-0.5 shadow-md">
-          <img src="/assets/img/logo.png" alt="Logo" class="w-full h-full rounded-md object-cover">
+      <div class="flex items-center gap-4 min-w-0">
+        <button id="sidebarToggle" type="button"
+          class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-100 transition-all hover:bg-slate-100"
+          aria-label="Open menu" aria-controls="appSidebar" aria-expanded="false">
+          <span class="iconify text-xl" data-icon="mdi:menu"></span>
+        </button>
+        <div class="w-10 h-10 bg-indigo-600 rounded-xl p-0.5 shadow-lg shadow-indigo-100">
+          <img src="/assets/img/logo.png" alt="Logo" class="w-full h-full rounded-[10px] object-cover border border-white/20">
         </div>
         <div class="hidden sm:flex flex-col">
-          <h1 class="text-white text-sm font-bold leading-tight">Doorstep Technology</h1>
-          <span class="text-white/70 text-[10px] font-medium uppercase tracking-wider">Admin Portal</span>
+          <h1 class="text-slate-900 text-sm font-black leading-tight tracking-tight">Doorstep</h1>
+          <span class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em]">Admin Portal</span>
         </div>
       </div>
 
       <!-- Clock -->
-      <div class="flex-1 text-center">
-        <h2 id="clock" class="text-white text-xs sm:text-sm font-semibold"></h2>
+      <div class="hidden min-[420px]:block flex-1 text-center">
+        <h2 id="clock" class="text-slate-900 text-xs font-black tabular-nums tracking-wider opacity-80"></h2>
       </div>
 
       <!-- User Section -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-4">
         <!-- User Info -->
-        <div class="hidden md:flex items-center gap-2.5">
+        <div class="hidden md:flex items-center gap-3 pl-2 border-l border-slate-100">
           <div
-            class="w-8 h-8 bg-gradient-to-br from-pink-400 to-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md">
+            class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-lg shadow-indigo-100">
             <?php
             $name = htmlspecialchars($_SESSION['uname'] ?? 'User');
             echo strtoupper(substr($name, 0, 1));
             ?>
           </div>
-          <span class="text-white text-sm font-semibold">
-            <?= htmlspecialchars($_SESSION['uname'] ?? 'User'); ?>
-          </span>
+          <div class="flex flex-col">
+            <span class="text-slate-900 text-xs font-black leading-none mb-0.5">
+                <?= htmlspecialchars($_SESSION['uname'] ?? 'User'); ?>
+            </span>
+            <span class="text-slate-400 text-[10px] font-bold">Administrator</span>
+          </div>
         </div>
 
         <!-- Logout Button -->
         <button id="logoutBtn"
-          class="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-red-500 border border-white/20 hover:border-transparent rounded-lg text-white text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg backdrop-blur-md"
+          class="flex items-center justify-center h-10 w-10 md:w-auto md:px-4 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white rounded-xl text-xs font-black transition-all duration-300 border border-rose-100 group"
           title="Logout">
-          <span class="iconify" data-icon="mdi:logout" data-width="18"></span>
-          <span class="hidden sm:inline">Logout</span>
+          <span class="iconify text-xl md:mr-2 group-hover:rotate-12 transition-transform" data-icon="mdi:logout-variant"></span>
+          <span class="hidden md:inline">Logout</span>
         </button>
       </div>
 

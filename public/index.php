@@ -192,19 +192,34 @@ $viewDir   = $baseDir . '/../resources/views';
     <link rel="stylesheet" href="/assets/css/style.css">
     <script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
 </head>
-<body class="bg-gray-100 overflow-x-hidden" style="margin:0;padding:0;">
+<body class="bg-slate-50 text-slate-900 overflow-x-hidden" style="margin:0;padding:0;">
 
 <?php if ($isLoggedIn): ?>
-    <div class="flex flex-col" style="height:100vh;">
+    <div class="flex flex-col h-screen">
         <?php include $layoutDir . '/navbar.php'; ?>
 
-        <div class="flex flex-1" style="overflow:hidden;">
+        <div class="flex flex-1 min-h-0 overflow-hidden">
+            <div id="sidebarOverlay" class="hidden fixed inset-0 top-[56px] z-30 bg-slate-900/20 md:hidden"></div>
             <?php if (file_exists($layoutDir . '/sidebar.php')) include $layoutDir . '/sidebar.php'; ?>
 
-            <main class="flex-1 flex flex-col" style="overflow:hidden;">
-                <?php if (file_exists($layoutDir . '/header.php')) include $layoutDir . '/header.php'; ?>
+            <main class="flex-1 min-w-0 flex flex-col overflow-hidden">
+                <!-- Breadcrumbs & Header -->
+                <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-5">
+                    <nav class="flex text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-2">
+                            <li><a href="?page=dashboard" class="hover:text-indigo-600 transition-colors">Dashboard</a></li>
+                            <?php if ($page !== 'dashboard'): ?>
+                                <li><span class="mx-1 text-slate-200">/</span></li>
+                                <li class="text-indigo-600 capitalize"><?= str_replace('_', ' ', basename($page)) ?></li>
+                            <?php endif; ?>
+                        </ol>
+                    </nav>
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight capitalize">
+                        <?= str_replace(['/', '_'], [' ', ' '], $page) ?>
+                    </h2>
+                </header>
 
-                <div style="flex:1;overflow-y:auto;overflow-x:hidden;">
+                <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
                     <?php
                     // FIX 5: resolve view path and verify it stays inside $viewDir
                     //         prevents path traversal via crafted $page values

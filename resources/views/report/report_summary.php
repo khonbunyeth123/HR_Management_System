@@ -120,6 +120,27 @@
     // Run on page load
     setDefaultDates();
     scheduleAutoRefresh();
+    fetchDepartments();
+
+    async function fetchDepartments() {
+        try {
+            const res = await fetch('/api/employees/departments');
+            const json = await res.json();
+            if (json.success) {
+                const select = document.getElementById('departmentFilter');
+                // Keep the "All Departments" option
+                select.innerHTML = '<option value="">All Departments</option>';
+                json.data.forEach(dept => {
+                    const opt = document.createElement('option');
+                    opt.value = dept;
+                    opt.textContent = dept + ' Department';
+                    select.appendChild(opt);
+                });
+            }
+        } catch (err) {
+            console.error('Failed to fetch departments:', err);
+        }
+    }
 
     function generateReport() {
         const from = document.getElementById('fromDate').value;

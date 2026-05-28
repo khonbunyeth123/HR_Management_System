@@ -63,11 +63,47 @@
         </div>
     </div>
 </div>
+    <div id="leaveDecisionModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4">
+        <div class="w-full max-w-md rounded-lg bg-white shadow-xl">
+            <div class="border-b border-gray-100 px-5 py-4">
+                <h2 id="leaveDecisionTitle" class="text-lg font-bold text-gray-900">Review Leave</h2>
+                <p id="leaveDecisionText" class="mt-1 text-sm text-gray-600">Confirm this action.</p>
+            </div>
+            <div class="space-y-4 px-5 py-4">
+                <div id="rejectReasonWrap" class="hidden">
+                    <label for="rejectReason" class="mb-2 block text-sm font-semibold text-gray-700">Reject reason *</label>
+                    <textarea id="rejectReason" rows="4"
+                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Explain why this request is rejected"></textarea>
+                    <p id="rejectReasonError" class="mt-2 hidden text-xs font-semibold text-red-600">Please enter a reject reason.</p>
+                </div>
+                <p id="leaveDecisionError" class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"></p>
+            </div>
+            <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
+                <button type="button" onclick="closeLeaveDecisionModal()"
+                    class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" id="confirmLeaveDecision" onclick="submitLeaveDecision()"
+                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+                    <iconify-icon icon="mdi:check"></iconify-icon>
+                    <span id="confirmLeaveDecisionText">Confirm</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaveFeedback" class="hidden fixed right-4 top-20 z-50 max-w-sm rounded-lg border-l-4 bg-white p-4 shadow-lg">
+        <p id="leaveFeedbackTitle" class="font-semibold text-gray-900"></p>
+        <p id="leaveFeedbackMessage" class="mt-1 text-sm text-gray-600"></p>
+    </div>
+
     <script src="/assets/js/pagination.js"></script>
     <script>
         const perPage = 5;
         let currentPage = 1;
         let totalPages = 1;
+        let pendingLeaveDecision = null;
 
         // Helper: Status badge
         function getStatusBadge(statusId) {
@@ -75,6 +111,56 @@
             if (statusId == 1) return '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">Approved</span>';
             if (statusId == 2) return '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">Rejected</span>';
             return '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">Unknown</span>';
+        }
+
+        function showFeedback(title, message, type = 'success') {
+            const box = document.getElementById('leaveFeedback');
+            document.getElementById('leaveFeedbackTitle').textContent = title;
+            document.getElementById('leaveFeedbackMessage').textContent = message;
+            box.className = `fixed right-4 top-20 z-50 max-w-sm rounded-lg border-l-4 bg-white p-4 shadow-lg ${
+                type === 'success' ? 'border-green-500' : 'border-red-500'
+            }`;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 3000);
+        }
+
+        function setDecisionLoading(isLoading) {
+            const btn = document.getElementById('confirmLeaveDecision');
+            const label = document.getElementById('confirmLeaveDecisionText');
+            const isReject = pendingLeaveDecision?.action === 'reject';
+            btn.disabled = isLoading;
+            label.textContent = isLoading ? 'Processing...' : (isReject ? 'Reject Leave' : 'Approve Leave');
+        }
+
+        function openLeaveDecisionModal(action, uuid) {
+            pendingLeaveDecision = { action, uuid };
+            const isReject = action === 'reject';
+
+            document.getElementById('leaveDecisionTitle').textContent = isReject ? 'Reject Leave Request' : 'Approve Leave Request';
+            document.getElementById('leaveDecisionText').textContent = isReject
+                ? 'Add a clear reason so the employee understands the decision.'
+                : 'Confirm that this employee can take the requested leave.';
+            document.getElementById('rejectReasonWrap').classList.toggle('hidden', !isReject);
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectReasonError').classList.add('hidden');
+            document.getElementById('leaveDecisionError').classList.add('hidden');
+            document.getElementById('confirmLeaveDecision').className = `inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                isReject ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+            }`;
+            document.getElementById('confirmLeaveDecisionText').textContent = isReject ? 'Reject Leave' : 'Approve Leave';
+            document.getElementById('leaveDecisionModal').classList.remove('hidden');
+            document.getElementById('leaveDecisionModal').classList.add('flex');
+
+            if (isReject) {
+                setTimeout(() => document.getElementById('rejectReason').focus(), 50);
+            }
+        }
+
+        function closeLeaveDecisionModal() {
+            if (document.getElementById('confirmLeaveDecision').disabled) return;
+            pendingLeaveDecision = null;
+            document.getElementById('leaveDecisionModal').classList.add('hidden');
+            document.getElementById('leaveDecisionModal').classList.remove('flex');
         }
 
         // Load leave applications from server
@@ -179,81 +265,73 @@
 
         // Approve / Reject leave
         function approveLeave(uuid) {
-            if (window.processing) return;
-            window.processing = true;
-
-            if (!confirm("Are you sure you want to approve this leave?")) {
-                window.processing = false;
-                return;
-            }
-
-            fetch("/api/leave/approve", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ uuid })
-            })
-            .then(res => res.json())
-            .then(data => {
-                window.processing = false;
-
-                if (data.success) {
-                    alert(data.message);
-                    loadLeaveApplications(currentPage); // reload table
-                } else {
-                    alert(data.message || "Approval failed");
-                }
-            })
-            .catch(err => {
-                window.processing = false;
-                alert("Server error");
-                console.error(err);
-            });
+            openLeaveDecisionModal('approve', uuid);
         }
 
         function rejectLeave(uuid) {
-            if (window.rejecting) return;
-            window.rejecting = true;
+            openLeaveDecisionModal('reject', uuid);
+        }
 
-            const remark = prompt("Enter reject reason:");
-            if (!remark) {
-                window.rejecting = false;
+        function submitLeaveDecision() {
+            if (!pendingLeaveDecision) return;
+
+            const isReject = pendingLeaveDecision.action === 'reject';
+            const remark = document.getElementById('rejectReason').value.trim();
+            const reasonError = document.getElementById('rejectReasonError');
+            const modalError = document.getElementById('leaveDecisionError');
+
+            reasonError.classList.add('hidden');
+            modalError.classList.add('hidden');
+
+            if (isReject && !remark) {
+                reasonError.classList.remove('hidden');
+                document.getElementById('rejectReason').focus();
                 return;
             }
 
-            if (!confirm("Are you sure you want to reject this leave?")) {
-                window.rejecting = false; // ✅ fixed
-                return;
-            }
+            setDecisionLoading(true);
 
-            fetch("/api/leave/reject", {
+            fetch(isReject ? "/api/leave/reject" : "/api/leave/approve", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    uuid: uuid,
-                    remark: remark
-                })
+                body: JSON.stringify(isReject
+                    ? { uuid: pendingLeaveDecision.uuid, remark }
+                    : { uuid: pendingLeaveDecision.uuid })
             })
             .then(res => res.json())
             .then(data => {
-                window.rejecting = false; // ✅ fixed
+                setDecisionLoading(false);
 
                 if (data.success) {
-                    alert(data.message);
+                    closeLeaveDecisionModal();
+                    showFeedback('Leave updated', data.message || 'The leave request was updated.');
                     loadLeaveApplications(currentPage);
                 } else {
-                    alert(data.message || "Rejection failed");
+                    modalError.textContent = data.message || 'Unable to update this leave request.';
+                    modalError.classList.remove('hidden');
                 }
             })
             .catch(err => {
-                window.rejecting = false; // ✅ fixed
-                alert("Server error");
+                setDecisionLoading(false);
+                modalError.textContent = 'Server error. Please try again.';
+                modalError.classList.remove('hidden');
                 console.error(err);
             });
         }
+
+        document.getElementById('leaveDecisionModal').addEventListener('click', (event) => {
+            if (event.target.id === 'leaveDecisionModal') {
+                closeLeaveDecisionModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeLeaveDecisionModal();
+            }
+        });
 
 
         // Event listeners

@@ -38,9 +38,24 @@ class ReportService
 
     private function buildStatus(array $row): string
     {
-        if (empty($row['check_in_1'])) return 'Absent';
-        if ($row['check_in_1'] > '08:00') return 'Late';
-        if (empty($row['check_out_1']) || empty($row['check_out_2'])) return 'Incomplete';
+        $c1 = $row['check_in_1'] ?? null;
+        $o1 = $row['check_out_1'] ?? null;
+        $c2 = $row['check_in_2'] ?? null;
+        $o2 = $row['check_out_2'] ?? null;
+
+        if (!$c1 && !$o1 && !$c2 && !$o2) {
+            return 'Absent';
+        }
+
+        if (!$c1 || !$o1 || !$c2 || !$o2) {
+            return 'Incomplete';
+        }
+
+        // Late if check_in_1 > 08:00 or check_in_2 > 13:00
+        if ($c1 > '08:00:00' || $c2 > '13:00:00') {
+            return 'Late';
+        }
+
         return 'On Time';
     }
 

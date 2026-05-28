@@ -194,6 +194,17 @@ class Employee
         return $stmt->execute([$userId, $id]);
     }
 
+    public function getDepartments(): array
+    {
+        $stmt = $this->db->query("
+            SELECT DISTINCT department 
+            FROM {$this->table} 
+            WHERE department IS NOT NULL AND deleted_at IS NULL
+            ORDER BY department ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     private function ensureUuid(array $row): array
     {
         $uuid = isset($row['uuid']) ? trim((string) $row['uuid']) : '';

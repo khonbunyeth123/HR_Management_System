@@ -1,179 +1,132 @@
-<?php include __DIR__ . '/header.php'; ?>
 <?php require_once __DIR__ . '/../../../app/Helpers/PermissionHelper.php'; ?>
 
-<div class="navigation bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50" style="max-height: 100vh;">
-  <div class="menu flex-1" style="overflow: hidden; max-height: calc(100vh - 56px);">
-    <ul class="p-3" style="overflow: hidden;">
+<aside id="appSidebar"
+  class="fixed left-0 top-[64px] z-40 h-[calc(100vh-64px)] w-72 -translate-x-full bg-white text-slate-600 border-r border-slate-100 transition-transform duration-300 ease-in-out md:static md:translate-x-0 flex flex-col"
+  aria-label="Primary navigation">
+  
+  <div class="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-8">
+    
+    <!-- Menu Section -->
+    <nav>
+      <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Main Menu</div>
+      <ul class="space-y-1">
+        <?php
+        $current_page = $_GET['page'] ?? 'dashboard';
+        
+        $menu_items = [
+          ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard-outline'],
+          ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
+          ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group-outline'],
+          ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month-outline'],
+        ];
 
-      <?php
-      $current_page = isset($_GET['page']) ? strtolower($_GET['page']) : 'dashboard';
-      $current_action = isset($_GET['action']) ? strtolower((string) $_GET['action']) : '';
+        foreach ($menu_items as $item):
+          $is_active = $current_page === $item['page'];
+        ?>
+        <li>
+          <a href="?page=<?= $item['page'] ?>"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group
+                  <?= $is_active 
+                      ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100' 
+                      : 'hover:bg-slate-50 hover:text-slate-900' ?>">
+            <span class="iconify text-xl <?= $is_active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' ?>" data-icon="<?= $item['icon'] ?>"></span>
+            <span><?= $item['label'] ?></span>
+          </a>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+    </nav>
 
-      $pagePermissions = [
-        'dashboard' => ['dashboard.view'],
-        'attendance' => ['attendance.view'],
-        'employee' => ['employee.view', 'employees.view'],
-        'leave' => ['leave.view'],
-        'report' => ['report.view'],
-        'report/report_daily' => ['report.view_daily', 'report.view'],
-        'report/report_summary' => ['report.view_summary', 'report.view'],
-        'report/report_detail' => ['report.view_detail', 'report.view'],
-        'report/report_top_employee' => ['report.view_top', 'report.view'],
-        'user' => ['user.view', 'users.view'],
-        'roles' => ['role.view', 'roles.view'],
-        'permissions' => ['permission.view', 'permissions.view'],
-        'audits' => ['audits.view', 'audit.view'],
-      ];
+    <!-- Analytics Section -->
+    <nav>
+      <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">Analytics</div>
+      <ul class="space-y-1">
+        <?php
+        $is_report_active = strpos($current_page, 'report') === 0;
+        ?>
+        <li>
+          <button type="button" 
+            class="nav-toggle flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group
+                  <?= $is_report_active ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-slate-50 hover:text-slate-900' ?>"
+            data-menu="reports">
+            <div class="flex items-center gap-3">
+              <span class="iconify text-xl <?= $is_report_active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' ?>" data-icon="mdi:chart-bar"></span>
+              <span>Reports</span>
+            </div>
+            <span class="iconify dropdown-arrow text-lg transition-transform duration-300 <?= $is_report_active ? 'rotate-180' : '' ?>" data-icon="mdi:chevron-down"></span>
+          </button>
+          
+          <ul class="submenu space-y-1 mt-1 px-2 <?= $is_report_active ? 'open' : '' ?>" data-submenu="reports">
+            <?php
+            $report_items = [
+              ['page' => 'report/report_daily',   'label' => 'Daily Attendance'],
+              ['page' => 'report/report_summary', 'label' => 'Summary Report'],
+              ['page' => 'report/report_detail',  'label' => 'Detailed Analysis'],
+              ['page' => 'report/report_top_employee', 'label' => 'Top Performers'],
+            ];
+            foreach ($report_items as $sub):
+              $is_sub_active = $current_page === $sub['page'];
+            ?>
+            <li>
+              <a href="?page=<?= $sub['page'] ?>"
+                class="flex items-center gap-3 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200
+                      <?= $is_sub_active 
+                          ? 'text-indigo-600 bg-indigo-50/50' 
+                          : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50' ?>">
+                <span class="w-1.5 h-1.5 rounded-full <?= $is_sub_active ? 'bg-indigo-600' : 'bg-slate-300' ?>"></span>
+                <span><?= $sub['label'] ?></span>
+              </a>
+            </li>
+            <?php endforeach; ?>
+          </ul>
+        </li>
+      </ul>
+    </nav>
 
-      $canAccessPage = static function (string $pageName) use ($pagePermissions): bool {
-        $pageName = strtolower($pageName);
+    <!-- System Section -->
+    <nav>
+      <div class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-2">System</div>
+      <ul class="space-y-1">
+        <?php
+        $system_items = [
+          ['page'=>'user','label'=>'Users','icon'=>'mdi:account-cog-outline'],
+          ['page'=>'roles','label'=>'Roles','icon'=>'mdi:shield-account-outline'],
+          ['page'=>'permissions','label'=>'Permissions','icon'=>'mdi:key-outline'],
+        ];
+        foreach ($system_items as $item):
+          $is_active = $current_page === $item['page'];
+        ?>
+        <li>
+          <a href="?page=<?= $item['page'] ?>"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group
+                  <?= $is_active 
+                      ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100' 
+                      : 'hover:bg-slate-50 hover:text-slate-900' ?>">
+            <span class="iconify text-xl <?= $is_active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' ?>" data-icon="<?= $item['icon'] ?>"></span>
+            <span><?= $item['label'] ?></span>
+          </a>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+    </nav>
 
-        if (!isset($pagePermissions[$pageName])) {
-          return true;
-        }
-
-        $slugs = $pagePermissions[$pageName];
-        $slugs = is_array($slugs) ? $slugs : [$slugs];
-
-        if (function_exists('hasAnyPermissionSlugs')) {
-          return hasAnyPermissionSlugs($slugs);
-        }
-
-        foreach ($slugs as $slug) {
-          if (is_string($slug) && hasPermissionSlug($slug)) {
-            return true;
-          }
-        }
-
-        return false;
-      };
-
-      $isSubmenuActive = static function (array $sub, string $activePage, string $activeAction): bool {
-        $subPage = strtolower((string) ($sub['page'] ?? ''));
-
-        if ($subPage === '' || !str_starts_with($activePage, $subPage)) {
-          return false;
-        }
-
-        if (isset($sub['active_action'])) {
-          return $activeAction === strtolower((string) $sub['active_action']);
-        }
-
-        if (isset($sub['exclude_action'])) {
-          return $activeAction !== strtolower((string) $sub['exclude_action']);
-        }
-
-        return true;
-      };
-
-      $menu_items = [
-        ['page'=>'dashboard','label'=>'Dashboard','icon'=>'mdi:view-dashboard'],
-        ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
-        ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group'],
-
-        ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month'],
-        [
-          'page'=>'report',
-          'label'=>'Reports',
-          'icon'=>'mdi:chart-box',
-          'submenu'=>[
-            ['page'=>'report/report_daily','label'=>'Daily Report','icon'=>'mdi:calendar-today'],
-            ['page'=>'report/report_summary','label'=>'Summary Report','icon'=>'mdi:chart-line'],
-            ['page'=>'report/report_detail','label'=>'Detailed Report','icon'=>'mdi:file-document-outline'],
-            ['page'=>'report/report_top_employee','label'=>'Top Employees','icon'=>'mdi:star-circle'],
-          ]
-        ],
-        ['page'=>'user','label'=>'User Management','icon'=>'mdi:account-cog'],
-        [
-          'page'=>'setting',
-          'label'=>'Settings',
-          'icon'=>'mdi:cog',
-          'submenu'=>[
-            ['page'=>'roles','label'=>'Roles','icon'=>'mdi:shield-account'],
-            ['page'=>'permissions','label'=>'Permissions','icon'=>'mdi:key-outline']
-          ]
-        ],
-      ];
-
-      foreach ($menu_items as $item):
-        $visibleSubmenu = [];
-
-        if (isset($item['submenu'])) {
-          foreach ($item['submenu'] as $sub) {
-            if ($canAccessPage($sub['page'])) {
-              $visibleSubmenu[] = $sub;
-            }
-          }
-
-          if (empty($visibleSubmenu)) {
-            continue;
-          }
-        } else {
-          if (!$canAccessPage($item['page'])) {
-            continue;
-          }
-        }
-
-        $has_active_submenu = false;
-        if (!empty($visibleSubmenu)) {
-          foreach ($visibleSubmenu as $sub) {
-            if ($isSubmenuActive($sub, $current_page, $current_action)) {
-              $has_active_submenu = true;
-              break;
-            }
-          }
-        }
-
-        $is_active = $current_page === strtolower($item['page']);
-        $is_parent_active = $is_active || $has_active_submenu;
-      ?>
-      <li class="mb-1.5 rounded-xl overflow-hidden <?= $is_parent_active ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white' : 'hover:bg-slate-700/50 text-slate-300' ?>">
-
-        <?php if (!empty($visibleSubmenu)): ?>
-        <button type="button"
-          class="nav-toggle w-full flex items-center px-4 py-3 gap-3"
-          data-menu="<?= $item['page'] ?>">
-          <span class="iconify text-xl" data-icon="<?= $item['icon'] ?>"></span>
-          <span class="text-sm font-semibold"><?= $item['label'] ?></span>
-          <span class="iconify ml-auto dropdown-arrow <?= $has_active_submenu ? 'rotate-180' : '' ?>"
-                data-icon="mdi:chevron-down"></span>
-        </button>
-
-        <ul class="submenu <?= $has_active_submenu ? 'open' : '' ?> pl-8 pr-4 space-y-1"
-          data-submenu="<?= $item['page'] ?>">
-          <?php foreach ($visibleSubmenu as $sub):
-            $is_sub_active = $isSubmenuActive($sub, $current_page, $current_action);
-            $sub_href = $sub['href'] ?? ('?page=' . strtolower($sub['page']));
-          ?>
-          <li>
-            <a href="<?= htmlspecialchars($sub_href, ENT_QUOTES, 'UTF-8') ?>"
-              class="no-underline flex items-center gap-2 py-2.5 px-3 rounded-lg text-sm
-                      <?= $is_sub_active
-                          ? 'bg-slate-700 text-white font-semibold'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-700/30' ?>">
-              <span class="iconify" data-icon="<?= $sub['icon'] ?>"></span>
-              <?= $sub['label'] ?>
-            </a>
-          </li>
-          <?php endforeach; ?>
-        </ul>
-
-        <?php else: ?>
-        <a href="?page=<?= strtolower($item['page']) ?>"
-          class="no-underline flex items-center gap-3 px-4 py-3 rounded-xl
-                text-sm font-semibold text-slate-200
-                hover:bg-slate-700/40 transition">
-          <span class="iconify text-[1em]" data-icon="<?= $item['icon'] ?>"></span>
-          <span><?= $item['label'] ?></span>
-        </a>
-        <?php endif; ?>
-      </li>
-      <?php endforeach; ?>
-    </ul>
   </div>
-</div>
 
-<script src="https://code.iconify.design/2/2.2.1/iconify.min.js"></script>
+  <!-- Sidebar Footer -->
+  <div class="p-6 border-t border-slate-100">
+    <div class="bg-indigo-600 rounded-2xl p-4 relative overflow-hidden group">
+      <div class="relative z-10">
+        <div class="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Status</div>
+        <div class="text-xs font-black text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            System Online
+        </div>
+      </div>
+      <span class="iconify absolute -right-2 -bottom-2 text-6xl text-white/10 group-hover:scale-110 transition-transform" data-icon="mdi:shield-check"></span>
+    </div>
+  </div>
+</aside>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.Iconify) {

@@ -1,75 +1,6 @@
-<?php
-$pageTitle = "User Management";
-$activeMenu = "users";
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> - Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- <style>
-        * { font-family: 'DM Sans', sans-serif; }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes shimmer {
-            0%   { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .modal-backdrop { animation: fadeIn 0.2s ease-out; }
-        .modal-box      { animation: slideUp 0.25s ease-out; }
-
-        .spinner {
-            display: inline-block; width: 14px; height: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%; border-top-color: white;
-            animation: spin 0.7s linear infinite;
-        }
-        .skeleton {
-            background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
-            background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px;
-        }
-        tbody tr { transition: background 0.12s; }
-        tbody tr:hover { background: #f5f3ff; }
-
-        .toast-container {
-            position: fixed; top: 1rem; right: 1rem;
-            z-index: 9999; display: flex; flex-direction: column; gap: 8px;
-        }
-        .toast {
-            animation: slideUp 0.3s ease-out; min-width: 280px;
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 16px; border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12); font-size: 14px; font-weight: 500;
-        }
-        .toast.success { background:#ecfdf5; border-left:4px solid #10b981; color:#065f46; }
-        .toast.error   { background:#fef2f2; border-left:4px solid #ef4444; color:#7f1d1d; }
-        .toast.info    { background:#eff6ff; border-left:4px solid #3b82f6; color:#1e3a8a; }
-
-        .error-msg { font-size:12px; color:#dc2626; margin-top:3px; display:none; }
-        .error-msg.show { display:block; }
-        .field-error { border-color:#ef4444 !important; }
-
-        .badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
-        .badge-active   { background:#dcfce7; color:#15803d; }
-        .badge-inactive { background:#fee2e2; color:#b91c1c; }
-
-        .modal-scroll { max-height: 70vh; overflow-y: auto; }
-    </style> -->
-</head>
 <body class="bg-gray-50 min-h-screen">
-
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-gray-200 mb-6">
         <div class="flex items-center gap-3 mb-4 sm:mb-0">
@@ -134,7 +65,7 @@ $activeMenu = "users";
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wide">
+                    <tr class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
                         <th class="px-6 py-3 text-left font-semibold">#</th>
                         <th class="px-6 py-3 text-left font-semibold">Name</th>
                         <th class="px-6 py-3 text-left font-semibold">Username</th>
@@ -473,7 +404,7 @@ function renderTable(users) {
                 </span>
             </td>
             <td class="px-6 py-4 text-center">
-                <span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? 'Active' : 'Inactive'}</span>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${active ? 'Active' : 'Inactive'}</span>
             </td>
             <td class="px-6 py-4 text-gray-500 text-xs">${formatDate(user.created_at)}</td>
             <td class="px-6 py-4 text-center">

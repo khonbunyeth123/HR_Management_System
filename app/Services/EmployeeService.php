@@ -65,6 +65,11 @@ class EmployeeService
     {
         return $this->employeeModel->Delete($id, $userId);
     }
+
+    public function getDepartments(): array
+    {
+        return $this->employeeModel->getDepartments();
+    }
  
     // Handle photo upload
     private function handlePhotoUpload(array $file): ?string
