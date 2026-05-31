@@ -1,6 +1,12 @@
 <?php
-$today = date('Y-m-d');
+$requestedDate = $_GET['date'] ?? date('Y-m-d');
+$today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
+    ? (string) $requestedDate
+    : date('Y-m-d');
 ?>
+<script>
+    window.__calendarInitialDate = <?= json_encode($today) ?>;
+</script>
 <div class="w-full h-full">
     <div class="p-3 lg:p-4 space-y-4">
         <div class="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-5 py-5 text-white shadow-xl shadow-slate-200/60">
@@ -307,7 +313,7 @@ $today = date('Y-m-d');
 (() => {
     const state = {
         view: 'month',
-        current: new Date(),
+        current: new Date(`${window.__calendarInitialDate || '<?= $today ?>'}T12:00:00`),
         filters: {
             employee_id: '',
             department: '',

@@ -198,6 +198,49 @@ class Dashboard
      */
     public function getCalendarEvents(string $month, ?int $employeeId = null): array
     {
+        try {
+            $calendar = new CalendarEvent();
+            $rangeStart = $month . '-01';
+            $rangeEnd = date('Y-m-t', strtotime($rangeStart));
+
+            $result = $calendar->list([
+                'employee_id' => $employeeId ?? 0,
+                'department'  => '',
+                'branch'      => '',
+                'event_type'  => '',
+                'status'      => '',
+            ], $rangeStart, $rangeEnd);
+
+            return array_map(static function (array $event): array {
+                $start = (string) ($event['start'] ?? '');
+                $end   = (string) ($event['end'] ?? $start);
+                $eventType = (string) ($event['event_type'] ?? $event['type'] ?? 'event');
+                $typeLabel = (string) ($event['leave_type'] ?? $event['type'] ?? $eventType);
+                $scopeLabel = (string) ($event['scope']['label'] ?? $event['employee_name'] ?? 'Company-wide');
+
+                return [
+                    'uuid'        => (string) ($event['uuid'] ?? ''),
+                    'title'       => (string) ($event['title'] ?? 'Untitled'),
+                    'start'       => substr($start, 0, 10),
+                    'end'         => substr($end, 0, 10),
+                    'type'        => $typeLabel,
+                    'event_type'  => $eventType,
+                    'status'      => (string) ($event['status'] ?? 'pending'),
+                    'scope_label' => $scopeLabel,
+                    'all_day'     => (bool) ($event['all_day'] ?? true),
+                ];
+            }, $result['events'] ?? []);
+        } catch (\Throwable $e) {
+            error_log("Error fetching calendar events from unified source: " . $e->getMessage());
+            return $this->legacyCalendarEvents($month, $employeeId);
+        }
+    }
+
+    /**
+     * Legacy fallback used if the unified calendar source is unavailable.
+     */
+    private function legacyCalendarEvents(string $month, ?int $employeeId = null): array
+    {
         $start = $month . '-01';
         $end = date('Y-m-t', strtotime($start));
 

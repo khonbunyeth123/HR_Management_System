@@ -18,18 +18,31 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Calendar Section -->
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span class="iconify text-indigo-500" data-icon="mdi:calendar-month"></span>
-                    Attendance & Leave Calendar
-                </h2>
-                <div class="flex gap-2">
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Approved
-                    </span>
-                    <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending
-                    </span>
+            <div class="px-6 py-4 border-b border-slate-100">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <span class="iconify text-indigo-500" data-icon="mdi:calendar-month"></span>
+                            Company Calendar
+                        </h2>
+                        <p class="mt-1 text-xs text-slate-500">A quick look at company events, leave, holidays, and schedules.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a id="openFullCalendarLink" href="?page=calendar"
+                           class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-100 transition hover:bg-indigo-700">
+                            <span class="iconify" data-icon="mdi:calendar-open"></span>
+                            Open Full Calendar
+                        </a>
+                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Approved
+                        </span>
+                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending
+                        </span>
+                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-2 h-2 rounded-full bg-rose-400"></span> Rejected
+                        </span>
+                    </div>
                 </div>
             </div>
             <div id="calendarContainer" class="min-h-[500px]">
@@ -97,12 +110,41 @@
             }
         }
 
+        getEventClasses(event) {
+            const eventType = (event.event_type || event.type || 'event').toLowerCase();
+            const status = (event.status || 'pending').toLowerCase();
+
+            const typeStyles = {
+                holiday: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                shift: 'bg-sky-50 text-sky-700 border-sky-200',
+                leave: 'bg-amber-50 text-amber-700 border-amber-200',
+                meeting: 'bg-violet-50 text-violet-700 border-violet-200',
+                reminder: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                task: 'bg-slate-50 text-slate-700 border-slate-200',
+                event: 'bg-slate-50 text-slate-700 border-slate-200',
+            };
+
+            const statusBorder = {
+                approved: 'ring-1 ring-emerald-100',
+                pending: 'ring-1 ring-amber-100',
+                rejected: 'ring-1 ring-rose-100',
+                cancelled: 'ring-1 ring-slate-100',
+            };
+
+            return `${typeStyles[eventType] || typeStyles.event} ${statusBorder[status] || statusBorder.pending}`;
+        }
+
         async render() {
             await this.fetchEvents();
             
             const year = this.currentDate.getFullYear();
             const month = this.currentDate.getMonth();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const pad = (value) => String(value).padStart(2, '0');
+            const fullCalendarLink = document.getElementById('openFullCalendarLink');
+            if (fullCalendarLink) {
+                fullCalendarLink.href = `?page=calendar&date=${year}-${pad(month + 1)}-01`;
+            }
             
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -161,25 +203,18 @@
                     <div class="bg-white h-32 p-2 relative group hover:bg-slate-50/80 transition-all border-transparent border-2 hover:border-indigo-100">
                         <div class="flex justify-between items-start mb-1">
                             <span class="text-sm font-bold ${isToday ? 'bg-indigo-600 text-white w-7 h-7 flex items-center justify-center rounded-lg shadow-lg shadow-indigo-200' : 'text-slate-400 group-hover:text-slate-600'} transition-colors">${d}</span>
+                            ${dayEvents.length ? `<span class="text-[10px] font-black rounded-full px-2 py-0.5 bg-slate-100 text-slate-500">${dayEvents.length}</span>` : ''}
                         </div>
                         <div class="space-y-1 overflow-y-auto max-h-20 no-scrollbar pb-1">
                             ${dayEvents.map(e => {
-                                let style = "";
-                                if (e.status === 'approved') {
-                                    style = "background-color: #ecfdf5; color: #059669; border-color: #10b981;";
-                                } else if (e.status === 'pending') {
-                                    style = "background-color: #fffbeb; color: #d97706; border-color: #f59e0b;";
-                                } else if (e.status === 'rejected') {
-                                    style = "background-color: #fef2f2; color: #dc2626; border-color: #ef4444;";
-                                } else {
-                                    style = "background-color: #f8fafc; color: #475569; border-color: #cbd5e1;";
-                                }
+                                const classes = this.getEventClasses(e);
+                                const label = (e.event_type || e.type || 'event').toUpperCase();
+                                const scope = e.scope_label ? ` • ${e.scope_label}` : '';
 
                                 return `
-                                    <div class="text-[9px] px-2 py-1 rounded-md border truncate font-bold shadow-sm" 
-                                         style="${style}" 
-                                         title="${e.title} (${e.type} - ${e.status})">
-                                        ${e.title}
+                                    <div class="text-[9px] px-2 py-1 rounded-md border truncate font-bold shadow-sm ${classes}"
+                                         title="${e.title} (${label} - ${e.status})${scope}">
+                                        <span class="block truncate">${e.title}</span>
                                     </div>
                                 `;
                             }).join('')}

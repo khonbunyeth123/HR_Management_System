@@ -12,6 +12,7 @@ class CalendarEvent
     private PDO $db;
     private ?array $tableColumns = null;
     private ?array $employeeColumns = null;
+    private ?array $calendarColumns = null;
 
     private const EVENT_TYPES = ['holiday', 'shift', 'leave', 'meeting', 'reminder', 'task'];
     private const STATUSES = ['pending', 'approved', 'rejected', 'cancelled'];
@@ -23,6 +24,7 @@ class CalendarEvent
 
     public function list(array $filters, string $start, string $end): array
     {
+        $this->assertSchemaReady();
         $events = array_merge(
             $this->fetchCalendarEvents($start, $end),
             $this->fetchLeaveEvents($filters, $start, $end)
@@ -44,6 +46,7 @@ class CalendarEvent
 
     public function filters(): array
     {
+        $this->assertSchemaReady();
         return [
             'employees' => $this->getEmployees(),
             'departments' => $this->getDistinctColumnValues('department'),
@@ -55,6 +58,7 @@ class CalendarEvent
 
     public function getByUuid(string $uuid): ?array
     {
+        $this->assertSchemaReady();
         $stmt = $this->db->prepare(
             'SELECT * FROM tbl_calendar_events WHERE uuid = :uuid AND deleted_at IS NULL LIMIT 1'
         );
@@ -70,6 +74,7 @@ class CalendarEvent
 
     public function create(array $data): array
     {
+        $this->assertSchemaReady();
         $uuid = $this->generateUuid();
 
         $payload = $this->normalizePayload($data);
@@ -123,6 +128,7 @@ class CalendarEvent
 
     public function update(string $uuid, array $data): bool
     {
+        $this->assertSchemaReady();
         $event = $this->getRawByUuid($uuid);
         if (!$event) {
             return false;
@@ -165,6 +171,7 @@ class CalendarEvent
 
     public function delete(string $uuid, ?int $deletedBy = null): bool
     {
+        $this->assertSchemaReady();
         $stmt = $this->db->prepare(
             'UPDATE tbl_calendar_events
              SET deleted_at = NOW(), deleted_by = :deleted_by
@@ -178,6 +185,7 @@ class CalendarEvent
 
     public function updateStatus(string $uuid, string $status, ?int $actorId = null): bool
     {
+        $this->assertSchemaReady();
         if (!in_array($status, self::STATUSES, true)) {
             return false;
         }
@@ -216,6 +224,7 @@ class CalendarEvent
 
     public function getTargetsByUuid(string $uuid): array
     {
+        $this->assertSchemaReady();
         $stmt = $this->db->prepare(
             'SELECT t.target_type, t.target_value, t.target_label
              FROM tbl_calendar_event_targets t
@@ -629,9 +638,12 @@ class CalendarEvent
             if ($payload['event_type'] !== '' && !in_array($payload['event_type'], self::EVENT_TYPES, true)) {
                 throw new \InvalidArgumentException('Invalid event type.');
             }
+            if ($requireTitle && $payload['event_type'] === '') {
+                throw new \InvalidArgumentException('Event type is required.');
+            }
         }
 
-        if (array_key_exists('status', $data)) {
+        if ($requireTitle || array_key_exists('status', $data)) {
             $status = strtolower(trim((string) $data['status']));
             if (!in_array($status, self::STATUSES, true)) {
                 $status = 'pending';
@@ -641,15 +653,17 @@ class CalendarEvent
 
         if (array_key_exists('start_at', $data) || array_key_exists('start', $data) || $requireTitle) {
             $payload['start_at'] = $this->normalizeDateTime((string) ($data['start_at'] ?? $data['start'] ?? ''));
+            if ($payload['start_at'] === null) {
+                throw new \InvalidArgumentException('Start date/time is required.');
+            }
         }
         if (array_key_exists('end_at', $data) || array_key_exists('end', $data) || $requireTitle) {
             $payload['end_at'] = $this->normalizeDateTime((string) ($data['end_at'] ?? $data['end'] ?? ''));
+            if ($payload['end_at'] === null) {
+                throw new \InvalidArgumentException('End date/time is required.');
+            }
         }
-
-        if (($payload['start_at'] ?? null) === null || ($payload['end_at'] ?? null) === null) {
-            throw new \InvalidArgumentException('Start and end date/time are required.');
-        }
-        if (strtotime($payload['end_at']) < strtotime($payload['start_at'])) {
+        if (isset($payload['start_at'], $payload['end_at']) && strtotime($payload['end_at']) < strtotime($payload['start_at'])) {
             throw new \InvalidArgumentException('End cannot be before start.');
         }
 
@@ -759,12 +773,16 @@ class CalendarEvent
             return null;
         }
 
-        $timestamp = strtotime($value);
-        if ($timestamp === false) {
-            return null;
+        $formats = ['Y-m-d\TH:i', 'Y-m-d\TH:i:s', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+        foreach ($formats as $format) {
+            $dt = \DateTimeImmutable::createFromFormat($format, $value);
+            if ($dt instanceof \DateTimeImmutable) {
+                return $dt->format('Y-m-d H:i:s');
+            }
         }
 
-        return date('Y-m-d H:i:s', $timestamp);
+        $timestamp = strtotime($value);
+        return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
     }
 
     private function matchesFilters(array $event, array $filters): bool
@@ -873,6 +891,7 @@ class CalendarEvent
 
     private function getRawByUuid(string $uuid): ?array
     {
+        $this->assertSchemaReady();
         $stmt = $this->db->prepare(
             'SELECT * FROM tbl_calendar_events WHERE uuid = :uuid AND deleted_at IS NULL LIMIT 1'
         );
@@ -894,6 +913,34 @@ class CalendarEvent
         }
 
         return isset($this->employeeColumns[$column]);
+    }
+
+    private function assertSchemaReady(): void
+    {
+        if ($this->calendarTableExists()) {
+            return;
+        }
+
+        throw new \RuntimeException('Calendar tables are missing. Run the calendar migration before using this module.');
+    }
+
+    private function calendarTableExists(): bool
+    {
+        if ($this->calendarColumns === null) {
+            $this->calendarColumns = [];
+            try {
+                $stmt = $this->db->query('SHOW COLUMNS FROM tbl_calendar_events');
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+                    if (!empty($col['Field'])) {
+                        $this->calendarColumns[$col['Field']] = true;
+                    }
+                }
+            } catch (PDOException $e) {
+                return false;
+            }
+        }
+
+        return !empty($this->calendarColumns);
     }
 
     private function generateUuid(): string

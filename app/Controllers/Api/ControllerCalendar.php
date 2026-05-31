@@ -17,109 +17,147 @@ class ControllerCalendar
 
     public function index(): void
     {
-        $start = (string) ($_GET['start'] ?? date('Y-m-01'));
-        $end = (string) ($_GET['end'] ?? date('Y-m-t'));
+        try {
+            $start = (string) ($_GET['start'] ?? date('Y-m-01'));
+            $end = (string) ($_GET['end'] ?? date('Y-m-t'));
 
-        $filters = [
-            'employee_id' => (int) ($_GET['employee_id'] ?? 0),
-            'department' => (string) ($_GET['department'] ?? ''),
-            'branch' => (string) ($_GET['branch'] ?? ''),
-            'event_type' => (string) ($_GET['event_type'] ?? ''),
-            'status' => (string) ($_GET['status'] ?? ''),
-        ];
+            $filters = [
+                'employee_id' => (int) ($_GET['employee_id'] ?? 0),
+                'department' => (string) ($_GET['department'] ?? ''),
+                'branch' => (string) ($_GET['branch'] ?? ''),
+                'event_type' => (string) ($_GET['event_type'] ?? ''),
+                'status' => (string) ($_GET['status'] ?? ''),
+            ];
 
-        Response::json([
-            'success' => true,
-            'message' => 'Calendar events retrieved',
-            'data' => $this->service->list($filters, substr($start, 0, 10), substr($end, 0, 10)),
-        ]);
+            Response::json([
+                'success' => true,
+                'message' => 'Calendar events retrieved',
+                'data' => $this->service->list($filters, substr($start, 0, 10), substr($end, 0, 10)),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 422);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
+        }
     }
 
     public function filters(): void
     {
-        Response::json([
-            'success' => true,
-            'message' => 'Calendar filters retrieved',
-            'data' => $this->service->filters(),
-        ]);
+        try {
+            Response::json([
+                'success' => true,
+                'message' => 'Calendar filters retrieved',
+                'data' => $this->service->filters(),
+            ]);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
+        }
     }
 
     public function show(string $uuid): void
     {
-        $event = $this->service->getEvent($uuid);
-        if (!$event) {
-            Response::notFound('Calendar event not found');
-            return;
-        }
+        try {
+            $event = $this->service->getEvent($uuid);
+            if (!$event) {
+                Response::notFound('Calendar event not found');
+                return;
+            }
 
-        Response::json([
-            'success' => true,
-            'message' => 'Calendar event retrieved',
-            'data' => $event,
-        ]);
+            Response::json([
+                'success' => true,
+                'message' => 'Calendar event retrieved',
+                'data' => $event,
+            ]);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
+        }
     }
 
     public function store(): void
     {
-        $input = $this->readJsonBody();
-        $result = $this->service->create($input);
+        try {
+            $input = $this->readJsonBody();
+            $result = $this->service->create($input);
 
-        Response::created([
-            'uuid' => $result['uuid'],
-            'id' => $result['id'],
-        ], 'Calendar event created');
+            Response::created([
+                'uuid' => $result['uuid'],
+                'id' => $result['id'],
+            ], 'Calendar event created');
+        } catch (\InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 422);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
+        }
     }
 
     public function update(string $uuid): void
     {
-        $input = $this->readJsonBody();
-        $ok = $this->service->update($uuid, $input);
+        try {
+            $input = $this->readJsonBody();
+            $ok = $this->service->update($uuid, $input);
 
-        if (!$ok) {
-            Response::notFound('Calendar event not found');
-            return;
+            if (!$ok) {
+                Response::notFound('Calendar event not found');
+                return;
+            }
+
+            Response::json(['success' => true, 'message' => 'Calendar event updated']);
+        } catch (\InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 422);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
         }
-
-        Response::json(['success' => true, 'message' => 'Calendar event updated']);
     }
 
     public function destroy(string $uuid): void
     {
-        $actorId = (int) ($_SESSION['user_id'] ?? 0);
-        $ok = $this->service->delete($uuid, $actorId ?: null);
+        try {
+            $actorId = (int) ($_SESSION['user_id'] ?? 0);
+            $ok = $this->service->delete($uuid, $actorId ?: null);
 
-        if (!$ok) {
-            Response::notFound('Calendar event not found');
-            return;
+            if (!$ok) {
+                Response::notFound('Calendar event not found');
+                return;
+            }
+
+            Response::json(['success' => true, 'message' => 'Calendar event deleted']);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
         }
-
-        Response::json(['success' => true, 'message' => 'Calendar event deleted']);
     }
 
     public function approveLeave(string $uuid): void
     {
-        $ok = $this->service->approveLeave($uuid);
-        Response::json([
-            'success' => $ok,
-            'message' => $ok ? 'Leave request approved' : 'Unable to approve leave request',
-        ], $ok ? 200 : 400);
+        try {
+            $ok = $this->service->approveLeave($uuid);
+            Response::json([
+                'success' => $ok,
+                'message' => $ok ? 'Leave request approved' : 'Unable to approve leave request',
+            ], $ok ? 200 : 400);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
+        }
     }
 
     public function rejectLeave(string $uuid): void
     {
-        $input = $this->readJsonBody();
-        $remark = trim((string) ($input['remark'] ?? ''));
+        try {
+            $input = $this->readJsonBody();
+            $remark = trim((string) ($input['remark'] ?? ''));
 
-        if ($remark === '') {
-            Response::validationError(['remark' => 'Reject reason is required.']);
-            return;
+            if ($remark === '') {
+                Response::validationError(['remark' => 'Reject reason is required.']);
+                return;
+            }
+
+            $ok = $this->service->rejectLeave($uuid, $remark);
+            Response::json([
+                'success' => $ok,
+                'message' => $ok ? 'Leave request rejected' : 'Unable to reject leave request',
+            ], $ok ? 200 : 400);
+        } catch (\RuntimeException $e) {
+            Response::error($e->getMessage(), 503);
         }
-
-        $ok = $this->service->rejectLeave($uuid, $remark);
-        Response::json([
-            'success' => $ok,
-            'message' => $ok ? 'Leave request rejected' : 'Unable to reject leave request',
-        ], $ok ? 200 : 400);
     }
 
     private function readJsonBody(): array

@@ -95,9 +95,10 @@ final class CreateCalendarModuleTables extends AbstractMigration
             ];
 
             foreach ($permissionRows as $permission) {
+                $module = addslashes($permission['module']);
+                $action = addslashes($permission['action']);
                 $existing = $this->fetchRow(
-                    'SELECT id FROM tbl_permissions WHERE module = ? AND action = ? AND deleted_at IS NULL LIMIT 1',
-                    [$permission['module'], $permission['action']]
+                    "SELECT id FROM tbl_permissions WHERE module = '{$module}' AND action = '{$action}' AND deleted_at IS NULL LIMIT 1"
                 );
 
                 if ($existing) {
