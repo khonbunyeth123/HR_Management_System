@@ -67,8 +67,8 @@
 
             <!-- Remember Me & Forgot Password -->
             <div class="flex items-center justify-between mb-6">
-                <label class="flex items-center text-gray-700">
-                    <input type="checkbox" name="remember" class="mr-2 rounded">
+                <label class="flex items-center text-gray-700 cursor-pointer">
+                    <input type="checkbox" id="remember" name="remember" class="mr-2 rounded focus:ring-blue-500">
                     <span class="text-sm">Remember me</span>
                 </label>
                 <a href="/forgot-password.php" class="text-sm text-blue-600 hover:underline">Forgot password?</a>
@@ -81,7 +81,7 @@
                 class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span class="iconify" data-icon="mdi:login"></span>
-                Sign In
+                Log In
             </button>
         </form>
 
@@ -113,18 +113,42 @@ const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const togglePasswordBtn = document.getElementById('togglePassword');
+const rememberCheckbox = document.getElementById('remember');
 const loginBtn = document.getElementById('loginBtn');
 const alertBox = document.getElementById('alert');
 
-// Toggle password visibility
+// Pre-fill email if remembered
+document.addEventListener('DOMContentLoaded', () => {
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    if (rememberedEmail) {
+        emailInput.value = rememberedEmail;
+        // Checkbox remains unchecked and password remains hidden by default on reload
+    }
+});
+
+// Toggle password visibility via button
 togglePasswordBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const isPassword = passwordInput.type === 'password';
     passwordInput.type = isPassword ? 'text' : 'password';
-    const icon = togglePasswordBtn.querySelector('.iconify');
-    icon.setAttribute('data-icon', isPassword ? 'mdi:eye-off' : 'mdi:eye');
-    if (window.Iconify) window.Iconify.build();
+    updatePasswordIcon(isPassword);
 });
+
+// Toggle password visibility via "Remember me" checkbox
+// User reported: "when click Remember me checkbox I'm nor see password"
+// Fix: Allow the checkbox to also reveal the password for convenience.
+rememberCheckbox.addEventListener('change', () => {
+    passwordInput.type = rememberCheckbox.checked ? 'text' : 'password';
+    updatePasswordIcon(rememberCheckbox.checked);
+});
+
+function updatePasswordIcon(isVisible) {
+    const icon = togglePasswordBtn.querySelector('.iconify');
+    if (icon) {
+        icon.setAttribute('data-icon', isVisible ? 'mdi:eye-off' : 'mdi:eye');
+        if (window.Iconify) window.Iconify.build();
+    }
+}
 
 // Show alert
 function showAlert(message, type) {
@@ -148,6 +172,7 @@ loginForm.addEventListener('submit', async (e) => {
 
     const email = emailInput.value.trim();
     const password = passwordInput.value;
+    const remember = rememberCheckbox.checked;
 
     // Client-side validation
     if (!email) {
@@ -168,6 +193,13 @@ loginForm.addEventListener('submit', async (e) => {
         return;
     }
 
+    // Save/Clear remembered email
+    if (remember) {
+        localStorage.setItem('remembered_email', email);
+    } else {
+        localStorage.removeItem('remembered_email');
+    }
+
     // Disable button during submission
     loginBtn.disabled = true;
     const originalHTML = loginBtn.innerHTML;
@@ -180,7 +212,7 @@ loginForm.addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&remember=${document.querySelector('input[name="remember"]').checked ? 1 : 0}`
+            body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&remember=${remember ? 1 : 0}`
         });
 
         const data = await response.json();
@@ -194,7 +226,7 @@ loginForm.addEventListener('submit', async (e) => {
             showAlert(data.message || 'Login failed. Please try again.', 'error');
             loginBtn.disabled = false;
             loginBtn.innerHTML = originalHTML;
-            passwordInput.value = '';
+            // passwordInput.value = ''; // Keep password for user convenience
             if (window.Iconify) window.Iconify.build();
         }
     } catch (error) {
