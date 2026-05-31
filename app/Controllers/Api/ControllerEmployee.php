@@ -81,18 +81,18 @@ class ControllerEmployee
     // Update employee
     public function update(int $id): void
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-            [$payload, $files] = $this->parsePutMultipart();
-        } elseif (!empty($_POST)) {
-            $payload = $_POST;
-            $files   = $_FILES;
-        } else {
-            $payload = json_decode(file_get_contents('php://input'), true);
-            if ($payload === null || json_last_error() !== JSON_ERROR_NONE) {
-                $this->jsonError('Invalid payload', 400);
-                return;
-            }
-            $files = [];
+        [$payload, $files, $parseError] = $this->extractUpdatePayload();
+
+        if ($parseError !== null) {
+            error_log(sprintf(
+                'Employee update payload parse error for ID %d: %s | method=%s | content_type=%s',
+                $id,
+                $parseError,
+                $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+                $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? 'unknown'
+            ));
+            $this->jsonError($parseError, 400);
+            return;
         }
 
         if (empty($payload)) {
@@ -104,19 +104,62 @@ class ControllerEmployee
         $this->jsonSuccess(null, 'Employee updated successfully');
     }
 
-    // Parse multipart/form-data for PUT requests
+    /**
+     * Parse the incoming update request body.
+     *
+     * Supports:
+     * - native POST body parsing (`$_POST` / `$_FILES`)
+     * - raw multipart/form-data for PUT requests
+     * - JSON payloads as a fallback for API clients
+     */
+    private function extractUpdatePayload(): array
+    {
+        if (!empty($_POST) || !empty($_FILES)) {
+            return [$_POST, $_FILES, null];
+        }
+
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+
+        if (str_contains(strtolower($contentType), 'multipart/form-data')) {
+            return $this->parseMultipartBody();
+        }
+
+        $rawBody = file_get_contents('php://input');
+        if ($rawBody === false || trim($rawBody) === '') {
+            return [[], [], 'Invalid payload'];
+        }
+
+        $json = json_decode($rawBody, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+            return [$json, [], null];
+        }
+
+        $form = [];
+        parse_str($rawBody, $form);
+        if (!empty($form)) {
+            return [$form, [], null];
+        }
+
+        return [[], [], 'Invalid payload'];
+    }
+
+    // Parse multipart/form-data requests
     // PHP only populates $_POST and $_FILES for POST — not PUT.
-    // This method manually parses the raw body and returns [$fields, $files].
-    private function parsePutMultipart(): array
+    // This method manually parses the raw body and returns [$fields, $files, $error].
+    private function parseMultipartBody(): array
     {
         $payload = [];
         $files   = [];
         $rawBody = file_get_contents('php://input');
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '';
+
+        if ($rawBody === false || trim($rawBody) === '') {
+            return [[], [], 'Invalid payload'];
+        }
 
         // Extract boundary (handle optional quotes and trailing whitespace)
         if (!preg_match('/boundary=("?)([^";\s]+)\1/', $contentType, $matches)) {
-            return [$payload, $files];
+            return [[], [], 'Invalid multipart payload'];
         }
 
         $boundary = $matches[2];
@@ -162,7 +205,11 @@ class ControllerEmployee
             }
         }
 
-        return [$payload, $files];
+        if (empty($payload) && empty($files)) {
+            return [[], [], 'Invalid multipart payload'];
+        }
+
+        return [$payload, $files, null];
     }
 
     // Delete employee
