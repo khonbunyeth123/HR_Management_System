@@ -184,6 +184,19 @@ class ControllerEmployee
         $this->jsonSuccess(null, 'Employee deleted');
     }
 
+    public function calendarEvents(): void
+    {
+        $month = $_GET['month'] ?? date('Y-m');
+        $employeeId = $_SESSION['employee_id'] ?? null;
+
+        if (!$employeeId) {
+            $this->jsonError("Unauthorized", 401);
+        }
+
+        $events = $this->service->getCalendarEvents($month, (int)$employeeId);
+        $this->jsonSuccess($events, 'Calendar events retrieved');
+    }
+
     /* ---------- helpers ---------- */
 
     private function sendJson(array $data, int $status = 200): void

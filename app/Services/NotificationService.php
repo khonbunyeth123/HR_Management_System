@@ -24,6 +24,18 @@ class NotificationService
         if ($remark !== '') $body .= " Reason: $remark";
         $this->send($fcmToken, ['title' => '❌ Leave Rejected', 'body' => $body], ['type' => 'leave_status', 'status' => 'rejected', 'remark' => $remark]);
     }
+
+    public function sendCalendarEventNotification(int $employeeId, string $title, string $body, array $data = []): void
+    {
+        $fcmToken = $this->getFcmToken($employeeId);
+        if (!$fcmToken) {
+            return;
+        }
+
+        $payload = array_merge(['type' => 'calendar_event'], $data);
+        $this->send($fcmToken, ['title' => $title, 'body' => $body], $payload);
+    }
+
     public function saveFcmToken(int $employeeId, string $fcmToken): bool
     {
         $db = \App\Core\Database::getInstance()->getConnection();

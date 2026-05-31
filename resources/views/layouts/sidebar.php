@@ -18,6 +18,7 @@
           ['page'=>'attendance','label'=>'Attendance','icon'=>'mdi:clock-check-outline'],
           ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group-outline'],
           ['page'=>'leave','label'=>'Leave Requests','icon'=>'mdi:calendar-month-outline'],
+          ['page'=>'calendar','label'=>'Calendar','icon'=>'mdi:calendar-range-outline'],
         ];
 
         foreach ($menu_items as $item):

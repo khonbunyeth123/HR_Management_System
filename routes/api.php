@@ -29,6 +29,7 @@ $router->post('/api/auth/fcm-token', 'ControllerAuth@saveFcmToken');
 $router->get('/api/dashboard/summary',       'ControllerDashboard@summary');
 $router->get('/api/dashboard/department',    'ControllerDashboard@department');
 $router->get('/api/dashboard/recent-leaves', 'ControllerDashboard@recentLeaves');
+$router->get('/api/dashboard/calendar-events', 'ControllerDashboard@calendarEvents');
 
 /* ================= ATTENDANCE ROUTES ================= */
 $router->post('/api/attendance/scan',    'ControllerAttendance@scan');
@@ -44,6 +45,7 @@ $router->post('/attendance/checkin', 'ControllerAttendance@checkin');
 $router->get('/api/employees',       'ControllerEmployee@index');
 $router->get('/api/employees/departments', 'ControllerEmployee@departments');
 $router->get('/api/employees/show',  'ControllerEmployee@index');
+$router->get('/api/employee/calendar-events', 'ControllerEmployee@calendarEvents');
 $router->get('/api/employees/{id}',  'ControllerEmployee@show');
 $router->post('/api/employees',      'ControllerEmployee@store');
 $router->put('/api/employees/{id}',  'ControllerEmployee@update');
@@ -54,6 +56,16 @@ $router->get('/api/leave/list',      'ControllerLeave@index');
 $router->post('/api/leave/create',   'ControllerLeave@create');
 $router->post('/api/leave/approve',  'ControllerLeave@approve');
 $router->post('/api/leave/reject',   'ControllerLeave@reject');
+
+/* ================= CALENDAR ROUTES ================= */
+$router->get('/api/calendar/events',            'ControllerCalendar@index');
+$router->get('/api/calendar/events/{uuid}',     'ControllerCalendar@show');
+$router->post('/api/calendar/events',           'ControllerCalendar@store');
+$router->put('/api/calendar/events/{uuid}',     'ControllerCalendar@update');
+$router->delete('/api/calendar/events/{uuid}',  'ControllerCalendar@destroy');
+$router->get('/api/calendar/filters',           'ControllerCalendar@filters');
+$router->post('/api/calendar/leaves/{uuid}/approve', 'ControllerCalendar@approveLeave');
+$router->post('/api/calendar/leaves/{uuid}/reject',  'ControllerCalendar@rejectLeave');
 
 /* ================= HISTORY ROUTES (Mobile) ================= */
 $router->get('/api/attendance/history', 'ControllerAttendance@history');

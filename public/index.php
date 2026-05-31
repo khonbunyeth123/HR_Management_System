@@ -68,7 +68,7 @@ $allowedPages = [
     'dashboard', 'attendance', 'employee', 'leave', 'audits',
     'report', 'report/report_daily', 'report/report_summary',
     'report/report_detail', 'report/report_top_employee',
-    'user', 'roles', 'permissions', 'checkin',
+    'user', 'roles', 'permissions', 'checkin', 'calendar',
 ];
 
 $rawPage = $_GET['page'] ?? 'dashboard';
@@ -80,6 +80,7 @@ $pagePermissions = [
     'attendance'                  => ['attendance.view'],
     'employee'                    => ['employee.view', 'employees.view'],
     'leave'                       => ['leave.view'],
+    'calendar'                    => ['calendar.view', 'calendar.manage'],
     'report'                      => ['report.view'],
     'report/report_daily'         => ['report.view_daily',   'report.view'],
     'report/report_summary'       => ['report.view_summary', 'report.view'],

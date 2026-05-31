@@ -32,4 +32,9 @@ class DashboardService
     {
         return $this->model->recentLeaves($limit);
     }
+
+    public function calendarEvents(string $month): array
+    {
+        return $this->model->getCalendarEvents($month);
+    }
 }

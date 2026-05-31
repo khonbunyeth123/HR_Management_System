@@ -70,6 +70,12 @@ class EmployeeService
     {
         return $this->employeeModel->getDepartments();
     }
+
+    public function getCalendarEvents(string $month, int $employeeId): array
+    {
+        $dashboardModel = new \App\Models\Dashboard();
+        return $dashboardModel->getCalendarEvents($month, $employeeId);
+    }
  
     // Handle photo upload
     private function handlePhotoUpload(array $file): ?string

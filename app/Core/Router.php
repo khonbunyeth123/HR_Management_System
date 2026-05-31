@@ -444,7 +444,7 @@ class Router
         $action     = $handler['action']     ?? '';
 
         if ($controller === 'ControllerEmployee'
-            && in_array($action, ['show', 'update'], true)
+            && in_array($action, ['show', 'update', 'calendarEvents'], true)
             && ($_SESSION['auth_type'] ?? '') === 'employee'
         ) {
             return [];
@@ -455,6 +455,7 @@ class Router
             'ControllerAttendance' => $this->permissionsForAttendanceAction($action),
             'ControllerEmployee'   => $this->permissionsForEmployeeAction($action),
             'ControllerLeave'      => $this->permissionsForLeaveAction($action),
+            'ControllerCalendar'   => $this->permissionsForCalendarAction($action),
             'ControllerReport'     => $this->permissionsForReportAction($action),
             'ControllerUser'       => $this->permissionsForUserAction($action),
             'ControllerRole'       => $this->permissionsForRoleAction($action),
@@ -475,6 +476,7 @@ class Router
             $this->route === '/api/leave/create'                               => 'employee',
             $this->route === '/api/attendance/history'                         => 'employee',
             $this->route === '/api/leave/history'                              => 'employee',
+            $this->route === '/api/employee/calendar-events'                  => 'employee',
             preg_match('#^/api/employees/\d+$#', $this->route) === 1          => null,
             $this->route === '/api/leave/list'                                 => null,
             default                                                            => 'user',
@@ -511,6 +513,16 @@ class Router
         return match ($action) {
             'approve', 'reject' => ['leave.update', 'leave.approve', 'leave.reject'],
             default             => [],
+        };
+    }
+
+    private function permissionsForCalendarAction(string $action): array
+    {
+        return match ($action) {
+            'index', 'show', 'filters'                     => ['calendar.view', 'calendar.manage'],
+            'store', 'update', 'destroy', 'approveLeave',
+            'rejectLeave'                                 => ['calendar.manage'],
+            default                                        => ['calendar.view', 'calendar.manage'],
         };
     }
 

@@ -188,4 +188,63 @@ class Dashboard
             return [];
         }
     }
+
+    /**
+     * Get leave events for calendar
+     * 
+     * @param string $month YYYY-MM
+     * @param int|null $employeeId Optional filter by employee ID
+     * @return array
+     */
+    public function getCalendarEvents(string $month, ?int $employeeId = null): array
+    {
+        $start = $month . '-01';
+        $end = date('Y-m-t', strtotime($start));
+
+        $sql = "
+            SELECT 
+                la.id,
+                la.uuid,
+                COALESCE(e.full_name, CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, ''))) AS title,
+                la.start_date as start,
+                la.end_date as end,
+                lt.name as type,
+                'leave' as event_type,
+                CASE 
+                    WHEN la.status_id = 0 THEN 'pending'
+                    WHEN la.status_id = 1 THEN 'approved'
+                    WHEN la.status_id = 2 THEN 'rejected'
+                    ELSE 'unknown'
+                END AS status
+            FROM tbl_leave_applications la
+            INNER JOIN tbl_employees e ON la.employee_id = e.id
+            INNER JOIN tbl_leave_types lt ON la.leave_type_id = lt.id
+            WHERE la.deleted_at IS NULL 
+                AND e.deleted_at IS NULL
+                AND (
+                    (la.start_date BETWEEN :start AND :end)
+                    OR (la.end_date BETWEEN :start AND :end)
+                    OR (:start BETWEEN la.start_date AND la.end_date)
+                )
+        ";
+
+        if ($employeeId !== null) {
+            $sql .= " AND la.employee_id = :employee_id";
+        }
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':start', $start);
+            $stmt->bindValue(':end', $end);
+            if ($employeeId !== null) {
+                $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
+            }
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error fetching calendar events: " . $e->getMessage());
+            return [];
+        }
+    }
 }

@@ -108,4 +108,26 @@ class ControllerDashboard
             $this->sendJsonError("Error loading leave requests", 500);
         }
     }
+
+    /**
+     * GET /api/dashboard/calendar-events
+     * Query param: month=YYYY-MM (default: current month)
+     * Returns: array of calendar events
+     */
+    public function calendarEvents(): void
+    {
+        try {
+            $month = $_GET['month'] ?? date('Y-m');
+            $events = $this->dashboardModel->getCalendarEvents($month);
+
+            $this->sendJson([
+                'success' => true,
+                'message' => 'Calendar events retrieved',
+                'data' => $events
+            ], 200);
+        } catch (\Exception $e) {
+            error_log("Calendar events error: " . $e->getMessage());
+            $this->sendJsonError("Error loading calendar events", 500);
+        }
+    }
 }

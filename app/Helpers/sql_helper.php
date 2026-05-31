@@ -10,7 +10,7 @@
             // common
             'id', 'uuid', 'status', 'created_at', 'updated_at',
             // employees
-            'full_name', 'email', 'phone', 'username', 'position', 'department',
+            'full_name', 'email', 'phone', 'username', 'position', 'department', 'branch',
             // attendance
             'date', 'check_in', 'check_out', 'check_type_id', 'employee_id',
             // leave

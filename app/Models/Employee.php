@@ -253,7 +253,7 @@ class Employee
     {
         $preferredColumns = [
             'id', 'uuid', 'photo', 'username', 'first_name', 'last_name', 'full_name',
-            'gender', 'email', 'phone', 'address', 'dob', 'position', 'department',
+            'gender', 'email', 'phone', 'address', 'dob', 'position', 'department', 'branch',
             'date_hired', 'status_id', 'created_at', 'created_by', 'updated_at',
             'updated_by', 'deleted_at', 'deleted_by'
         ];
