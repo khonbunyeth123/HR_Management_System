@@ -42,10 +42,11 @@ class Attendance
     }
 
     /**
-     * Get a list of attendance records with optional status filter
+     * Get a list of attendance records with optional filters
      */
-    public function getList(int $limit, int $offset, ?int $statusId): array
+    public function getList(int $limit, int $offset, ?int $statusId, ?string $date = null, ?string $search = null, ?string $checkType = null): array
     {
+        $params = [];
         $sql = "
             SELECT 
                 a.*,
@@ -62,14 +63,31 @@ class Attendance
 
         if ($statusId !== null) {
             $sql .= " AND a.status_id = :status_id";
+            $params[':status_id'] = $statusId;
+        }
+
+        if ($date !== null && $date !== '') {
+            $sql .= " AND a.date = :date";
+            $params[':date'] = $date;
+        }
+
+        if ($search !== null && $search !== '') {
+            $sql .= " AND (e.full_name LIKE :search_name OR CAST(e.id AS CHAR) LIKE :search_id)";
+            $params[':search_name'] = '%' . $search . '%';
+            $params[':search_id']   = '%' . $search . '%';
+        }
+
+        if ($checkType !== null && $checkType !== '') {
+            $sql .= " AND ct.name LIKE :check_type";
+            $params[':check_type'] = '%' . $checkType . '%';
         }
 
         $sql .= " ORDER BY a.check_time DESC LIMIT :limit OFFSET :offset";
 
         $stmt = $this->db->prepare($sql);
 
-        if ($statusId !== null) {
-            $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
         }
 
         $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
@@ -81,20 +99,44 @@ class Attendance
     }
 
     /**
-     * Count all records for optional status filter
+     * Count all records for optional filters
      */
-    public function countAll(?int $statusId): int
+    public function countAll(?int $statusId, ?string $date = null, ?string $search = null, ?string $checkType = null): int
     {
-        $sql = "SELECT COUNT(*) FROM tbl_attendance_records WHERE 1";
+        $params = [];
+        $sql = "
+            SELECT COUNT(*) 
+            FROM tbl_attendance_records a
+            LEFT JOIN tbl_employees e ON a.employee_id = e.id
+            LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
+            WHERE 1
+        ";
 
         if ($statusId !== null) {
-            $sql .= " AND status_id = :status_id";
+            $sql .= " AND a.status_id = :status_id";
+            $params[':status_id'] = $statusId;
+        }
+
+        if ($date !== null && $date !== '') {
+            $sql .= " AND a.date = :date";
+            $params[':date'] = $date;
+        }
+
+        if ($search !== null && $search !== '') {
+            $sql .= " AND (e.full_name LIKE :search_name OR CAST(e.id AS CHAR) LIKE :search_id)";
+            $params[':search_name'] = '%' . $search . '%';
+            $params[':search_id']   = '%' . $search . '%';
+        }
+
+        if ($checkType !== null && $checkType !== '') {
+            $sql .= " AND ct.name LIKE :check_type";
+            $params[':check_type'] = '%' . $checkType . '%';
         }
 
         $stmt = $this->db->prepare($sql);
 
-        if ($statusId !== null) {
-            $stmt->bindValue(':status_id', $statusId, PDO::PARAM_INT);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
         }
 
         $stmt->execute();

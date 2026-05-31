@@ -22,20 +22,31 @@
         </div>
 
         <!-- Filters -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-            <div class="relative">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mt-6">
+            <div class="relative sm:col-span-4">
                 <span class="iconify absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
                 <input type="text" id="searchInput" placeholder="Search Name, ID or Date..."
                     class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm">
             </div>
-            <select id="checkTypeFilter"
-                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all cursor-pointer">
-                <option value="">All Check Types</option>
-                <option value="check-in">Check In Only</option>
-                <option value="check-out">Check Out Only</option>
-            </select>
-            <input type="date" id="dateFilter"
-                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all">
+            <div class="sm:col-span-3">
+                <select id="checkTypeFilter"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all cursor-pointer">
+                    <option value="">All Check Types</option>
+                    <option value="check-in">Check In Only</option>
+                    <option value="check-out">Check Out Only</option>
+                </select>
+            </div>
+            <div class="sm:col-span-3">
+                <input type="date" id="dateFilter"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all">
+            </div>
+            <div class="sm:col-span-2">
+                <button onclick="setTodayFilter()"
+                    class="w-full h-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-xl transition-all">
+                    <span class="iconify text-lg" data-icon="mdi:calendar-today"></span>
+                    Today
+                </button>
+            </div>
         </div>
     </div>
 
@@ -178,6 +189,12 @@
     function downloadQR() { generateQRCard(800, c => { const a = document.createElement('a'); a.download = 'attendance-qr.png'; a.href = c.toDataURL(); a.click(); }); }
     function printQR() { generateQRCard(800, c => { const w = window.open('', '_blank'); w.document.write(`<body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f3f4f6;"><img src="${c.toDataURL()}" style="width:400px;"></body>`); w.print(); }); }
 
+    function setTodayFilter() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateFilter').value = today;
+        loadAttendance(1);
+    }
+
     function loadAttendance(page = 1) {
         const searchInput = document.getElementById("searchInput").value;
         const checkType   = document.getElementById("checkTypeFilter").value;
@@ -186,25 +203,17 @@
         const params = new URLSearchParams({
             "paging_options[page]": page,
             "paging_options[per_page]": perPage,
-            "filters[status_id]": 1
+            "filters[status_id]": 1,
+            "filters[date]": date,
+            "filters[search]": searchInput,
+            "filters[check_type]": checkType
         });
 
         fetch("/api/attendance/show?" + params.toString())
             .then(res => res.json())
             .then(result => {
                 if (result.success && result.data) {
-                    let filtered = result.data.attendance_records.filter(rec => {
-                        const matchSearch = !searchInput || (
-                            String(rec.emp_code || '').toLowerCase().includes(searchInput.toLowerCase()) || 
-                            String(rec.full_name || '').toLowerCase().includes(searchInput.toLowerCase()) ||
-                            rec.date.includes(searchInput)
-                        );
-                        const matchType = !checkType || rec.check_type_name.toLowerCase().includes(checkType);
-                        const matchDate = !date || rec.date === date;
-                        return matchSearch && matchType && matchDate;
-                    });
-
-                    renderTable(filtered);
+                    renderTable(result.data.attendance_records);
                     document.getElementById("totalCount").textContent = `${result.pagination.total} Records found`;
                     renderPagination(result.pagination.total_pages, page);
                 } else {
@@ -280,5 +289,8 @@
     document.getElementById("searchInput").addEventListener("input", () => loadAttendance(1));
     document.getElementById("checkTypeFilter").addEventListener("change", () => loadAttendance(1));
     document.getElementById("dateFilter").addEventListener("change", () => loadAttendance(1));
+    
+    // Set default filter to today
+    document.getElementById('dateFilter').value = new Date().toISOString().split('T')[0];
     loadAttendance();
 </script>

@@ -89,11 +89,14 @@ class ControllerAttendance
             $perPage = isset($_GET['paging_options']['per_page']) ? (int)$_GET['paging_options']['per_page'] : 18;
             $offset  = ($page - 1) * $perPage;
 
-            $filters  = $_GET['filters'] ?? [];
-            $statusId = isset($filters['status_id']) ? (int)$filters['status_id'] : null;
+            $filters   = $_GET['filters'] ?? [];
+            $statusId  = isset($filters['status_id']) ? (int)$filters['status_id'] : null;
+            $date      = isset($filters['date']) ? (string)$filters['date'] : null;
+            $search    = isset($filters['search']) ? (string)$filters['search'] : null;
+            $checkType = isset($filters['check_type']) ? (string)$filters['check_type'] : null;
 
-            $records = $this->attendanceModel->getList($perPage, $offset, $statusId);
-            $total   = $this->attendanceModel->countAll($statusId);
+            $records = $this->attendanceModel->getList($perPage, $offset, $statusId, $date, $search, $checkType);
+            $total   = $this->attendanceModel->countAll($statusId, $date, $search, $checkType);
 
             $this->sendJson([
                 'success' => true,
