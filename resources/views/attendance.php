@@ -27,7 +27,7 @@
                 <span class="iconify absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
                 <input type="text" id="searchInput" placeholder="Search Name, ID or Date..."
                     class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm">
-            </div>
+        </div>
             <div class="sm:col-span-3">
                 <select id="checkTypeFilter"
                     class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all cursor-pointer">
@@ -234,14 +234,30 @@
         }
 
         tbody.innerHTML = records.map(rec => {
-            const isCheckIn = rec.check_type_name.toLowerCase().includes('in');
-            const typeClass = isCheckIn ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600';
+            const isLeave = rec.check_time === 'Leave';
+            const isCheckIn = !isLeave && rec.check_type_name.toLowerCase().includes('in');
+            
+            let typeClass = '';
+            let typeLabel = '';
+            
+            if (isLeave) {
+                typeClass = 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                typeLabel = 'Leave';
+            } else if (isCheckIn) {
+                typeClass = 'bg-emerald-50 text-emerald-600';
+                typeLabel = 'In';
+            } else {
+                typeClass = 'bg-amber-50 text-amber-600';
+                typeLabel = 'Out';
+            }
+            
+            const timeDisplay = isLeave ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full Day</span>' : rec.check_time;
             
             return `
-            <tr class="hover:bg-slate-50 transition-colors group">
+            <tr class="${isLeave ? 'bg-indigo-50/30' : ''} hover:bg-slate-50 transition-colors group">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs font-bold">
+                        <div class="w-8 h-8 rounded-lg ${isLeave ? 'bg-indigo-100 text-indigo-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-xs font-bold">
                             ${(rec.full_name || rec.emp_code || '#').charAt(0)}
                         </div>
                         <div class="flex flex-col">
@@ -255,10 +271,10 @@
                     </div>
                 </td>
                 <td class="px-6 py-4 text-slate-500">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</td>
-                <td class="px-6 py-4 font-mono font-bold text-indigo-600">${rec.check_time}</td>
+                <td class="px-6 py-4 font-mono font-bold ${isLeave ? 'text-indigo-600' : 'text-indigo-600'}">${timeDisplay}</td>
                 <td class="px-6 py-4">
                     <span class="${typeClass} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                        ${isCheckIn ? 'In' : 'Out'}
+                        ${typeLabel}
                     </span>
                 </td>
                 <td class="px-6 py-4">

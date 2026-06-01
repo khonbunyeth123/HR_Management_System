@@ -1,0 +1,23 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../app/'
+        exclude:
+            - '../app/Core/'
+            - '../app/Models/'
+            - '../app/Enum/'
+
+    App\Repository\LeaveRepositoryInterface:
+        class: App\Repository\LeaveRepository
+
+    App\EventSubscriber\AttendanceLeaveSubscriber:
+        tags: ['kernel.event_subscriber']
+
+    App\EventSubscriber\CalendarLeaveSubscriber:
+        tags: ['kernel.event_subscriber']
+
+    App\EventSubscriber\DashboardCacheSubscriber:
+        tags: ['kernel.event_subscriber']

@@ -1,56 +1,178 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Services;
-use App\Models\Leave;
+
+use App\Repository\LeaveRepositoryInterface;
+use App\Enum\LeaveStatus;
+use App\Event\LeaveApprovedEvent;
+use App\Event\LeaveRejectedEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use App\Services\LeaveAuditService;
+use App\Services\NotificationService;
+use LogicException;
+
+/**
+ * Service for managing leave business logic.
+ */
 class LeaveService
 {
-    private Leave $model;
-    private NotificationService $notificationService;
-    public function __construct()
-    {
-        $this->model = new Leave();
-        $this->notificationService = new NotificationService();
-    }
+    public function __construct(
+        private readonly LeaveRepositoryInterface $repository,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly LeaveAuditService $auditService,
+        private readonly NotificationService $notificationService
+    ) {}
+
+    /**
+     * List leaves with pagination.
+     */
     public function listLeaves(array $filters, int $page, int $perPage): array
     {
         if ($page < 1) $page = 1;
         if ($perPage > 50) $perPage = 50;
-        $result = $this->model->getAll($filters, $page, $perPage);
-        return ['total' => $result['total'], 'rows' => $result['rows'], 'pages' => ceil($result['total'] / $perPage)];
+        
+        $result = $this->repository->listAll($filters, $page, $perPage);
+        
+        return [
+            'total' => $result['total'],
+            'rows' => $result['rows'],
+            'pages' => ceil($result['total'] / $perPage)
+        ];
     }
-    public function leaveTypes(): array { return $this->model->getLeaveTypes(); }
-    public function approveLeave(string $uuid): bool
+
+    /**
+     * Get all leave types.
+     */
+    public function leaveTypes(): array
     {
-        $ok = $this->model->approveLeave($uuid, 1);
-        if ($ok) {
-            $employeeId = $this->model->getEmployeeIdByUuid($uuid);
-            if ($employeeId) $this->notificationService->sendLeaveApproved($employeeId);
+        return $this->repository->getLeaveTypes();
+    }
+
+    /**
+     * Get a leave type ID by name.
+     */
+    public function getLeaveTypeIdByName(string $name): ?int
+    {
+        return $this->repository->getLeaveTypeIdByName($name);
+    }
+
+    /**
+     * Approve a leave application.
+     * 
+     * @param string $uuid
+     * @param int $actorId The user ID performing the approval
+     * @return bool
+     * @throws LogicException
+     */
+    public function approveLeave(string $uuid, int $actorId): bool
+    {
+        $leave = $this->repository->findByUuid($uuid);
+        if (!$leave) {
+            return false;
         }
+
+        if ($leave['status_id'] === LeaveStatus::APPROVED->value) {
+            throw new LogicException('Leave is already approved.');
+        }
+
+        $ok = $this->repository->approve((int)$leave['id'], $actorId);
+        
+        if ($ok) {
+            $updatedLeave = array_merge($leave, ['status_id' => LeaveStatus::APPROVED->value]);
+            
+            // Dispatch event
+            $this->eventDispatcher->dispatch(new LeaveApprovedEvent($updatedLeave));
+            
+            // Record audit log
+            $this->auditService->logApproved((int)$leave['id'], $actorId);
+            
+            // Send notification
+            $this->notificationService->sendLeaveApproved((int)$leave['employee_id']);
+        }
+
         return $ok;
     }
-    public function rejectLeave(string $uuid, string $remark): bool
+
+    /**
+     * Reject a leave application.
+     * 
+     * @param string $uuid
+     * @param string $remark
+     * @param int $actorId The user ID performing the rejection
+     * @return bool
+     */
+    public function rejectLeave(string $uuid, string $remark, int $actorId): bool
     {
-        $ok = $this->model->rejectLeave($uuid, $remark);
-        if ($ok) {
-            $employeeId = $this->model->getEmployeeIdByUuid($uuid);
-            if ($employeeId) $this->notificationService->sendLeaveRejected($employeeId, $remark);
+        $leave = $this->repository->findByUuid($uuid);
+        if (!$leave) {
+            return false;
         }
+
+        $ok = $this->repository->reject((int)$leave['id'], $actorId, $remark);
+        
+        if ($ok) {
+            $updatedLeave = array_merge($leave, ['status_id' => LeaveStatus::REJECTED->value, 'remark' => $remark]);
+            
+            // Dispatch event
+            $this->eventDispatcher->dispatch(new LeaveRejectedEvent($updatedLeave, $remark));
+            
+            // Record audit log
+            $this->auditService->logRejected((int)$leave['id'], $actorId);
+            
+            // Send notification
+            $this->notificationService->sendLeaveRejected((int)$leave['employee_id'], $remark);
+        }
+
         return $ok;
     }
+
+    /**
+     * Create a new leave application.
+     * 
+     * @param array $input
+     * @return array
+     */
     public function create(array $input): array
     {
         $required = ['employee_id', 'leave_type_id', 'start_date', 'end_date', 'reason'];
         foreach ($required as $field) {
-            if (empty($input[$field])) return ['success' => false, 'error' => "Missing required field: $field"];
+            if (empty($input[$field])) {
+                return ['success' => false, 'error' => "Missing required field: $field"];
+            }
         }
-        if ($input['end_date'] < $input['start_date']) return ['success' => false, 'error' => 'End date cannot be before start date'];
-        return $this->model->create((int)$input['employee_id'], (int)$input['leave_type_id'], $input['start_date'], $input['end_date'], $input['reason']);
+
+        if ($input['end_date'] < $input['start_date']) {
+            return ['success' => false, 'error' => 'End date cannot be before start date'];
+        }
+
+        $result = $this->repository->create($input);
+        
+        if ($result['success']) {
+            $this->auditService->logCreated((int)$result['data']['id'], (int)$input['employee_id']);
+        }
+
+        return $result;
     }
-    public function getLeaveTypeIdByName(string $name): ?int { return $this->model->getLeaveTypeIdByName($name); }
+
+    /**
+     * Get employee leave history.
+     */
     public function getEmployeeHistory(int $employeeId, int $page, int $perPage): array
     {
-        if ($page < 1) $page = 1;
-        $offset = ($page - 1) * $perPage;
-        $result = $this->model->getByEmployeeId(['employee_id' => $employeeId], $perPage, $offset);
-        return ['rows' => $result['rows'], 'total' => $result['total'], 'total_pages' => (int)ceil($result['total'] / $perPage)];
+        $rows = $this->repository->findByEmployee($employeeId);
+        return [
+            'rows' => $rows,
+            'total' => count($rows),
+            'total_pages' => 1
+        ];
+    }
+
+    /**
+     * Get a leave application by UUID.
+     */
+    public function getLeaveByUuid(string $uuid): ?array
+    {
+        return $this->repository->findByUuid($uuid);
     }
 }

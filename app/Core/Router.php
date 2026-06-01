@@ -129,22 +129,47 @@ class Router
                 throw new \RuntimeException("Controller not found: $controllerClass");
             }
 
-            $controller = new $controllerClass();
+            // Use Container for autowiring
+            $container = new \App\Core\Container();
+            $controller = $container->get($controllerClass);
 
             if (!method_exists($controller, $actionMethod)) {
                 throw new \RuntimeException("Action not found: {$handler['controller']}@$actionMethod");
             }
 
-            if (!empty($this->parameters)) {
-                call_user_func_array([$controller, $actionMethod], $this->parameters);
-            } else {
-                $controller->$actionMethod();
+            // Pass the Request object if the action expects it
+            $request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
+            $params = array_values($this->parameters);
+
+            // Handle method arguments (like UUID) + Request
+            $response = $this->invokeAction($controller, $actionMethod, $request, $params);
+
+            if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
+                $response->send();
             }
         } catch (\Exception $e) {
-            // FIX: log the real error server-side but never expose it to the client
             error_log("Route execution error: " . $e->getMessage());
-            $this->sendJson(['success' => false, 'message' => 'Error processing request'], 500);
+            $this->sendJson(['success' => false, 'message' => 'Error processing request: ' . $e->getMessage()], 500);
         }
+    }
+
+    private function invokeAction(object $controller, string $method, \Symfony\Component\HttpFoundation\Request $request, array $pathParams): mixed
+    {
+        $reflection = new \ReflectionMethod($controller, $method);
+        $arguments = [];
+
+        foreach ($reflection->getParameters() as $parameter) {
+            $type = $parameter->getType();
+            if ($type && $type->getName() === \Symfony\Component\HttpFoundation\Request::class) {
+                $arguments[] = $request;
+            } elseif (!empty($pathParams)) {
+                $arguments[] = array_shift($pathParams);
+            } else {
+                $arguments[] = $parameter->isDefaultValueAvailable() ? $parameter->getDefaultValue() : null;
+            }
+        }
+
+        return $reflection->invokeArgs($controller, $arguments);
     }
 
     // -----------------------------------------------------------------------

@@ -4,86 +4,82 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\Database;
+use App\Enum\LeaveStatus;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use PDO;
 use PDOException;
 
+/**
+ * Model for dashboard metrics with caching.
+ */
 class Dashboard
 {
     private PDO $db;
 
-    public function __construct()
-    {
-        try {
-            $this->db = Database::getInstance()->getConnection();
-            
-            if (!$this->db) {
-                throw new \Exception('Failed to establish database connection');
-            }
-        } catch (\Exception $e) {
-            error_log("Dashboard Model - Database Connection Error: " . $e->getMessage());
-            throw $e;
-        }
+    public function __construct(
+        private readonly CacheInterface $cache
+    ) {
+        $this->db = Database::getInstance()->getConnection();
     }
 
     /**
-     * Get total count of non-deleted employees
+     * Get total count of non-deleted employees.
      */
     public function totalEmployees(): int
     {
-        try {
+        return $this->cache->get('dashboard.total_employees', function (ItemInterface $item) {
+            $item->expiresAfter(300);
             $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_employees WHERE deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
             return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Error fetching total employees: " . $e->getMessage());
-            return 0;
-        }
+        });
     }
 
     /**
-     * Get count of active users (status_id = 1)
+     * Get count of active users.
      */
     public function activeEmployees(): int
     {
-        try {
+        return $this->cache->get('dashboard.active_employees', function (ItemInterface $item) {
+            $item->expiresAfter(300);
             $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_users WHERE status_id = 1 AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
             return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Error fetching active employees: " . $e->getMessage());
-            return 0;
-        }
+        });
     }
 
     /**
-     * Get count of pending leave applications (status_id = 0)
+     * Get count of pending leave applications.
      */
     public function pendingLeaves(): int
     {
-        try {
-            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_leave_applications WHERE status_id = 0 AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
-            return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Error fetching pending leaves: " . $e->getMessage());
-            return 0;
-        }
+        return $this->cache->get('dashboard.pending_leaves_count', function (ItemInterface $item) {
+            $item->expiresAfter(60);
+            $sql = "SELECT COUNT(*) FROM tbl_leave_applications WHERE status_id = :status AND deleted_at IS NULL";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':status' => LeaveStatus::PENDING->value]);
+            return (int)$stmt->fetchColumn();
+        });
     }
 
     /**
-     * Get count of employees on leave today
+     * Get count of employees on leave today.
      */
     public function onLeaveToday(): int
     {
-        try {
-            $result = $this->db->query("SELECT COUNT(*) as total FROM tbl_leave_applications WHERE status_id = 1 AND CURDATE() BETWEEN start_date AND end_date AND deleted_at IS NULL")->fetch(PDO::FETCH_ASSOC);
-            return $result ? (int)$result['total'] : 0;
-        } catch (PDOException $e) {
-            error_log("Error fetching on leave today: " . $e->getMessage());
-            return 0;
-        }
+        return $this->cache->get('dashboard.on_leave_today_count', function (ItemInterface $item) {
+            $item->expiresAfter(60);
+            $sql = "SELECT COUNT(*) FROM tbl_leave_applications 
+                    WHERE status_id = :status 
+                      AND CURDATE() BETWEEN start_date AND end_date 
+                      AND deleted_at IS NULL";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':status' => LeaveStatus::APPROVED->value]);
+            return (int)$stmt->fetchColumn();
+        });
     }
 
     /**
-     * Get all summary statistics
-     * Returns: ['total_employees', 'active_employees', 'pending_leaves', 'on_leave_today']
+     * Get summary stats.
      */
     public function getSummaryStats(): array
     {
@@ -96,198 +92,63 @@ class Dashboard
     }
 
     /**
-     * Get department statistics with employee counts and percentages
+     * Get department statistics.
      */
     public function departmentStats(): array
     {
-        try {
-            $sql = "
-                SELECT 
-                    department AS name,
-                    COUNT(*) AS count
-                FROM tbl_employees
-                WHERE deleted_at IS NULL
-                GROUP BY department
-                ORDER BY count DESC
-            ";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-
-            $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            if (empty($departments)) {
-                error_log("No departments found");
-                return [];
-            }
-            
-            $total = array_sum(array_column($departments, 'count'));
-            
-            return array_map(function($dept) use ($total) {
-                $dept['percentage'] = $total > 0 ? round(($dept['count'] / $total) * 100, 1) : 0;
-                return $dept;
-            }, $departments);
-
-        } catch (PDOException $e) {
-            error_log("Error fetching department stats: " . $e->getMessage());
-            return [];
-        }
+        $sql = "SELECT department AS name, COUNT(*) AS count FROM tbl_employees WHERE deleted_at IS NULL GROUP BY department ORDER BY count DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $total = array_sum(array_column($departments, 'count'));
+        return array_map(function($dept) use ($total) {
+            $dept['percentage'] = $total > 0 ? round(($dept['count'] / $total) * 100, 1) : 0;
+            return $dept;
+        }, $departments);
     }
 
     /**
-     * Get recent leave applications
-     * 
-     * @param int $limit Default: 5, Max: 100
-     * @return array Array of leave applications with employee and leave type details
+     * Get recent leave applications.
      */
     public function recentLeaves(int $limit = 5): array
     {
-        if ($limit <= 0 || $limit > 100) {
-            $limit = 5;
-        }
-
         $sql = "
-            SELECT 
-                la.id,
-                la.uuid,
-                COALESCE(e.full_name, CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, ''))) AS name,
-                COALESCE(lt.name, 'Not Specified') AS type,
-                DATE_FORMAT(la.start_date, '%M %d') AS start_date_formatted,
-                DATE_FORMAT(la.end_date, '%M %d') AS end_date_formatted,
-                CONCAT(DATE_FORMAT(la.start_date, '%M %d'), ' - ', DATE_FORMAT(la.end_date, '%M %d')) AS period,
-                DATEDIFF(la.end_date, la.start_date) + 1 AS total_days,
-                CASE 
-                    WHEN la.status_id = 0 THEN 'pending'
-                    WHEN la.status_id = 1 THEN 'approved'
-                    WHEN la.status_id = 2 THEN 'rejected'
-                    ELSE 'unknown'
-                END AS status,
-                la.status_id,
-                la.reason,
-                DATE_FORMAT(la.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
-                e.username,
-                e.id AS employee_id,
-                lt.id AS leave_type_id
+            SELECT la.id, la.uuid, e.full_name AS name, lt.name AS type,
+                   DATE_FORMAT(la.start_date, '%M %d') AS start_date_formatted,
+                   DATE_FORMAT(la.end_date, '%M %d') AS end_date_formatted,
+                   DATEDIFF(la.end_date, la.start_date) + 1 AS total_days,
+                   la.status_id, la.reason, la.created_at
             FROM tbl_leave_applications la
             INNER JOIN tbl_employees e ON la.employee_id = e.id
             INNER JOIN tbl_leave_types lt ON la.leave_type_id = lt.id
-            WHERE la.deleted_at IS NULL 
-                AND e.deleted_at IS NULL
-            ORDER BY la.created_at DESC
-            LIMIT :limit
+            WHERE la.deleted_at IS NULL AND e.deleted_at IS NULL
+            ORDER BY la.created_at DESC LIMIT :limit
         ";
-
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmt->execute();
-
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error fetching recent leaves: " . $e->getMessage());
-            return [];
-        }
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Get leave events for calendar
-     * 
-     * @param string $month YYYY-MM
-     * @param int|null $employeeId Optional filter by employee ID
-     * @return array
+     * Get calendar events.
      */
-    public function getCalendarEvents(string $month, ?int $employeeId = null): array
+    public function getCalendarEvents(string $month): array
     {
-        try {
-            $calendar = new CalendarEvent();
-            $rangeStart = $month . '-01';
-            $rangeEnd = date('Y-m-t', strtotime($rangeStart));
-
-            $result = $calendar->list([
-                'employee_id' => $employeeId ?? 0,
-                'department'  => '',
-                'branch'      => '',
-                'event_type'  => '',
-                'status'      => '',
-            ], $rangeStart, $rangeEnd);
-
-            return array_map(static function (array $event): array {
-                $start = (string) ($event['start'] ?? '');
-                $end   = (string) ($event['end'] ?? $start);
-                $eventType = (string) ($event['event_type'] ?? $event['type'] ?? 'event');
-                $typeLabel = (string) ($event['leave_type'] ?? $event['type'] ?? $eventType);
-                $scopeLabel = (string) ($event['scope']['label'] ?? $event['employee_name'] ?? 'Company-wide');
-
-                return [
-                    'uuid'        => (string) ($event['uuid'] ?? ''),
-                    'title'       => (string) ($event['title'] ?? 'Untitled'),
-                    'start'       => substr($start, 0, 10),
-                    'end'         => substr($end, 0, 10),
-                    'type'        => $typeLabel,
-                    'event_type'  => $eventType,
-                    'status'      => (string) ($event['status'] ?? 'pending'),
-                    'scope_label' => $scopeLabel,
-                    'all_day'     => (bool) ($event['all_day'] ?? true),
-                ];
-            }, $result['events'] ?? []);
-        } catch (\Throwable $e) {
-            error_log("Error fetching calendar events from unified source: " . $e->getMessage());
-            return $this->legacyCalendarEvents($month, $employeeId);
-        }
-    }
-
-    /**
-     * Legacy fallback used if the unified calendar source is unavailable.
-     */
-    private function legacyCalendarEvents(string $month, ?int $employeeId = null): array
-    {
-        $start = $month . '-01';
-        $end = date('Y-m-t', strtotime($start));
-
-        $sql = "
-            SELECT 
-                la.id,
-                la.uuid,
-                COALESCE(e.full_name, CONCAT(COALESCE(e.first_name, ''), ' ', COALESCE(e.last_name, ''))) AS title,
-                la.start_date as start,
-                la.end_date as end,
-                lt.name as type,
-                'leave' as event_type,
-                CASE 
-                    WHEN la.status_id = 0 THEN 'pending'
-                    WHEN la.status_id = 1 THEN 'approved'
-                    WHEN la.status_id = 2 THEN 'rejected'
-                    ELSE 'unknown'
-                END AS status
-            FROM tbl_leave_applications la
-            INNER JOIN tbl_employees e ON la.employee_id = e.id
-            INNER JOIN tbl_leave_types lt ON la.leave_type_id = lt.id
-            WHERE la.deleted_at IS NULL 
-                AND e.deleted_at IS NULL
-                AND (
-                    (la.start_date BETWEEN :start AND :end)
-                    OR (la.end_date BETWEEN :start AND :end)
-                    OR (:start BETWEEN la.start_date AND la.end_date)
-                )
-        ";
-
-        if ($employeeId !== null) {
-            $sql .= " AND la.employee_id = :employee_id";
-        }
-
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':start', $start);
-            $stmt->bindValue(':end', $end);
-            if ($employeeId !== null) {
-                $stmt->bindValue(':employee_id', $employeeId, PDO::PARAM_INT);
-            }
-            $stmt->execute();
-
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Error fetching calendar events: " . $e->getMessage());
-            return [];
-        }
+        $calendar = new CalendarEvent();
+        $rangeStart = $month . '-01';
+        $rangeEnd = date('Y-m-t', strtotime($rangeStart));
+        $result = $calendar->list(['employee_id' => 0, 'department' => '', 'branch' => '', 'event_type' => '', 'status' => ''], $rangeStart, $rangeEnd);
+        return array_map(static function (array $event): array {
+            return [
+                'uuid' => (string)($event['uuid'] ?? ''),
+                'title' => (string)($event['title'] ?? 'Untitled'),
+                'start' => substr((string)$event['start'], 0, 10),
+                'end' => substr((string)$event['end'], 0, 10),
+                'type' => (string)($event['leave_type'] ?? $event['event_type'] ?? 'event'),
+                'status' => (string)($event['status'] ?? 'pending'),
+                'all_day' => (bool)($event['all_day'] ?? true),
+            ];
+        }, $result['events'] ?? []);
     }
 }
