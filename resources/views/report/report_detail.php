@@ -1,141 +1,113 @@
 <?php
 // resources/views/report/report_detail.php
 ?>
-<body class="bg-slate-100 min-h-screen p-6">
-<div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl p-6">
-  <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
-    <h1 class="text-2xl font-bold text-slate-800">📋 Detailed Attendance Report</h1>
-    <div class="flex gap-2">
-      <button onclick="exportExcel()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">📊 Export Excel</button>
-      <button onclick="exportPDF()"   class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">📄 Export PDF</button>
+<body class="bg-[#FBFCFD] min-h-screen p-4 md:p-10 transition-colors duration-200 font-sans">
+<div class="max-w-7xl mx-auto">
+  
+  <!-- Header Section -->
+  <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-slate-100 pb-8">
+    <div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Live Analysis</span>
+      </div>
+      <h1 class="text-4xl font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
+      <p class="text-sm text-slate-500 mt-2 font-medium">Detailed audit of daily shift performance and employee punctuality.</p>
+    </div>
+    <div class="flex gap-3 w-full md:w-auto">
+      <button onclick="exportExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 text-[11px] font-bold px-6 py-3 rounded-2xl hover:bg-slate-50 transition shadow-sm group">
+        <span class="iconify text-emerald-500 text-lg group-hover:scale-110 transition-transform" data-icon="mdi:file-excel"></span> EXCEL
+      </button>
+      <button onclick="exportPDF()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 text-[11px] font-bold px-6 py-3 rounded-2xl hover:bg-slate-50 transition shadow-sm group">
+        <span class="iconify text-rose-500 text-lg group-hover:scale-110 transition-transform" data-icon="mdi:file-pdf-box"></span> PDF
+      </button>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
-    <h2 class="text-sm font-bold text-slate-600 uppercase tracking-wide mb-3">🔍 Filters &amp; Search</h2>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-slate-500">From Date</label>
-        <input type="date" id="fromDate" oninput="fetchData()" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-slate-500">To Date</label>
-        <input type="date" id="toDate" oninput="fetchData()" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-slate-500">Search</label>
-        <input type="text" id="searchInput" placeholder="Name, ID or Check Type…" oninput="applyFilters()" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-slate-500">Department</label>
-        <select id="deptFilter" onchange="fetchData()" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">All</option>
-          <option>IT</option><option>HR</option><option>Sales</option><option>Finance</option>
-        </select>
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-slate-500">Status</label>
-        <select id="statusFilter" onchange="fetchData()" class="text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option value="">All</option>
-          <option>On Time</option><option>Late</option><option>Early</option><option>Missing</option>
-        </select>
-      </div>
+  <!-- Summary Metric Cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-indigo-100 transition-colors group">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-indigo-400 transition-colors">Total Staff</p>
+      <div class="text-4xl font-bold text-slate-900" id="statTotalEmployees">0</div>
     </div>
-    <div class="flex items-center gap-3 mt-3">
-      <span id="recordCount" class="text-xs text-slate-400"></span>
-      <span id="loadingIndicator" class="hidden text-xs text-blue-500 animate-pulse">⏳ Loading...</span>
+    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-teal-100 transition-colors group">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-teal-500 transition-colors">Present</p>
+      <div class="text-4xl font-bold text-slate-900" id="statTotalPresent">0</div>
+    </div>
+    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-rose-100 transition-colors group">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-rose-500 transition-colors">Absent</p>
+      <div class="text-4xl font-bold text-slate-900" id="statTotalAbsent">0</div>
+    </div>
+    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-orange-100 transition-colors group">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-orange-500 transition-colors">Late Arrivals</p>
+      <div class="text-4xl font-bold text-slate-900" id="statTotalLate">0</div>
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
-    <table class="w-full min-w-[900px] text-sm">
-      <thead>
-        <tr class="bg-slate-800 text-white text-xs uppercase tracking-wide">
-          <th class="text-left px-4 py-3 cursor-pointer hover:bg-slate-700 transition" onclick="sortBy('name')">Employee <span id="sort_name"></span></th>
-          <th class="px-4 py-3 cursor-pointer hover:bg-slate-700 transition" onclick="sortBy('employee_id')">ID <span id="sort_employee_id"></span></th>
-          <th class="px-4 py-3 cursor-pointer hover:bg-slate-700 transition" onclick="sortBy('date')">Date <span id="sort_date"></span></th>
-          <th class="px-4 py-3">Day</th>
-          <th class="px-4 py-3">Check Type</th>
-          <th class="px-4 py-3">Standard</th>
-          <th class="px-4 py-3">Actual</th>
-          <th class="px-4 py-3">Diff</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3">Action</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+  <!-- Filter Bar -->
+  <div class="bg-white border border-slate-100 p-2 rounded-[2rem] shadow-sm mb-12 flex flex-wrap items-center gap-2">
+    <div class="flex items-center px-6 py-2">
+      <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest mr-4">Period</span>
+      <input type="date" id="fromDate" oninput="fetchData()" class="bg-transparent text-sm font-bold text-slate-700 outline-none">
+      <span class="mx-3 text-slate-200">/</span>
+      <input type="date" id="toDate" oninput="fetchData()" class="bg-transparent text-sm font-bold text-slate-700 outline-none">
+    </div>
+    
+    <div class="h-8 w-px bg-slate-100 mx-2"></div>
+
+    <div class="flex items-center px-6 py-2">
+      <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest mr-4">Department</span>
+      <select id="deptFilter" onchange="fetchData()" class="text-sm font-bold text-slate-700 outline-none border-none cursor-pointer bg-transparent">
+        <option value="">All Departments</option>
+      </select>
+    </div>
+
+    <div class="relative flex-1 min-w-[280px] ml-auto">
+      <span class="iconify absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-lg" data-icon="mdi:magnify"></span>
+      <input type="text" id="searchInput" placeholder="Search name or employee ID..." oninput="render()" 
+             class="w-full bg-slate-50 text-sm font-semibold text-slate-600 pl-14 pr-6 py-4 rounded-3xl outline-none border border-transparent focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-500/5 transition-all">
+    </div>
+
+    <div id="loadingIndicator" class="hidden px-6">
+      <span class="iconify animate-spin text-indigo-400 text-xl" data-icon="mdi:loading"></span>
+    </div>
   </div>
 
-  <!-- Pagination -->
-  <div class="flex flex-wrap justify-between items-center mt-5 gap-3">
-    <p class="text-sm text-slate-500" id="pageInfo"></p>
-    <div class="flex flex-wrap gap-1.5" id="pageBtns"></div>
+  <!-- START: Employee Accordion -->
+  <div id="accordionContainer" class="space-y-6">
+    <!-- Content dynamically rendered -->
   </div>
+  <!-- END: Employee Accordion -->
+
+  <!-- Empty State -->
+  <div id="emptyState" class="hidden py-40 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
+    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+      <span class="iconify text-5xl text-slate-200" data-icon="mdi:database-search-outline"></span>
+    </div>
+    <h3 class="text-xl font-bold text-slate-900">No records found</h3>
+    <p class="text-sm text-slate-400 mt-2 font-medium">Try adjusting your filters or search keywords.</p>
+  </div>
+
 </div>
 
-<!-- ── View Details Modal ── -->
-<div id="detailModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-    <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-      <h3 class="font-bold text-base" id="modalTitle">Attendance Details</h3>
-      <button onclick="closeModal('detailModal')" class="text-slate-300 hover:text-red-400 text-xl leading-none transition">✕</button>
-    </div>
-    <div class="p-6 overflow-y-auto max-h-[70vh]" id="modalBody"></div>
-    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
-      <button onclick="closeModal('detailModal')" class="text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg transition">Close</button>
-      <button onclick="window.print()" class="text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg transition">🖨 Print</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Report Issue Modal ── -->
-<div id="issueModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-    <div class="bg-red-600 text-white px-6 py-4 flex justify-between items-center">
-      <h3 class="font-bold text-base">🚨 Report Missing Record</h3>
-      <button onclick="closeModal('issueModal')" class="text-red-200 hover:text-white text-xl leading-none transition">✕</button>
-    </div>
-    <div class="p-6 space-y-3">
-      <p class="text-xs text-slate-500">Submit a report for the missing attendance record below.</p>
-      <div class="space-y-1"><label class="text-xs font-semibold text-slate-500">Employee</label><input id="issueEmp" readonly class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50"></div>
-      <div class="space-y-1"><label class="text-xs font-semibold text-slate-500">Date</label><input id="issueDate" readonly class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50"></div>
-      <div class="space-y-1"><label class="text-xs font-semibold text-slate-500">Check Type</label><input id="issueCheck" readonly class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-slate-50"></div>
-      <div class="space-y-1"><label class="text-xs font-semibold text-slate-500">Issue Type</label>
-        <select id="issueType" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-red-400">
-          <option>Forgot to check in/out</option><option>Device malfunction</option>
-          <option>Was absent (sick)</option><option>Was absent (leave)</option><option>Other</option>
-        </select>
-      </div>
-      <div class="space-y-1"><label class="text-xs font-semibold text-slate-500">Notes</label>
-        <textarea id="issueNotes" rows="3" placeholder="Additional details…" class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"></textarea>
-      </div>
-    </div>
-    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
-      <button onclick="closeModal('issueModal')" class="text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-lg transition">Cancel</button>
-      <button onclick="submitIssue()" class="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition">Submit Report</button>
-    </div>
-  </div>
-</div>
+<!-- Scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-// ── State ──
-let RECORDS = [];
-let filtered = [];
-let sortCol = 'date', sortDir = -1, page = 1;
-const PER_PAGE = 10;
+// ── Core Data ──
+let RAW_DATA = [];
+let GROUPED_DATA = [];
 
-// ── Init: set default dates then fetch ──
+// ── App Lifecycle ──
 (function init() {
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
   const lastDay  = today.toISOString().split('T')[0];
   document.getElementById('fromDate').value = firstDay;
   document.getElementById('toDate').value   = lastDay;
+  
   fetchDepartments();
   fetchData();
 })();
@@ -146,280 +118,224 @@ async function fetchDepartments() {
     const json = await res.json();
     if (json.success) {
       const select = document.getElementById('deptFilter');
-      select.innerHTML = '<option value="">All</option>';
       json.data.forEach(dept => {
         const opt = document.createElement('option');
-        opt.value = dept;
-        opt.textContent = dept;
+        opt.value = dept; opt.textContent = dept;
         select.appendChild(opt);
       });
     }
-  } catch (err) {
-    console.error('Failed to fetch departments:', err);
-  }
+  } catch (err) { console.error('Dept Fetch Error:', err); }
 }
 
-// ── Fetch from API ──
 async function fetchData() {
-  const from   = document.getElementById('fromDate').value;
-  const to     = document.getElementById('toDate').value;
-  const dept   = document.getElementById('deptFilter').value;
-  const status = document.getElementById('statusFilter').value;
-
+  const from = document.getElementById('fromDate').value;
+  const to = document.getElementById('toDate').value;
+  const dept = document.getElementById('deptFilter').value;
+  
   if (!from || !to) return;
-
-  // Build query params
-  const params = new URLSearchParams({ from, to });
-  if (dept)   params.append('department', dept);
-  if (status) params.append('status', status);
-
   document.getElementById('loadingIndicator').classList.remove('hidden');
 
   try {
-    const res  = await fetch(`/api/report/detailed?${params.toString()}`);
+    const params = new URLSearchParams({ from, to });
+    if (dept) params.append('department', dept);
+    
+    const res = await fetch(`/api/report/detailed?${params.toString()}`);
     const json = await res.json();
 
     if (json.success) {
-      RECORDS  = json.data;
-      filtered = [...RECORDS];
-      applyFilters();
-    } else {
-      showError(json.message || 'Failed to load data.');
+      RAW_DATA = json.data;
+      processAndRender();
     }
-  } catch (err) {
-    showError('Network error. Please try again.');
-    console.error(err);
-  } finally {
-    document.getElementById('loadingIndicator').classList.add('hidden');
-  }
+  } catch (err) { console.error('Data Fetch Error:', err); } 
+  finally { document.getElementById('loadingIndicator').classList.add('hidden'); }
 }
 
-function showError(msg) {
-  document.getElementById('tableBody').innerHTML =
-    `<tr><td colspan="10" class="text-center py-12 text-red-400 text-sm">⚠ ${msg}</td></tr>`;
+function processAndRender() {
+  const from = document.getElementById('fromDate').value;
+  const to = document.getElementById('toDate').value;
+  const dateRange = getDateRange(from, to);
+  const grouped = {};
+  
+  // Group flat API data by Employee -> Date
+  RAW_DATA.forEach(r => {
+    if (!grouped[r.employee_id]) {
+      grouped[r.employee_id] = { id: r.employee_id, name: r.name, department: r.department, days: {} };
+    }
+    if (!grouped[r.employee_id].days[r.date]) {
+      grouped[r.employee_id].days[r.date] = { date: r.date, day: r.day, c1: '--:--', o1: '--:--', c2: '--:--', o2: '--:--', status: 'Present', isLate: false };
+    }
+    const day = grouped[r.employee_id].days[r.date];
+    const time = r.actual_time || '--:--';
+    if (r.check_type === 'Check-in 1')  day.c1 = time;
+    if (r.check_type === 'Check-out 1') day.o1 = time;
+    if (r.check_type === 'Check-in 2')  day.c2 = time;
+    if (r.check_type === 'Check-out 2') day.o2 = time;
+    if (r.status === 'Late') day.isLate = true;
+  });
+
+  // Fill in absences for the selected range
+  Object.values(grouped).forEach(emp => {
+    dateRange.forEach(d => {
+      if (!emp.days[d]) {
+        emp.days[d] = { 
+          date: d, 
+          day: new Date(d).toLocaleDateString('en-US', { weekday: 'long' }), 
+          c1: '--:--', o1: '--:--', c2: '--:--', o2: '--:--', 
+          status: 'Absent', isLate: false 
+        };
+      }
+    });
+  });
+
+  // Sort by Name & Update State
+  GROUPED_DATA = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+  updateStats();
+  render();
 }
 
-// ── Helpers ──
-const checkBadgeClass = t => ({
-  'Check-in 1' :'bg-blue-100 text-blue-700',
-  'Check-out 1':'bg-purple-100 text-purple-700',
-  'Check-in 2' :'bg-orange-100 text-orange-700',
-  'Check-out 2':'bg-red-100 text-red-700'
-}[t] || 'bg-slate-100 text-slate-600');
-
-function statusPill(s) {
-  const map  = {'On Time':'bg-green-100 text-green-700','Late':'bg-yellow-100 text-yellow-700','Missing':'bg-red-100 text-red-700','Early':'bg-blue-100 text-blue-700'};
-  const icon = {'On Time':'✓','Late':'⚠','Missing':'✗','Early':'⚡'}[s] || '';
-  return `<span class="inline-block px-3 py-0.5 rounded-full text-xs font-semibold ${map[s]||''}">${icon} ${s}</span>`;
-}
-function diffCell(d) {
-  if (d === null || d === undefined) return `<span class="text-red-500 font-bold text-xs">N/A</span>`;
-  if (d === 0)  return `<span class="text-green-600 text-xs">0 min</span>`;
-  if (d > 0)    return `<span class="text-yellow-600 font-bold text-xs">+${d} min</span>`;
-  return `<span class="text-blue-600 font-bold text-xs">${d} min</span>`;
-}
-function actualCell(a, s) {
-  const col = {'On Time':'text-green-600','Late':'text-yellow-600','Missing':'text-red-500','Early':'text-blue-600'}[s] || 'text-slate-700';
-  return `<span class="font-semibold ${col}">${a ?? '--:--'}</span>`;
+function updateStats() {
+  let present = 0, late = 0, absent = 0;
+  GROUPED_DATA.forEach(emp => {
+    Object.values(emp.days).forEach(d => {
+      if (d.status === 'Absent') absent++;
+      else { present++; if (d.isLate) late++; }
+    });
+  });
+  document.getElementById('statTotalEmployees').textContent = GROUPED_DATA.length;
+  document.getElementById('statTotalPresent').textContent = present;
+  document.getElementById('statTotalAbsent').textContent = absent;
+  document.getElementById('statTotalLate').textContent = late;
 }
 
-// ── Render Table ──
 function render() {
-  const start = (page - 1) * PER_PAGE;
-  const end   = start + PER_PAGE;
-  const rows  = filtered.slice(start, end);
-  const tbody = document.getElementById('tableBody');
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const container = document.getElementById('accordionContainer');
+  const empty = document.getElementById('emptyState');
+  
+  const filtered = GROUPED_DATA.filter(emp => 
+    emp.name.toLowerCase().includes(search) || 
+    String(emp.id).includes(search)
+  );
 
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-12 text-slate-400 text-sm">No records found.</td></tr>`;
-  } else {
-    tbody.innerHTML = rows.map((r, i) => `
-      <tr class="border-b border-slate-100 hover:bg-slate-50 transition ${r.status === 'Missing' ? 'bg-red-50' : ''} text-sm">
-        <td class="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">${r.name}</td>
-        <td class="px-4 py-3 text-center text-slate-500">${r.employee_id}</td>
-        <td class="px-4 py-3 text-center text-slate-600">${r.date}</td>
-        <td class="px-4 py-3 text-center text-slate-400 text-xs">${r.day}</td>
-        <td class="px-4 py-3 text-center">
-          <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ${checkBadgeClass(r.check_type)}">${r.check_type}</span>
-        </td>
-        <td class="px-4 py-3 text-center text-slate-500">${r.standard_time}</td>
-        <td class="px-4 py-3 text-center">${actualCell(r.actual_time, r.status)}</td>
-        <td class="px-4 py-3 text-center">${diffCell(r.diff)}</td>
-        <td class="px-4 py-3 text-center">${statusPill(r.status)}</td>
-        <td class="px-4 py-3 text-center">
-          ${r.status === 'Missing'
-            ? `<button onclick="openIssue(${start + i})" class="text-xs font-semibold text-red-500 hover:text-red-700 underline transition">Report Issue</button>`
-            : `<button onclick="openDetail(${start + i})" class="text-xs font-semibold text-blue-500 hover:text-blue-700 underline transition">View Details</button>`}
-        </td>
-      </tr>`).join('');
+  if (filtered.length === 0) {
+    container.innerHTML = ''; empty.classList.remove('hidden'); return;
   }
 
-  document.getElementById('recordCount').textContent =
-    `Showing ${Math.min(start + 1, filtered.length)}–${Math.min(end, filtered.length)} of ${filtered.length} records`;
-  renderPagination();
-}
+  empty.classList.add('hidden');
+  container.innerHTML = filtered.map(emp => `
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden transition-all duration-300">
+      <button onclick="toggleAccordion('${emp.id}')" class="w-full flex items-center justify-between p-8 hover:bg-slate-50/30 transition-colors group">
+        <div class="flex items-center gap-6">
+          <div class="w-14 h-14 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xl border border-slate-100 shadow-inner">
+            ${emp.name.charAt(0)}
+          </div>
+          <div class="text-left">
+            <h4 class="font-bold text-slate-800 text-xl tracking-tight">${emp.name}</h4>
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">${emp.department} • ID: ${emp.id}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <span class="px-5 py-2 rounded-2xl bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
+            ${Object.keys(emp.days).length} Records
+          </span>
+          <div id="icon-${emp.id}" class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:text-indigo-400 transition-all duration-300 border border-slate-100">
+            <span class="iconify text-2xl" data-icon="mdi:chevron-down"></span>
+          </div>
+        </div>
+      </button>
 
-function renderPagination() {
-  const total = Math.ceil(filtered.length / PER_PAGE) || 1;
-  document.getElementById('pageInfo').textContent = `Page ${page} of ${total}`;
-  const base   = 'text-xs font-semibold px-3 py-1.5 rounded-lg transition';
-  const active = 'bg-blue-600 text-white';
-  const normal = 'bg-slate-200 hover:bg-slate-300 text-slate-600';
-  const dis    = 'bg-slate-100 text-slate-300 cursor-not-allowed';
-  let html = `
-    <button class="${base} ${page===1?dis:normal}" onclick="goPage(1)" ${page===1?'disabled':''}>« First</button>
-    <button class="${base} ${page===1?dis:normal}" onclick="goPage(${page-1})" ${page===1?'disabled':''}>‹ Prev</button>`;
-  for (let p2 = 1; p2 <= total; p2++) {
-    if (p2 === 1 || p2 === total || Math.abs(p2 - page) <= 1)
-      html += `<button class="${base} ${p2===page?active:normal}" onclick="goPage(${p2})">${p2}</button>`;
-    else if (Math.abs(p2 - page) === 2)
-      html += `<span class="text-xs text-slate-400 px-1 self-center">…</span>`;
-  }
-  html += `
-    <button class="${base} ${page===total?dis:normal}" onclick="goPage(${page+1})" ${page===total?'disabled':''}>Next ›</button>
-    <button class="${base} ${page===total?dis:normal}" onclick="goPage(${total})" ${page===total?'disabled':''}>Last »</button>`;
-  document.getElementById('pageBtns').innerHTML = html;
-}
-function goPage(p) {
-  const t = Math.ceil(filtered.length / PER_PAGE) || 1;
-  page = Math.max(1, Math.min(p, t));
-  render();
-}
-
-// ── Client-side Filter (search only — dept/status sent to API) ──
-function applyFilters() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  filtered = RECORDS.filter(r =>
-    !q ||
-    r.name.toLowerCase().includes(q) ||
-    String(r.employee_id).toLowerCase().includes(q) ||
-    r.check_type.toLowerCase().includes(q)
-  );
-  sortData();
-  page = 1;
-  render();
-}
-
-// ── Sort ──
-function sortBy(col) {
-  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
-  ['name','employee_id','date'].forEach(c =>
-    document.getElementById('sort_' + c).textContent = c === col ? (sortDir === 1 ? '▲' : '▼') : ''
-  );
-  sortData(); render();
-}
-function sortData() {
-  filtered.sort((a, b) => {
-    const av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
-    return av < bv ? -sortDir : av > bv ? sortDir : 0;
-  });
-}
-
-// ── View Details Modal ──
-function openDetail(idx) {
-  const r = filtered[idx];
-  document.getElementById('modalTitle').textContent = `${r.name} — ${r.check_type} (${r.date})`;
-  const statusBg = {
-    'On Time':'bg-green-100 text-green-700',
-    'Late'   :'bg-yellow-100 text-yellow-700',
-    'Early'  :'bg-blue-100 text-blue-700',
-    'Missing':'bg-red-100 text-red-700'
-  }[r.status] || '';
-  const diffStr  = r.diff === null ? 'N/A' : r.diff === 0 ? '0 min' : r.diff > 0 ? `+${r.diff} min` : `${r.diff} min`;
-  const dotColor = s => ({'On Time':'bg-green-500','Late':'bg-yellow-400','Missing':'bg-red-500','Early':'bg-blue-500'}[s] || 'bg-slate-400');
-
-  // All check types for this employee on this date (from loaded RECORDS)
-  const dayRecs = RECORDS
-    .filter(x => x.employee_id === r.employee_id && x.date === r.date)
-    .sort((a, b) => a.check_type.localeCompare(b.check_type));
-
-  document.getElementById('modalBody').innerHTML = `
-    <div class="mb-5">
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 border-b pb-1">Employee Info</p>
-      <div class="grid grid-cols-2 gap-3">
-        ${[['Full Name',r.name],['Employee ID',r.employee_id],['Department',r.department]].map(([l,v])=>`
-        <div><p class="text-xs text-slate-400 font-semibold">${l}</p><p class="text-sm font-bold text-slate-700">${v}</p></div>`).join('')}
+      <div id="content-${emp.id}" class="hidden border-t border-slate-50 p-8 bg-slate-50/[0.2]">
+        <div class="overflow-x-auto rounded-3xl border border-slate-100 bg-white shadow-inner">
+          <table class="w-full text-left text-xs min-w-[800px]">
+            <thead>
+              <tr class="text-slate-300 font-bold uppercase tracking-widest border-b border-slate-50">
+                <th class="px-8 py-6">Date</th>
+                <th class="px-8 py-6 text-center">In 1</th>
+                <th class="px-8 py-6 text-center">Out 1</th>
+                <th class="px-8 py-6 text-center">In 2</th>
+                <th class="px-8 py-6 text-center">Out 2</th>
+                <th class="px-8 py-6 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              ${Object.values(emp.days).sort((a,b) => b.date.localeCompare(a.date)).map(d => `
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-8 py-5">
+                    <div class="font-bold text-slate-700 text-sm">${d.date}</div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-tight">${d.day}</div>
+                  </td>
+                  <td class="px-8 py-5 text-center font-mono font-bold text-sm ${d.c1 !== '--:--' ? 'text-indigo-500' : 'text-slate-200'}">${d.c1}</td>
+                  <td class="px-8 py-5 text-center font-mono font-medium text-xs ${d.o1 !== '--:--' ? 'text-slate-500' : 'text-slate-200'}">${d.o1}</td>
+                  <td class="px-8 py-5 text-center font-mono font-bold text-sm ${d.c2 !== '--:--' ? 'text-indigo-500' : 'text-slate-200'}">${d.c2}</td>
+                  <td class="px-8 py-5 text-center font-mono font-medium text-xs ${d.o2 !== '--:--' ? 'text-slate-500' : 'text-slate-200'}">${d.o2}</td>
+                  <td class="px-8 py-5 text-center">${getStatusBadge(d)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="mb-5">
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 border-b pb-1">Check Record</p>
-      <div class="grid grid-cols-2 gap-3">
-        ${[
-          ['Date',`${r.date} (${r.day})`],
-          ['Check Type',`<span class="text-xs font-semibold px-2 py-0.5 rounded ${checkBadgeClass(r.check_type)}">${r.check_type}</span>`],
-          ['Standard Time', r.standard_time],
-          ['Actual Time',   r.actual_time ?? '--:--'],
-          ['Difference',    diffStr],
-          ['Status',`<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusBg}">${r.status}</span>`]
-        ].map(([l,v])=>`
-        <div><p class="text-xs text-slate-400 font-semibold">${l}</p><p class="text-sm font-semibold text-slate-700">${v}</p></div>`).join('')}
-      </div>
-    </div>
-    <div>
-      <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 border-b pb-1">Day Timeline — ${r.date}</p>
-      <div class="relative pl-5 border-l-2 border-slate-200 space-y-4">
-        ${dayRecs.map(x => `
-        <div class="relative">
-          <div class="absolute -left-[1.35rem] top-1 w-3 h-3 rounded-full border-2 border-white ${dotColor(x.status)}"></div>
-          <p class="text-xs text-slate-400">${x.check_type}</p>
-          <p class="text-sm font-bold text-slate-700">${x.actual_time ?? '--:--'} <span class="text-xs font-normal text-slate-400">(std: ${x.standard_time})</span></p>
-          <div class="mt-0.5">${statusPill(x.status)}</div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  document.getElementById('detailModal').classList.remove('hidden');
+  `).join('');
 }
 
-// ── Report Issue ──
-function openIssue(idx) {
-  const r = filtered[idx];
-  document.getElementById('issueEmp').value   = `${r.name} (${r.employee_id})`;
-  document.getElementById('issueDate').value  = `${r.date} — ${r.day}`;
-  document.getElementById('issueCheck').value = r.check_type;
-  document.getElementById('issueNotes').value = '';
-  document.getElementById('issueModal').classList.remove('hidden');
+// ── UI Helpers ──
+function toggleAccordion(id) {
+  const content = document.getElementById(`content-${id}`);
+  const icon = document.getElementById(`icon-${id}`);
+  content.classList.toggle('hidden');
+  icon.classList.toggle('rotate-180');
 }
-function submitIssue() {
-  alert('✅ Report submitted!\nHR will review within 24 hours.');
-  closeModal('issueModal');
-}
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-document.querySelectorAll('#detailModal,#issueModal').forEach(m =>
-  m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); })
-);
 
-// ── Export ──
+function getStatusBadge(d) {
+  const base = "px-4 py-1.5 rounded-xl font-bold text-[9px] uppercase tracking-wider shadow-sm border";
+  if (d.status === 'Absent') return `<span class="${base} bg-rose-50 text-rose-500 border-rose-100">Absent</span>`;
+  if (d.isLate) return `<span class="${base} bg-orange-50 text-orange-500 border-orange-100">Late</span>`;
+  return `<span class="${base} bg-teal-50 text-teal-600 border-teal-100">Present</span>`;
+}
+
+function getDateRange(start, end) {
+  const dates = [];
+  let curr = new Date(start);
+  const stop = new Date(end);
+  while (curr <= stop) { dates.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); }
+  return dates;
+}
+
+// ── Export Logic ──
 function exportExcel() {
-  const cols = ['Name','ID','Department','Date','Day','Check Type','Standard Time','Actual Time','Diff (min)','Status'];
-  const rows = filtered.map(r => [
-    r.name, r.employee_id, r.department, r.date, r.day,
-    r.check_type, r.standard_time, r.actual_time ?? '--:--',
-    r.diff ?? 'N/A', r.status
-  ]);
-  const ws = XLSX.utils.aoa_to_sheet([cols, ...rows]);
-  ws['!cols'] = [{wch:18},{wch:10},{wch:12},{wch:12},{wch:10},{wch:13},{wch:14},{wch:14},{wch:10},{wch:10}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, 'Attendance', ws);
-  XLSX.writeFile(wb, 'attendance_report.xlsx');
-}
-function exportPDF() {
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape'});
-  doc.setFontSize(14); doc.text('Detailed Attendance Report', 14, 16);
-  doc.setFontSize(8);
-  const headers = ['Name','ID','Date','Check Type','Std','Actual','Diff','Status'];
-  let y = 26;
-  doc.setFillColor(30,41,59); doc.setTextColor(255,255,255);
-  doc.rect(10, y-5, 277, 8, 'F');
-  headers.forEach((h, i) => doc.text(h, 12 + i*35, y));
-  doc.setTextColor(0,0,0); y += 8;
-  filtered.forEach(r => {
-    if (y > 185) { doc.addPage(); y = 20; }
-    [r.name, r.employee_id, r.date, r.check_type, r.standard_time, r.actual_time ?? '--:--', r.diff ?? 'N/A', r.status]
-      .forEach((v, i) => doc.text(String(v), 12 + i*35, y));
-    y += 7;
+  const data = [];
+  GROUPED_DATA.forEach(emp => {
+    Object.values(emp.days).forEach(d => {
+      data.push({ 'ID': emp.id, 'Name': emp.name, 'Date': d.date, 'Day': d.day, 'In 1': d.c1, 'Out 1': d.o1, 'In 2': d.c2, 'Out 2': d.o2, 'Status': d.status });
+    });
   });
-  doc.save('attendance.pdf');
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, 'Report', ws);
+  XLSX.writeFile(wb, `Attendance_Detailed_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('l', 'mm', 'a4');
+  doc.setFontSize(18); doc.setTextColor(15, 23, 42);
+  doc.text('Attendance Audit Report', 14, 20);
+  const tableData = [];
+  GROUPED_DATA.forEach(emp => {
+    Object.values(emp.days).forEach(d => {
+      tableData.push([emp.name, d.date, d.day, d.c1, d.o1, d.c2, d.o2, d.status]);
+    });
+  });
+  doc.autoTable({
+    startY: 30,
+    head: [['Name', 'Date', 'Day', 'In 1', 'Out 1', 'In 2', 'Out 2', 'Status']],
+    body: tableData,
+    theme: 'plain',
+    headStyles: { fontStyle: 'bold', textColor: [148, 163, 184] },
+    styles: { fontSize: 7 }
+  });
+  doc.save(`Attendance_Audit.pdf`);
 }
 </script>
 </body>
