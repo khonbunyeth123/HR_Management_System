@@ -5,13 +5,13 @@
 <div class="max-w-7xl mx-auto">
   
   <!-- Header Section -->
-  <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-slate-100 pb-8">
+  <div class="flex flex-col md:flex-row justify-between items-end mb-1 gap-6 border-b border-slate-100 pb-8">
     <div>
-      <div class="flex items-center gap-2 mb-2">
+      <!-- <div class="flex items-center gap-2 mb-2">
         <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Live Analysis</span>
-      </div>
-      <h1 class="text-4xl font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
+      </div> -->
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
       <p class="text-sm text-slate-500 mt-2 font-medium">Detailed audit of daily shift performance and employee punctuality.</p>
     </div>
     <div class="flex gap-3 w-full md:w-auto">
@@ -25,7 +25,7 @@
   </div>
 
   <!-- Summary Metric Cards -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
     <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-indigo-100 transition-colors group">
       <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-indigo-400 transition-colors">Total Staff</p>
       <div class="text-4xl font-bold text-slate-900" id="statTotalEmployees">0</div>
@@ -45,7 +45,7 @@
   </div>
 
   <!-- Filter Bar -->
-  <div class="bg-white border border-slate-100 p-2 rounded-[2rem] shadow-sm mb-12 flex flex-wrap items-center gap-2">
+  <div class="bg-white border border-slate-100 p-2 rounded-[2rem] shadow-sm mb-6 flex flex-wrap items-center gap-2">
     <div class="flex items-center px-6 py-2">
       <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest mr-4">Period</span>
       <input type="date" id="fromDate" oninput="fetchData()" class="bg-transparent text-sm font-bold text-slate-700 outline-none">
@@ -81,7 +81,7 @@
 
   <!-- Empty State -->
   <div id="emptyState" class="hidden py-40 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
-    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
       <span class="iconify text-5xl text-slate-200" data-icon="mdi:database-search-outline"></span>
     </div>
     <h3 class="text-xl font-bold text-slate-900">No records found</h3>
@@ -224,7 +224,7 @@ function render() {
   empty.classList.add('hidden');
   container.innerHTML = filtered.map(emp => `
     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden transition-all duration-300">
-      <button onclick="toggleAccordion('${emp.id}')" class="w-full flex items-center justify-between p-8 hover:bg-slate-50/30 transition-colors group">
+      <button onclick="toggleAccordion('${emp.id}')" class="w-full flex items-center justify-between p-2 hover:bg-slate-50/30 transition-colors group">
         <div class="flex items-center gap-6">
           <div class="w-14 h-14 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xl border border-slate-100 shadow-inner">
             ${emp.name.charAt(0)}
@@ -244,25 +244,25 @@ function render() {
         </div>
       </button>
 
-      <div id="content-${emp.id}" class="hidden border-t border-slate-50 p-8 bg-slate-50/[0.2]">
+      <div id="content-${emp.id}" class="hidden border-t border-slate-50 p-4 bg-slate-50/[0.2]">
         <div class="overflow-x-auto rounded-3xl border border-slate-100 bg-white shadow-inner">
           <table class="w-full text-left text-xs min-w-[800px]">
             <thead>
-              <tr class="text-slate-300 font-bold uppercase tracking-widest border-b border-slate-50">
-                <th class="px-8 py-6">Date</th>
-                <th class="px-8 py-6 text-center">In 1</th>
-                <th class="px-8 py-6 text-center">Out 1</th>
-                <th class="px-8 py-6 text-center">In 2</th>
-                <th class="px-8 py-6 text-center">Out 2</th>
-                <th class="px-8 py-6 text-center">Status</th>
+              <tr class="text-slate-300 font-bold uppercase tracking-widest bg-black border-b border-slate-50">
+                <th class="px-4 py-4">Date</th>
+                <th class="px-4 py-4 text-center">In 1</th>
+                <th class="px-4 py-4 text-center">Out 1</th>
+                <th class="px-4 py-4 text-center">In 2</th>
+                <th class="px-4 py-4 text-center">Out 2</th>
+                <th class="px-4 py-4 text-center">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               ${Object.values(emp.days).sort((a,b) => b.date.localeCompare(a.date)).map(d => `
                 <tr class="hover:bg-slate-50/50 transition-colors">
-                  <td class="px-8 py-5">
+                  <td class="px-8 py-2">
                     <div class="font-bold text-slate-700 text-sm">${d.date}</div>
-                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-tight">${d.day}</div>
+                    <div class="text-[10px] text-slate-300 bg-black font-bold uppercase tracking-tight">${d.day}</div>
                   </td>
                   <td class="px-8 py-5 text-center font-mono font-bold text-sm ${d.c1 !== '--:--' ? 'text-indigo-500' : 'text-slate-200'}">${d.c1}</td>
                   <td class="px-8 py-5 text-center font-mono font-medium text-xs ${d.o1 !== '--:--' ? 'text-slate-500' : 'text-slate-200'}">${d.o1}</td>

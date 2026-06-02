@@ -6,12 +6,9 @@ use App\Models\Dashboard;
 
 class DashboardService
 {
-    private Dashboard $model;
-
-    public function __construct()
-    {
-        $this->model = new Dashboard(); // ✅ Works now
-    }
+    public function __construct(
+        private readonly Dashboard $model
+    ) {}
 
     public function summary(): array
     {

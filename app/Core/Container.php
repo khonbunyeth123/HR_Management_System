@@ -53,11 +53,31 @@ class Container
                 throw new RuntimeException("Cannot resolve parameter {$parameter->getName()} in $class: missing type hint");
             }
 
+            if (!$type instanceof \ReflectionNamedType) {
+                throw new RuntimeException("Cannot resolve parameter {$parameter->getName()} in $class: complex types (union/intersection) not supported");
+            }
+
+            if ($type->isBuiltin()) {
+                if ($parameter->isDefaultValueAvailable()) {
+                    $dependencies[] = $parameter->getDefaultValue();
+                    continue;
+                }
+                throw new RuntimeException("Cannot resolve built-in parameter {$parameter->getName()} in $class: no default value");
+            }
+
             $dependencyClass = $type->getName();
             
             // Handle Interfaces
             if (interface_exists($dependencyClass)) {
-                $dependencyClass = $this->resolveInterface($dependencyClass);
+                try {
+                    $dependencyClass = $this->resolveInterface($dependencyClass);
+                } catch (RuntimeException $e) {
+                    if ($parameter->isDefaultValueAvailable()) {
+                        $dependencies[] = $parameter->getDefaultValue();
+                        continue;
+                    }
+                    throw $e;
+                }
             }
 
             $dependencies[] = $this->get($dependencyClass);

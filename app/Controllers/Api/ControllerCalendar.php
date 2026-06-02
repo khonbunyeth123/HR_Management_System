@@ -8,12 +8,9 @@ use App\Services\CalendarService;
 
 class ControllerCalendar
 {
-    private CalendarService $service;
-
-    public function __construct()
-    {
-        $this->service = new CalendarService();
-    }
+    public function __construct(
+        private readonly CalendarService $service
+    ) {}
 
     public function index(): void
     {

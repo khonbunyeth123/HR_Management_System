@@ -7,16 +7,11 @@ use App\Models\CalendarEvent;
 
 class CalendarService
 {
-    private CalendarEvent $model;
-    private NotificationService $notificationService;
-    private LeaveService $leaveService;
-
-    public function __construct()
-    {
-        $this->model = new CalendarEvent();
-        $this->notificationService = new NotificationService();
-        $this->leaveService = new LeaveService();
-    }
+    public function __construct(
+        private readonly CalendarEvent $model,
+        private readonly NotificationService $notificationService,
+        private readonly LeaveService $leaveService
+    ) {}
 
     public function list(array $filters, string $start, string $end): array
     {
