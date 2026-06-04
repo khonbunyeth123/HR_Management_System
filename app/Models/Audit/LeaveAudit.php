@@ -29,15 +29,20 @@ class LeaveAudit
      */
     public function record(int $leaveId, string $action, int $userId, ?string $ipAddress = null): bool
     {
-        $sql = "INSERT INTO tbl_leave_audit (leave_id, action, performed_by_user_id, ip_address, performed_at)
-                VALUES (:leave_id, :action, :user_id, :ip_address, NOW())";
-        
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':leave_id' => $leaveId,
-            ':action' => $action,
-            ':user_id' => $userId,
-            ':ip_address' => $ipAddress
-        ]);
+        try {
+            $sql = "INSERT INTO tbl_leave_audit (leave_id, action, performed_by_user_id, ip_address, performed_at)
+                    VALUES (:leave_id, :action, :user_id, :ip_address, NOW())";
+
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':leave_id' => $leaveId,
+                ':action' => $action,
+                ':user_id' => $userId,
+                ':ip_address' => $ipAddress
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Leave audit write skipped: ' . $e->getMessage());
+            return false;
+        }
     }
 }

@@ -53,9 +53,18 @@ $router->delete('/api/employees/{id}','ControllerEmployee@delete');
 
 /* ================= LEAVE ROUTES ================= */
 $router->get('/api/leave/list',      'ControllerLeave@index');
+$router->get('/api/leaves',          'ControllerLeave@index');
 $router->post('/api/leave/create',   'ControllerLeave@create');
+$router->post('/api/leave/request',   'ControllerLeave@create');
+$router->post('/api/leave/employee/create', 'ControllerLeave@create');
+$router->post('/api/employee/leave/create', 'ControllerLeave@create');
+$router->post('/api/employee/leave/request', 'ControllerLeave@create');
+$router->post('/api/auth/employee/leave/create', 'ControllerLeave@create');
+$router->post('/api/leaves',         'ControllerLeave@create');
 $router->post('/api/leave/approve',  'ControllerLeave@approve');
+$router->patch('/api/leaves/{uuid}/approve', 'ControllerLeave@approve');
 $router->post('/api/leave/reject',   'ControllerLeave@reject');
+$router->patch('/api/leaves/{uuid}/reject',  'ControllerLeave@reject');
 
 /* ================= CALENDAR ROUTES ================= */
 $router->get('/api/calendar/events',            'ControllerCalendar@index');

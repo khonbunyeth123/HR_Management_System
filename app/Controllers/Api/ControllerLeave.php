@@ -54,8 +54,28 @@ class ControllerLeave extends BaseController
     {
         $this->denyAccessUnlessGranted(LeaveVoter::LEAVE_STORE);
 
-        $input = json_decode($request->getContent(), true);
-        $input['employee_id'] = $this->getUser()?->id;
+        $input = $this->normalizeCreateInput($this->readInput($request));
+        if ($input === []) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Invalid request body. Send JSON or form data.'
+            ], 422);
+        }
+
+        if (empty($input['employee_id'])) {
+            $input['employee_id'] = (int) ($this->getUser()?->id ?? 0);
+        }
+
+        if (!isset($input['leave_type_id']) || $input['leave_type_id'] === '') {
+            $leaveTypeName = trim((string) ($input['leave_type'] ?? $input['leave_type_name'] ?? ''));
+            if ($leaveTypeName !== '') {
+                $input['leave_type_id'] = $this->service->getLeaveTypeIdByName($leaveTypeName);
+            }
+        }
+
+        if (isset($input['leave_type_id'])) {
+            $input['leave_type_id'] = (int) $input['leave_type_id'];
+        }
 
         $result = $this->service->create($input);
 
@@ -73,12 +93,104 @@ class ControllerLeave extends BaseController
         ], 400);
     }
 
+    private function normalizeCreateInput(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $aliases = [
+            'leave_type_id' => ['leave_type_id', 'leaveTypeId', 'leave_type', 'leaveType', 'type_id', 'typeId'],
+            'start_date'    => ['start_date', 'startDate', 'start', 'from_date', 'fromDate', 'date_from'],
+            'end_date'      => ['end_date', 'endDate', 'end', 'to_date', 'toDate', 'date_to'],
+            'reason'        => ['reason', 'remark', 'description', 'details', 'note'],
+            'employee_id'   => ['employee_id', 'employeeId'],
+        ];
+
+        $normalized = $input;
+
+        foreach ($aliases as $target => $candidates) {
+            if (isset($normalized[$target]) && $normalized[$target] !== '') {
+                continue;
+            }
+
+            foreach ($candidates as $candidate) {
+                if (!array_key_exists($candidate, $normalized)) {
+                    continue;
+                }
+
+                $value = $normalized[$candidate];
+                if ($value === null || $value === '') {
+                    continue;
+                }
+
+                if ($target === 'leave_type_id' && !is_numeric($value)) {
+                    continue;
+                }
+
+                $normalized[$target] = $value;
+                break;
+            }
+        }
+
+        if (isset($normalized['leave_type_id']) && !is_numeric($normalized['leave_type_id'])) {
+            $normalized['leave_type'] = (string) $normalized['leave_type_id'];
+            unset($normalized['leave_type_id']);
+        }
+
+        if (isset($normalized['reason'])) {
+            $normalized['reason'] = trim((string) $normalized['reason']);
+        }
+
+        if (isset($normalized['start_date'])) {
+            $normalized['start_date'] = trim((string) $normalized['start_date']);
+        }
+
+        if (isset($normalized['end_date'])) {
+            $normalized['end_date'] = trim((string) $normalized['end_date']);
+        }
+
+        return $normalized;
+    }
+
+    private function readInput(Request $request): array
+    {
+        $formData = $request->request->all();
+        if (is_array($formData) && !empty($formData)) {
+            return $formData;
+        }
+
+        $content = trim((string) $request->getContent());
+        if ($content === '') {
+            return [];
+        }
+
+        $json = json_decode($content, true);
+        if (is_array($json)) {
+            return $json;
+        }
+
+        $parsed = [];
+        parse_str($content, $parsed);
+        return is_array($parsed) ? $parsed : [];
+    }
+
     /**
      * Approve a leave application.
      */
     #[Route('/api/leaves/{uuid}/approve', name: 'api_leaves_approve', methods: ['PATCH'])]
-    public function approve(string $uuid): JsonResponse
+    public function approve(Request $request, ?string $uuid = null): JsonResponse
     {
+        $input = $this->readInput($request);
+        $uuid = trim((string) ($uuid ?? ($input['uuid'] ?? '')));
+
+        if ($uuid === '') {
+            return $this->json([
+                'success' => false,
+                'message' => 'UUID is required'
+            ], 422);
+        }
+
         $leave = $this->service->getLeaveByUuid($uuid);
         $this->denyAccessUnlessGranted(LeaveVoter::LEAVE_APPROVE, $leave);
 
@@ -102,12 +214,21 @@ class ControllerLeave extends BaseController
      * Reject a leave application.
      */
     #[Route('/api/leaves/{uuid}/reject', name: 'api_leaves_reject', methods: ['PATCH'])]
-    public function reject(Request $request, string $uuid): JsonResponse
+    public function reject(Request $request, ?string $uuid = null): JsonResponse
     {
+        $input = $this->readInput($request);
+        $uuid = trim((string) ($uuid ?? ($input['uuid'] ?? '')));
+
+        if ($uuid === '') {
+            return $this->json([
+                'success' => false,
+                'message' => 'UUID is required'
+            ], 422);
+        }
+
         $leave = $this->service->getLeaveByUuid($uuid);
         $this->denyAccessUnlessGranted(LeaveVoter::LEAVE_REJECT, $leave);
 
-        $input = json_decode($request->getContent(), true);
         $remark = $input['remark'] ?? '';
 
         if (!$remark) {

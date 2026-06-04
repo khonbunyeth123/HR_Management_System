@@ -82,7 +82,7 @@ class LeaveRepository implements LeaveRepositoryInterface
         
         if (!$uuid) return false;
         
-        return $this->model->rejectLeave($uuid, $reason);
+        return $this->model->rejectLeave($uuid, $rejectedBy, $reason);
     }
 
     /**

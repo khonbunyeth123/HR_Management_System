@@ -3,23 +3,16 @@ declare(strict_types=1);
 namespace App\Controllers\Api;
 
 use App\Models\Attendance;
+use App\Models\Employee;
 use App\Services\AttendanceService;
 
 class ControllerAttendance
 {
-    private Attendance $attendanceModel;
-    private AttendanceService $service;
-
-    public function __construct()
-    {
-        try {
-            $this->attendanceModel = new Attendance();
-            $this->service = new AttendanceService();
-        } catch (\Exception $e) {
-            error_log("ControllerAttendance - Initialization Error: " . $e->getMessage());
-            $this->sendJsonError("Failed to initialize attendance", 500);
-        }
-    }
+    public function __construct(
+        private readonly Attendance $attendanceModel,
+        private readonly Employee $employeeModel,
+        private readonly AttendanceService $service
+    ) {}
 
     /**
      * POST /api/attendance/scan
@@ -147,17 +140,17 @@ class ControllerAttendance
     {
         $sessionEmployeeId = isset($_SESSION['employee_id']) ? (int) $_SESSION['employee_id'] : 0;
         if ($sessionEmployeeId > 0) {
-            return $this->attendanceModel->findActiveEmployeeById($sessionEmployeeId);
+            return $this->employeeModel->findActiveEmployeeById($sessionEmployeeId);
         }
 
         $employeeUuid = trim((string) ($data['employee_uuid'] ?? ''));
         if ($employeeUuid !== '') {
-            return $this->attendanceModel->findActiveEmployeeByUuid($employeeUuid);
+            return $this->employeeModel->findActiveEmployeeByUuid($employeeUuid);
         }
 
         $employeeId = isset($data['employee_id']) ? (int) $data['employee_id'] : 0;
         if ($employeeId > 0) {
-            return $this->attendanceModel->findActiveEmployeeById($employeeId);
+            return $this->employeeModel->findActiveEmployeeById($employeeId);
         }
 
         return null;

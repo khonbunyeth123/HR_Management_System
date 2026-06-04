@@ -12,6 +12,8 @@ use PDO;
  */
 class Leave {
     private PDO $db;
+    private string $table = 'tbl_leave_applications';
+    private ?array $tableColumns = null;
 
     public function __construct()
     {
@@ -81,25 +83,36 @@ class Leave {
     /**
      * Approve a leave application.
      */
-    public function approveLeave(string $uuid, int $statusId): bool
+    public function approveLeave(string $uuid, int $approvedBy): bool
     {
-        $sql = "UPDATE tbl_leave_applications SET status_id = :status_id, approved_at = NOW() WHERE uuid = :uuid";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':status_id' => $statusId, ':uuid' => $uuid]);
+        $fields = [
+            'status_id' => LeaveStatus::APPROVED->value,
+            'approved_at' => date('Y-m-d H:i:s'),
+        ];
+
+        if ($this->hasColumn('approved_by')) {
+            $fields['approved_by'] = $approvedBy;
+        }
+
+        return $this->updateByUuid($uuid, $fields);
     }
 
     /**
      * Reject a leave application.
      */
-    public function rejectLeave(string $uuid, string $remark): bool
+    public function rejectLeave(string $uuid, int $rejectedBy, string $remark): bool
     {
-        $sql = "UPDATE tbl_leave_applications SET status_id = :status_id, remark = :remark, rejected_at = NOW() WHERE uuid = :uuid";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':status_id' => LeaveStatus::REJECTED->value,
-            ':remark' => $remark,
-            ':uuid' => $uuid
-        ]);
+        $fields = [
+            'status_id' => LeaveStatus::REJECTED->value,
+            'remark' => $remark,
+            'rejected_at' => date('Y-m-d H:i:s'),
+        ];
+
+        if ($this->hasColumn('rejected_by')) {
+            $fields['rejected_by'] = $rejectedBy;
+        }
+
+        return $this->updateByUuid($uuid, $fields);
     }
 
     /**
@@ -171,10 +184,48 @@ class Leave {
 
     public function getLeaveTypeIdByName(string $name): ?int
     {
-        $stmt = $this->db->prepare("SELECT id FROM tbl_leave_types WHERE name = :name LIMIT 1");
-        $stmt->bindValue(':name', $name);
+        $stmt = $this->db->prepare("SELECT id FROM tbl_leave_types WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name)) LIMIT 1");
+        $stmt->bindValue(':name', trim($name));
         $stmt->execute();
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ? (int)$row['id'] : null;
+    }
+
+    private function updateByUuid(string $uuid, array $fields): bool
+    {
+        $set = [];
+        $params = [':uuid' => $uuid];
+
+        foreach ($fields as $column => $value) {
+            if (!$this->hasColumn($column)) {
+                continue;
+            }
+
+            $set[] = $column . ' = :' . $column;
+            $params[':' . $column] = $value;
+        }
+
+        if (empty($set)) {
+            return false;
+        }
+
+        $sql = 'UPDATE ' . $this->table . ' SET ' . implode(', ', $set) . ' WHERE uuid = :uuid';
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
+    }
+
+    private function hasColumn(string $column): bool
+    {
+        if ($this->tableColumns === null) {
+            $this->tableColumns = [];
+            $stmt = $this->db->query('SHOW COLUMNS FROM ' . $this->table);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+                if (!empty($col['Field'])) {
+                    $this->tableColumns[$col['Field']] = true;
+                }
+            }
+        }
+
+        return isset($this->tableColumns[$column]);
     }
 }

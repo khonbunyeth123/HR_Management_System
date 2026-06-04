@@ -4,15 +4,14 @@ declare(strict_types=1);
 namespace App\Services;
  
 use App\Models\Employee;
+use App\Models\Dashboard;
  
 class EmployeeService
 {
-    private Employee $employeeModel;
- 
-    public function __construct()
-    {
-        $this->employeeModel = new Employee();
-    }
+    public function __construct(
+        private readonly Employee $employeeModel,
+        private readonly Dashboard $dashboardModel
+    ) {}
  
     // List all employees
     public function list(): array
@@ -46,19 +45,19 @@ class EmployeeService
  
     // Update
     public function update(int $id, array $data, array $files = []): bool
-{
-    // Merge $_FILES (POST) with manually parsed $files (PUT)
-    $fileSource = !empty($files) ? $files : $_FILES;
+    {
+        // Merge $_FILES (POST) with manually parsed $files (PUT)
+        $fileSource = !empty($files) ? $files : $_FILES;
 
-    if (isset($fileSource['photo']) && $fileSource['photo']['error'] === UPLOAD_ERR_OK) {
-        $photoPath = $this->handlePhotoUpload($fileSource['photo']);
-        if ($photoPath) {
-            $data['photo'] = $photoPath;
+        if (isset($fileSource['photo']) && $fileSource['photo']['error'] === UPLOAD_ERR_OK) {
+            $photoPath = $this->handlePhotoUpload($fileSource['photo']);
+            if ($photoPath) {
+                $data['photo'] = $photoPath;
+            }
         }
-    }
 
-    return $this->employeeModel->update($id, $data);
-}
+        return $this->employeeModel->update($id, $data);
+    }
  
     // Delete
     public function delete(int $id, int $userId): bool
@@ -73,8 +72,7 @@ class EmployeeService
 
     public function getCalendarEvents(string $month, int $employeeId): array
     {
-        $dashboardModel = new \App\Models\Dashboard();
-        return $dashboardModel->getCalendarEvents($month, $employeeId);
+        return $this->dashboardModel->getCalendarEvents($month, $employeeId);
     }
  
     // Handle photo upload

@@ -135,6 +135,17 @@ class LeaveService
      */
     public function create(array $input): array
     {
+        if (!isset($input['leave_type_id']) || $input['leave_type_id'] === '') {
+            $leaveTypeName = trim((string) ($input['leave_type'] ?? $input['leave_type_name'] ?? ''));
+            if ($leaveTypeName !== '') {
+                $input['leave_type_id'] = $this->repository->getLeaveTypeIdByName($leaveTypeName);
+            }
+        }
+
+        if (isset($input['leave_type_id']) && is_numeric($input['leave_type_id'])) {
+            $input['leave_type_id'] = (int) $input['leave_type_id'];
+        }
+
         $required = ['employee_id', 'leave_type_id', 'start_date', 'end_date', 'reason'];
         foreach ($required as $field) {
             if (empty($input[$field])) {
@@ -142,7 +153,14 @@ class LeaveService
             }
         }
 
-        if ($input['end_date'] < $input['start_date']) {
+        $startTimestamp = strtotime((string) $input['start_date']);
+        $endTimestamp = strtotime((string) $input['end_date']);
+
+        if ($startTimestamp === false || $endTimestamp === false) {
+            return ['success' => false, 'error' => 'Invalid start_date or end_date'];
+        }
+
+        if ($endTimestamp < $startTimestamp) {
             return ['success' => false, 'error' => 'End date cannot be before start date'];
         }
 
@@ -150,6 +168,10 @@ class LeaveService
         
         if ($result['success']) {
             $this->auditService->logCreated((int)$result['data']['id'], (int)$input['employee_id']);
+        }
+
+        if (!$result['success']) {
+            error_log('Leave create failed: ' . ($result['error'] ?? 'unknown error'));
         }
 
         return $result;

@@ -46,7 +46,10 @@ class LeaveServiceTest extends TestCase
         $leave = ['id' => 1, 'uuid' => $uuid, 'status_id' => LeaveStatus::PENDING->value, 'employee_id' => 123];
         
         $this->repository->method('findByUuid')->willReturn($leave);
-        $this->repository->expects($this->once())->method('approve')->willReturn(true);
+        $this->repository->expects($this->once())
+            ->method('approve')
+            ->with(1, 1)
+            ->willReturn(true);
         
         $this->eventDispatcher->expects($this->once())
             ->method('dispatch')
@@ -61,7 +64,10 @@ class LeaveServiceTest extends TestCase
         $leave = ['id' => 1, 'uuid' => $uuid, 'status_id' => LeaveStatus::PENDING->value, 'employee_id' => 123];
         
         $this->repository->method('findByUuid')->willReturn($leave);
-        $this->repository->expects($this->once())->method('reject')->willReturn(true);
+        $this->repository->expects($this->once())
+            ->method('reject')
+            ->with(1, 1, 'Reason')
+            ->willReturn(true);
         
         $this->eventDispatcher->expects($this->once())
             ->method('dispatch')

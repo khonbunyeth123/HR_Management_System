@@ -194,6 +194,23 @@ class Employee
         return $stmt->execute([$userId, $id]);
     }
 
+    public function findActiveEmployeeById(int $id): ?array
+    {
+        return $this->getById($id);
+    }
+
+    public function findActiveEmployeeByUuid(string $uuid): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT " . $this->selectColumns() . " FROM {$this->table}
+            WHERE uuid = :uuid AND deleted_at IS NULL
+            LIMIT 1
+        ");
+        $stmt->execute(['uuid' => $uuid]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $row && $this->hasColumn('uuid') ? $this->ensureUuid($row) : $row;
+    }
+
     public function getDepartments(): array
     {
         $stmt = $this->db->query("

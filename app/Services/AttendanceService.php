@@ -7,12 +7,9 @@ use Ramsey\Uuid\Uuid;
 
 class AttendanceService
 {
-    private Attendance $model;
-
-    public function __construct()
-    {
-        $this->model = new Attendance(); // Initialize the Attendance model
-    }
+    public function __construct(
+        private readonly Attendance $model
+    ) {}
 
     public function getPaginatedRecords(int $page, int $perPage, array $filters): array
     {
