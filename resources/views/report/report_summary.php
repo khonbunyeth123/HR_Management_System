@@ -146,13 +146,14 @@
         const from = document.getElementById('fromDate').value;
         const to = document.getElementById('toDate').value;
         const department = document.getElementById('departmentFilter').value;
+        const summaryBody = document.getElementById('summaryTableBody');
 
         if (!from || !to) {
             alert('Please select both dates');
             return;
         }
 
-        document.getElementById('summaryTableBody').innerHTML = `
+        summaryBody.innerHTML = `
             <tr>
                 <td colspan="10" class="p-4 text-center text-gray-500">⏳ Loading...</td>
             </tr>
