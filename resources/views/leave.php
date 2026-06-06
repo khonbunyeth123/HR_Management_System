@@ -100,7 +100,7 @@
 
     <script src="/assets/js/pagination.js"></script>
     <script>
-        const perPage = 5;
+        const perPage = 10;
         let currentPage = 1;
         let totalPages = 1;
         let pendingLeaveDecision = null;

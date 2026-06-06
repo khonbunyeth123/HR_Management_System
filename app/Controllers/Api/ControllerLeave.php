@@ -36,7 +36,7 @@ class ControllerLeave extends BaseController
         );
         $perPage = $request->query->getInt(
             'per_page',
-            (int) ($pagingOptions['per_page'] ?? 10)
+            (int) ($pagingOptions['per_page'] ?? 5)
         );
 
         $page = max(1, $page);
