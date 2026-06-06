@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
 
 final class CreateTblLeaveTypesTable extends AbstractMigration
 {
@@ -25,25 +26,25 @@ final class CreateTblLeaveTypesTable extends AbstractMigration
         // Insert default leave types
         $this->table('tbl_leave_types')->insert([
             [
-                'uuid' => bin2hex(random_bytes(16)),
+                'uuid' => Uuid::v4(),
                 'name' => 'Sick Leave',
                 'description' => 'Leave for illness',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => bin2hex(random_bytes(16)),
+                'uuid' => Uuid::v4(),
                 'name' => 'Casual Leave',
                 'description' => 'Personal reasons',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => bin2hex(random_bytes(16)),
+                'uuid' => Uuid::v4(),
                 'name' => 'Annual Leave',
                 'description' => 'Yearly paid leave',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => bin2hex(random_bytes(16)),
+                'uuid' => Uuid::v4(),
                 'name' => 'Other',
                 'description' => 'Other leave types',
                 'created_at' => date('Y-m-d H:i:s'),

@@ -234,8 +234,9 @@
         }
 
         tbody.innerHTML = records.map(rec => {
-            const isLeave = rec.check_time === 'Leave';
-            const isCheckIn = !isLeave && rec.check_type_name.toLowerCase().includes('in');
+            const checkTypeName = String(rec.check_type_name || '').toLowerCase();
+            const isLeave = checkTypeName === 'leave' || rec.check_time === 'Leave';
+            const isCheckIn = !isLeave && checkTypeName.includes('in');
             
             let typeClass = '';
             let typeLabel = '';

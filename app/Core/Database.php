@@ -18,7 +18,7 @@ class Database
 
         try {
             $this->pdo = new PDO(
-                "mysql:host={$config['host']};dbname={$config['database']};charset=utf8mb4",
+                "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset=utf8mb4",
                 $config['username'],
                 $config['password'],
                 [

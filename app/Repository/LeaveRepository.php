@@ -48,18 +48,6 @@ class LeaveRepository implements LeaveRepositoryInterface
      */
     public function approve(int $id, int $approvedBy): bool
     {
-        // The current Leave model uses UUID for approval, but the interface requested ID.
-        // I will adapt the repository to handle the translation if needed, 
-        // but for now, I'll update the model or use UUID if that's what's available.
-        // Actually, I'll update the model to be more flexible later or just use what works.
-        // Let's assume the ID is passed and we find the UUID first or update by ID.
-        
-        // Since I need to show COMPLETE files, I will implement it correctly.
-        // I'll need to add findById to Leave model or just use the DB directly here.
-        // But the instructions say "wrapping the existing Leave model".
-        
-        // I'll use the UUID approach as that's what the model currently supports.
-        // I will find the UUID by ID first.
         $db = \App\Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT uuid FROM tbl_leave_applications WHERE id = ?");
         $stmt->execute([$id]);
@@ -67,7 +55,7 @@ class LeaveRepository implements LeaveRepositoryInterface
         
         if (!$uuid) return false;
         
-        return $this->model->approveLeave($uuid, LeaveStatus::APPROVED->value);
+        return $this->model->approveLeave($uuid, $approvedBy);
     }
 
     /**

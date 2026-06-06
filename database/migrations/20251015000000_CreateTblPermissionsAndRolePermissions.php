@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
 
 final class CreateTblPermissionsAndRolePermissions extends AbstractMigration
 {
@@ -69,13 +70,7 @@ final class CreateTblPermissionsAndRolePermissions extends AbstractMigration
         $rows = [];
         foreach ($permissions as $p) {
             $rows[] = [
-                'uuid'        => sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-                    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-                    mt_rand(0, 0xffff),
-                    mt_rand(0, 0x0fff) | 0x4000,
-                    mt_rand(0, 0x3fff) | 0x8000,
-                    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-                ),
+                'uuid'        => Uuid::v4(),
                 'module'      => $p['module'],
                 'action'      => $p['action'],
                 'description' => $p['description'],

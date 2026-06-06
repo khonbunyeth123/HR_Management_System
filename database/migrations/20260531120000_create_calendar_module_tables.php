@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
 
 final class CreateCalendarModuleTables extends AbstractMigration
 {
@@ -109,7 +110,7 @@ final class CreateCalendarModuleTables extends AbstractMigration
                     'INSERT INTO tbl_permissions (uuid, module, action, description, status_id, created_at)
                      VALUES (?, ?, ?, ?, 1, ?)',
                     [
-                        $this->generateUuid(),
+                        Uuid::v4(),
                         $permission['module'],
                         $permission['action'],
                         $permission['description'],
@@ -148,15 +149,4 @@ final class CreateCalendarModuleTables extends AbstractMigration
         }
     }
 
-    private function generateUuid(): string
-    {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
-    }
 }

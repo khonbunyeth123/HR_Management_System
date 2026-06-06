@@ -5,6 +5,7 @@ namespace App\Models;
 
 use App\Core\Database;
 use App\Enum\LeaveStatus;
+use App\Support\Uuid;
 use PDO;
 
 /**
@@ -121,7 +122,15 @@ class Leave {
     public function create(int $employee_id, int $leave_type_id, string $start_date, string $end_date, string $reason): array
     {
         try {
-            $uuid = bin2hex(random_bytes(16));
+            if (!$this->employeeExists($employee_id)) {
+                return ['success' => false, 'error' => 'Employee not found'];
+            }
+
+            if (!$this->leaveTypeExists($leave_type_id)) {
+                return ['success' => false, 'error' => 'Leave type not found'];
+            }
+
+            $uuid = Uuid::v4();
             $stmt = $this->db->prepare("
                 INSERT INTO tbl_leave_applications (uuid, employee_id, leave_type_id, start_date, end_date, reason, status_id, created_at)
                 VALUES (:uuid, :employee_id, :leave_type_id, :start_date, :end_date, :reason, :status_id, NOW())
@@ -174,7 +183,9 @@ class Leave {
      */
     public function getLeaveTypes(): array
     {
-        $result = $this->db->query("SELECT DISTINCT name FROM tbl_leave_types ORDER BY name ASC");
+        $result = $this->db->query(
+            "SELECT DISTINCT name FROM tbl_leave_types WHERE deleted_at IS NULL ORDER BY name ASC"
+        );
         $types = [];
         while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
             $types[] = $row['name'];
@@ -184,7 +195,12 @@ class Leave {
 
     public function getLeaveTypeIdByName(string $name): ?int
     {
-        $stmt = $this->db->prepare("SELECT id FROM tbl_leave_types WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name)) LIMIT 1");
+        $stmt = $this->db->prepare(
+            "SELECT id FROM tbl_leave_types
+             WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name))
+               AND deleted_at IS NULL
+             LIMIT 1"
+        );
         $stmt->bindValue(':name', trim($name));
         $stmt->execute();
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -227,5 +243,23 @@ class Leave {
         }
 
         return isset($this->tableColumns[$column]);
+    }
+
+    private function employeeExists(int $employeeId): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 1 FROM tbl_employees WHERE id = :id AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([':id' => $employeeId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    private function leaveTypeExists(int $leaveTypeId): bool
+    {
+        $stmt = $this->db->prepare(
+            'SELECT 1 FROM tbl_leave_types WHERE id = :id AND deleted_at IS NULL LIMIT 1'
+        );
+        $stmt->execute([':id' => $leaveTypeId]);
+        return (bool) $stmt->fetchColumn();
     }
 }

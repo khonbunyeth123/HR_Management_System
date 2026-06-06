@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Core\Database;
+use App\Support\Uuid;
 use Exception;
 use PDO;
 
@@ -164,7 +165,7 @@ class PermissionService
 
             $description = isset($data['description']) ? trim($data['description']) : null;
             $status_id   = isset($data['status_id'])   ? (int) $data['status_id']  : 1;
-            $uuid        = $data['uuid'] ?? $this->generateUuid();
+            $uuid        = $data['uuid'] ?? Uuid::v4();
 
             $stmt = $this->db->getConnection()->prepare(
                 "INSERT INTO {$this->table} (uuid, module, action, description, status_id, created_at)
@@ -424,14 +425,4 @@ class PermissionService
         return ['valid' => empty($errors), 'errors' => $errors];
     }
 
-    /**
-     * Generate a UUID v4
-     */
-    private function generateUuid(): string
-    {
-        $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
 }

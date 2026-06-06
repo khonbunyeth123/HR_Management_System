@@ -2,6 +2,7 @@
 
 namespace App\Models;
 use App\Core\Database;
+use App\Support\Uuid;
 use PDO;
 
 class Role
@@ -137,7 +138,7 @@ class Role
      */
     public function createRole($data)
     {
-        $uuid = $this->generateUuid();
+        $uuid = Uuid::v4();
         $now = date('Y-m-d H:i:s');
         $createdBy = $_SESSION['user_id'] ?? null;
 
@@ -241,21 +242,6 @@ class Role
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([$name]);
         return $stmt->fetch(\PDO::FETCH_ASSOC);
-    }
-
-    /**
-     * Generate UUID v4
-     */
-    private function generateUuid()
-    {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
     }
 
     /**

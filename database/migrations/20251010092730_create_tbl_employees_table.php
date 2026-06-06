@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
 
 final class CreateTblEmployeesTable extends AbstractMigration
 {
@@ -38,15 +39,26 @@ final class CreateTblEmployeesTable extends AbstractMigration
             ->create();
 
         // Insert default employee
+        $employeeUsername = trim((string) ($_ENV['HRMS_INITIAL_EMPLOYEE_USERNAME'] ?? getenv('HRMS_INITIAL_EMPLOYEE_USERNAME') ?? ''));
+        $employeePassword = (string) ($_ENV['HRMS_INITIAL_EMPLOYEE_PASSWORD'] ?? getenv('HRMS_INITIAL_EMPLOYEE_PASSWORD') ?? '');
+        $employeeEmail = trim((string) ($_ENV['HRMS_INITIAL_EMPLOYEE_EMAIL'] ?? getenv('HRMS_INITIAL_EMPLOYEE_EMAIL') ?? ''));
+        $employeeFullName = trim((string) ($_ENV['HRMS_INITIAL_EMPLOYEE_FULL_NAME'] ?? getenv('HRMS_INITIAL_EMPLOYEE_FULL_NAME') ?? ''));
+
+        if ($employeeUsername === '' || $employeePassword === '') {
+            throw new RuntimeException(
+                'HRMS initial employee credentials must be set in the environment before running this migration.'
+            );
+        }
+
         $employeeData = [
             [
-                'uuid' => bin2hex(random_bytes(16)),
-                'username' => 'admin',
-                'password' => password_hash('admin123', PASSWORD_BCRYPT),
+                'uuid' => Uuid::v4(),
+                'username' => $employeeUsername,
+                'password' => password_hash($employeePassword, PASSWORD_BCRYPT),
                 'first_name' => 'Admin',
                 'last_name' => 'User',
-                'full_name' => 'Admin User',
-                'email' => 'admin@example.com',
+                'full_name' => $employeeFullName !== '' ? $employeeFullName : 'Admin User',
+                'email' => $employeeEmail !== '' ? $employeeEmail : null,
                 'position' => 'System Administrator',
                 'department' => 'IT',
                 'date_hired' => date('Y-m-d'),
@@ -57,17 +69,6 @@ final class CreateTblEmployeesTable extends AbstractMigration
         ];
 
         $this->table('tbl_employees')->insert($employeeData)->saveData();
-    }
-
-    function generateUUID() {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
     }
 
     public function down(): void

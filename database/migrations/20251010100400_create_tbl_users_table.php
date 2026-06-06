@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
+
 final class CreateTblUsersTable extends AbstractMigration
 {
     public function up(): void
@@ -26,13 +28,24 @@ final class CreateTblUsersTable extends AbstractMigration
             ->addForeignKey('role_id', 'tbl_roles', 'id', ['delete' => 'SET_NULL', 'update' => 'CASCADE'])
             ->create();
 
+        $adminUsername = trim((string) ($_ENV['HRMS_INITIAL_ADMIN_USERNAME'] ?? getenv('HRMS_INITIAL_ADMIN_USERNAME') ?? ''));
+        $adminPassword = (string) ($_ENV['HRMS_INITIAL_ADMIN_PASSWORD'] ?? getenv('HRMS_INITIAL_ADMIN_PASSWORD') ?? '');
+        $adminEmail = trim((string) ($_ENV['HRMS_INITIAL_ADMIN_EMAIL'] ?? getenv('HRMS_INITIAL_ADMIN_EMAIL') ?? ''));
+        $adminFullName = trim((string) ($_ENV['HRMS_INITIAL_ADMIN_FULL_NAME'] ?? getenv('HRMS_INITIAL_ADMIN_FULL_NAME') ?? ''));
+
+        if ($adminUsername === '' || $adminPassword === '') {
+            throw new RuntimeException(
+                'HRMS initial admin credentials must be set in the environment before running this migration.'
+            );
+        }
+
         $adminData = [
             [
-                'uuid' => bin2hex(random_bytes(16)),
-                'username' => 'admin',
-                'password' => password_hash('admin123', PASSWORD_BCRYPT),
-                'full_name' => 'Administrator',
-                'email' => 'admin@example.com',
+                'uuid' => Uuid::v4(),
+                'username' => $adminUsername,
+                'password' => password_hash($adminPassword, PASSWORD_BCRYPT),
+                'full_name' => $adminFullName !== '' ? $adminFullName : 'Administrator',
+                'email' => $adminEmail !== '' ? $adminEmail : 'admin@example.com',
                 'role_id' => 1,
                 'status_id' => 1,
                 'login_session' => null,

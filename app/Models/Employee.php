@@ -5,6 +5,7 @@ namespace App\Models;
 
 use PDO;
 use App\Core\Database;
+use App\Support\Uuid;
 
 class Employee
 {
@@ -88,7 +89,7 @@ class Employee
 
         // Only insert uuid if the column actually exists in the table
         if ($this->hasColumn('uuid')) {
-            $params['uuid'] = !empty($data['uuid']) ? (string) $data['uuid'] : $this->generateUuid();
+            $params['uuid'] = !empty($data['uuid']) ? (string) $data['uuid'] : Uuid::v4();
         }
 
         if ($this->hasColumn('gender') && array_key_exists('gender', $data)) {
@@ -229,7 +230,7 @@ class Employee
             return $row;
         }
 
-        $generated = $this->generateUuid();
+        $generated = Uuid::v4();
 
         if (isset($row['id'])) {
             $stmt = $this->db->prepare(
@@ -255,15 +256,6 @@ class Employee
         }
 
         return isset($this->tableColumns[$column]);
-    }
-
-    private function generateUuid(): string
-    {
-        $data    = random_bytes(16);
-        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
-        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
-
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     private function selectColumns(): string

@@ -129,6 +129,17 @@ class Attendance
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
+    public function getCheckTypeIdByName(string $name): ?int
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id FROM tbl_check_types WHERE LOWER(TRIM(name)) = LOWER(TRIM(:name)) AND deleted_at IS NULL LIMIT 1"
+        );
+        $stmt->bindValue(':name', trim($name));
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int) $row['id'] : null;
+    }
+
     public function insertScan(array $data): bool
     {
         $sql = "INSERT INTO tbl_attendance_records (uuid, employee_id, date, check_time, check_type_id, status_id, created_at) 

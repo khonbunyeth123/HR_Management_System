@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Support\Uuid;
 use PDO;
 
 class User
@@ -68,7 +69,7 @@ class User
     public function create(array $data)
     {
         try {
-            $uuid = $this->generateUuid();
+            $uuid = Uuid::v4();
 
             error_log("User Model - Creating user with username: " . $data['username']);
 
@@ -157,12 +158,4 @@ class User
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function generateUuid(): string
-    {
-        $data = random_bytes(16);
-        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
-        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
-
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-    }
 }

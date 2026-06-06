@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
+use App\Support\Uuid;
 
 final class CreateTblRolesTable extends AbstractMigration
 {
@@ -26,7 +27,7 @@ final class CreateTblRolesTable extends AbstractMigration
 
         $roles = [
             [
-                'uuid' => $this->generateUuid(),
+                'uuid' => Uuid::v4(),
                 'name' => 'Admin',
                 'description' => 'System administrator with full access',
                 'status_id' => 1,
@@ -34,7 +35,7 @@ final class CreateTblRolesTable extends AbstractMigration
                 'created_by' => null,
             ],
             [
-                'uuid' => $this->generateUuid(),
+                'uuid' => Uuid::v4(),
                 'name' => 'Manager',
                 'description' => 'Manager with limited access',
                 'status_id' => 1,
@@ -42,7 +43,7 @@ final class CreateTblRolesTable extends AbstractMigration
                 'created_by' => null,
             ],
             [
-                'uuid' => $this->generateUuid(),
+                'uuid' => Uuid::v4(),
                 'name' => 'Employee',
                 'description' => 'Regular employee user',
                 'status_id' => 1,
@@ -57,17 +58,5 @@ final class CreateTblRolesTable extends AbstractMigration
     public function down(): void
     {
         $this->table('tbl_roles')->drop()->save();
-    }
-
-    private function generateUuid(): string
-    {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
     }
 }

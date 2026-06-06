@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Attendance;
-use Ramsey\Uuid\Uuid;
+use App\Support\Uuid;
 
 class AttendanceService
 {
@@ -53,7 +53,7 @@ class AttendanceService
             return ['error' => 'Invalid check type'];
         }
         $this->model->insertScan([
-            'uuid' => Uuid::uuid4()->toString(),
+            'uuid' => Uuid::v4(),
             'employee_id' => $employeeId,
             'date' => $date,
             'check_time' => $time,
