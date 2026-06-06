@@ -74,7 +74,11 @@
                 <div id="miniLeaveRequests" class="space-y-3">
                     <p class="text-xs text-slate-400 text-center py-4">Loading...</p>
                 </div>
-                <a href="?page=leave" class="block text-center mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">View All Applications</a>
+                <div class="mt-4 pt-4 border-t border-slate-200/80">
+                    <a href="?page=leave" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 py-2 text-xs font-bold text-indigo-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
+                        View All Applications
+                    </a>
+                </div>
             </div>
         </div>
     </div>
