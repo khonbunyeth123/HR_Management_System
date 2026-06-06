@@ -61,7 +61,7 @@
                     Departments
                 </h2>
             </div>
-            <div id="departments" class="p-6 space-y-4 flex-grow">
+            <div id="departments" class="p-6 space-y-4 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
                 <div class="flex flex-col items-center justify-center py-12 text-slate-400">
                     <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
                     <p class="text-sm">Loading departments...</p>
@@ -300,6 +300,42 @@
             </div>`;
         }
 
+        function loadDepartments() {
+            const departmentsContainer = document.getElementById("departments");
+
+            if (departmentsContainer) {
+                departmentsContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                        <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
+                        <p class="text-sm">Loading departments...</p>
+                    </div>`;
+            }
+
+            fetch("/api/dashboard/department")
+                .then(res => res.json())
+                .then(result => {
+                    const data = result.success ? (result.data || []) : (Array.isArray(result) ? result : []);
+
+                    if (!departmentsContainer) {
+                        return;
+                    }
+
+                    departmentsContainer.scrollTop = 0;
+
+                    if (!data.length) {
+                        departmentsContainer.innerHTML = '<div class="text-center text-slate-400 py-12">No departments found</div>';
+                        return;
+                    }
+
+                    departmentsContainer.innerHTML = data.map(d => createDepartment(d)).join('');
+                })
+                .catch(() => {
+                    if (departmentsContainer) {
+                        departmentsContainer.innerHTML = '<div class="text-center text-rose-400 py-12">Failed to load departments</div>';
+                    }
+                });
+        }
+
         /* ---------- Dashboard Summary ---------- */
         fetch("/api/dashboard/summary")
             .then(res => res.json())
@@ -340,20 +376,7 @@
             });
 
         /* ---------- Departments ---------- */
-        fetch("/api/dashboard/department")
-            .then(res => res.json())
-            .then(result => {
-                const div = document.getElementById("departments");
-                const data = result.success ? result.data : (Array.isArray(result) ? result : []);
-                
-                if (data.length === 0) {
-                    div.innerHTML = '<div class="text-center text-slate-400 py-12">No data found</div>';
-                    return;
-                }
-                
-                div.innerHTML = data.map(d => createDepartment(d)).join('');
-            })
-            .catch(() => window.Toast?.error("Error", "Failed to load department data."));
+        loadDepartments();
 
         /* ---------- Initialize Calendar ---------- */
         const cal = new SimpleCalendar("calendarContainer");

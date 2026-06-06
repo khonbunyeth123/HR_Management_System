@@ -96,14 +96,30 @@ class Dashboard
      */
     public function departmentStats(): array
     {
-        $sql = "SELECT department AS name, COUNT(*) AS count FROM tbl_employees WHERE deleted_at IS NULL GROUP BY department ORDER BY count DESC";
+        $sql = "
+            SELECT department AS name, COUNT(*) AS count
+            FROM tbl_employees
+            WHERE deleted_at IS NULL
+              AND department IS NOT NULL
+              AND TRIM(department) <> ''
+            GROUP BY department
+            ORDER BY count DESC, department ASC
+        ";
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $total = array_sum(array_column($departments, 'count'));
-        return array_map(function($dept) use ($total) {
-            $dept['percentage'] = $total > 0 ? round(($dept['count'] / $total) * 100, 1) : 0;
-            return $dept;
+
+        $total = array_sum(array_map(static fn (array $dept): int => (int) ($dept['count'] ?? 0), $departments));
+
+        return array_map(static function (array $dept) use ($total): array {
+            $count = (int) ($dept['count'] ?? 0);
+
+            return [
+                'name' => (string) ($dept['name'] ?? 'Unknown'),
+                'count' => $count,
+                'percentage' => $total > 0 ? round(($count / $total) * 100, 1) : 0,
+            ];
         }, $departments);
     }
 
