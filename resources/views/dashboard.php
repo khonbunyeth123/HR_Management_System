@@ -53,28 +53,35 @@
             </div>
         </div>
 
-        <!-- Departments -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-            <div class="px-6 py-4 border-b border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <span class="iconify text-emerald-500" data-icon="mdi:office-building"></span>
-                    Departments
-                </h2>
-            </div>
-            <div id="departments" class="p-6 space-y-4 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
-                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
-                    <p class="text-sm">Loading departments...</p>
+        <div class="space-y-6">
+            <!-- Departments -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="px-6 py-4 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="iconify text-emerald-500" data-icon="mdi:office-building"></span>
+                        Departments
+                    </h2>
+                </div>
+                <div id="departments" class="p-6 space-y-4 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                        <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
+                        <p class="text-sm">Loading departments...</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Mini Recent Leaves in Sidebar -->
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                <h3 class="text-sm font-bold text-slate-700 mb-4">Recent Leave Requests</h3>
-                <div id="miniLeaveRequests" class="space-y-3">
+            <!-- Recent Leave Requests -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="px-6 py-4 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="iconify text-indigo-500" data-icon="mdi:calendar-clock"></span>
+                        Recent Leave Requests
+                    </h2>
+                </div>
+                <div id="miniLeaveRequests" class="p-6 space-y-3 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
                     <p class="text-xs text-slate-400 text-center py-4">Loading...</p>
                 </div>
-                <div class="mt-4 pt-4 border-t border-slate-200/80">
+                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                     <a href="?page=leave" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 py-2 text-xs font-bold text-indigo-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
                         View All Applications
                     </a>
