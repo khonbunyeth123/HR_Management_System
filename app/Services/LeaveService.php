@@ -29,15 +29,15 @@ class LeaveService
      */
     public function listLeaves(array $filters, int $page, int $perPage): array
     {
-        if ($page < 1) $page = 1;
-        if ($perPage > 50) $perPage = 50;
+        $page = max(1, $page);
+        $perPage = max(1, min(50, $perPage));
         
         $result = $this->repository->listAll($filters, $page, $perPage);
         
         return [
             'total' => $result['total'],
             'rows' => $result['rows'],
-            'pages' => ceil($result['total'] / $perPage)
+            'pages' => max(1, (int) ceil($result['total'] / $perPage))
         ];
     }
 

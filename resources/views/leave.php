@@ -170,8 +170,8 @@
             const status = document.getElementById("statusFilter").value;
 
             const params = new URLSearchParams({
-                "paging_options[page]": page,
-                "paging_options[per_page]": perPage,
+                "page": page,
+                "per_page": perPage,
                 "filters[employee_name]": search,
                 "filters[leave_type]": leaveType,
                 "filters[status_id]": status
@@ -200,8 +200,12 @@
                         renderPagination({
                             currentPage,
                             totalPages,
-                            showingFrom: (currentPage-1)*perPage +1,
-                            showingTo: Math.min(currentPage*perPage, result.pagination.total),
+                            showingFrom: result.data.leave_applications.length
+                                ? ((currentPage - 1) * perPage) + 1
+                                : 0,
+                            showingTo: result.data.leave_applications.length
+                                ? ((currentPage - 1) * perPage) + result.data.leave_applications.length
+                                : 0,
                             totalRecords: result.pagination.total,
                             showPageNumbers: true,
                             onPrevious: () => currentPage > 1 && loadLeaveApplications(currentPage -1),

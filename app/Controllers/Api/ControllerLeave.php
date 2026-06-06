@@ -25,8 +25,22 @@ class ControllerLeave extends BaseController
     #[Route('/api/leaves', name: 'api_leaves_index', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $page    = $request->query->getInt('page', 1);
-        $perPage = $request->query->getInt('per_page', 5);
+        $pagingOptions = $request->query->all('paging_options');
+        if (!is_array($pagingOptions)) {
+            $pagingOptions = [];
+        }
+
+        $page = $request->query->getInt(
+            'page',
+            (int) ($pagingOptions['page'] ?? 1)
+        );
+        $perPage = $request->query->getInt(
+            'per_page',
+            (int) ($pagingOptions['per_page'] ?? 10)
+        );
+
+        $page = max(1, $page);
+        $perPage = max(1, min(50, $perPage));
 
         $filters = $request->query->all('filters');
         $result = $this->service->listLeaves($filters, $page, $perPage);

@@ -88,4 +88,23 @@ class LeaveServiceTest extends TestCase
         
         $this->service->approveLeave($uuid, 1);
     }
+
+    public function testListLeavesClampsInvalidPaginationValues(): void
+    {
+        $filters = ['status_id' => 0];
+
+        $this->repository->expects($this->once())
+            ->method('listAll')
+            ->with($filters, 1, 1)
+            ->willReturn([
+                'total' => 0,
+                'rows' => [],
+            ]);
+
+        $result = $this->service->listLeaves($filters, 0, 0);
+
+        $this->assertSame(0, $result['total']);
+        $this->assertSame([], $result['rows']);
+        $this->assertSame(1, $result['pages']);
+    }
 }
