@@ -41,8 +41,18 @@ class Attendance
         }
 
         if ($checkType !== null && $checkType !== '') {
-            $where .= " AND ct.name = ?";
-            $params[] = $checkType;
+            $checkType = strtolower(trim($checkType));
+
+            if ($checkType === 'check-in') {
+                $where .= " AND LOWER(ct.name) LIKE ?";
+                $params[] = 'check-in%';
+            } elseif ($checkType === 'check-out') {
+                $where .= " AND LOWER(ct.name) LIKE ?";
+                $params[] = 'check-out%';
+            } elseif ($checkType === 'leave') {
+                $where .= " AND LOWER(ct.name) = ?";
+                $params[] = 'leave';
+            }
         }
 
         $sql = "SELECT a.uuid, a.employee_id, a.date, a.check_time, a.status_id, a.created_at,
@@ -90,8 +100,18 @@ class Attendance
         }
 
         if ($checkType !== null && $checkType !== '') {
-            $where .= " AND ct.name = ?";
-            $params[] = $checkType;
+            $checkType = strtolower(trim($checkType));
+
+            if ($checkType === 'check-in') {
+                $where .= " AND LOWER(ct.name) LIKE ?";
+                $params[] = 'check-in%';
+            } elseif ($checkType === 'check-out') {
+                $where .= " AND LOWER(ct.name) LIKE ?";
+                $params[] = 'check-out%';
+            } elseif ($checkType === 'leave') {
+                $where .= " AND LOWER(ct.name) = ?";
+                $params[] = 'leave';
+            }
         }
 
         $sql = "SELECT COUNT(*) FROM tbl_attendance_records a 
