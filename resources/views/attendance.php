@@ -213,9 +213,17 @@
             .then(res => res.json())
             .then(result => {
                 if (result.success && result.data) {
+                    const pagination = result.pagination || {};
+                    currentPage = pagination.page || page;
+                    totalPages = pagination.total_pages || 1;
+
                     renderTable(result.data.attendance_records);
-                    document.getElementById("totalCount").textContent = `${result.pagination.total} Records found`;
-                    renderPagination(result.pagination.total_pages, page);
+                    document.getElementById("totalCount").textContent = `${pagination.total || 0} Records found`;
+                    renderPagination({
+                        currentPage,
+                        totalPages,
+                        totalRecords: pagination.total || 0
+                    });
                 } else {
                     throw new Error("No data");
                 }
@@ -289,18 +297,113 @@
         `;}).join('');
     }
 
-    function renderPagination(total, current) {
+    function getVisiblePages(current, total, maxButtons = 5) {
+        if (total <= maxButtons) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        const half = Math.floor(maxButtons / 2);
+        let start = Math.max(1, current - half);
+        let end = start + maxButtons - 1;
+
+        if (end > total) {
+            end = total;
+            start = Math.max(1, end - maxButtons + 1);
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    }
+
+    function paginationButton(page, currentPageNumber, label = null, disabled = false, extraClass = '') {
+        const isActive = page === currentPageNumber;
+        const isDisabled = disabled || isActive;
+        const text = label ?? page;
+        const baseClass = 'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm font-bold transition-all';
+        const activeClass = 'bg-indigo-600 text-white border-indigo-600 shadow-sm';
+        const inactiveClass = 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700';
+        const disabledClass = 'opacity-40 cursor-not-allowed';
+
+        return `
+            <button
+                class="${baseClass} ${isActive ? activeClass : inactiveClass} ${isDisabled ? disabledClass : ''} ${extraClass}"
+                data-page="${page}"
+                ${isDisabled ? 'disabled' : ''}
+            >${text}</button>
+        `;
+    }
+
+    function renderPagination({ currentPage, totalPages, totalRecords }) {
         const container = document.getElementById("paginationContainer");
         container.innerHTML = '';
-        if (total <= 1) return;
-        
-        for (let i = 1; i <= total; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${i === current ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-indigo-50 border border-slate-100'}`;
-            btn.onclick = () => loadAttendance(i);
-            container.appendChild(btn);
+
+        const safeCurrentPage = Math.min(Math.max(currentPage, 1), Math.max(totalPages, 1));
+        const showingFrom = totalRecords > 0 ? ((safeCurrentPage - 1) * perPage) + 1 : 0;
+        const showingTo = totalRecords > 0 ? Math.min(safeCurrentPage * perPage, totalRecords) : 0;
+
+        if (totalRecords === 0) {
+            container.innerHTML = `
+                <div class="w-full flex items-center justify-between gap-4 text-sm text-slate-500">
+                    <span>Showing 0 of 0 records</span>
+                </div>
+            `;
+            return;
         }
+
+        if (totalPages <= 1) {
+            container.innerHTML = `
+                <div class="w-full flex items-center justify-between gap-4 text-sm text-slate-500">
+                    <span>Showing ${showingFrom} to ${showingTo} of ${totalRecords} records</span>
+                </div>
+            `;
+            return;
+        }
+
+        const visiblePages = getVisiblePages(safeCurrentPage, totalPages, 5);
+        let pageButtons = '';
+
+        if (visiblePages[0] > 1) {
+            pageButtons += paginationButton(1, safeCurrentPage);
+            if (visiblePages[0] > 2) {
+                pageButtons += '<span class="px-1 text-slate-400">...</span>';
+            }
+        }
+
+        visiblePages.forEach(page => {
+            pageButtons += paginationButton(page, safeCurrentPage);
+        });
+
+        const lastVisiblePage = visiblePages[visiblePages.length - 1];
+        if (lastVisiblePage < totalPages) {
+            if (lastVisiblePage < totalPages - 1) {
+                pageButtons += '<span class="px-1 text-slate-400">...</span>';
+            }
+            pageButtons += paginationButton(totalPages, safeCurrentPage);
+        }
+
+        container.innerHTML = `
+            <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-slate-500">
+                    Showing <span class="font-semibold text-slate-700">${showingFrom}</span>
+                    to <span class="font-semibold text-slate-700">${showingTo}</span>
+                    of <span class="font-semibold text-slate-700">${totalRecords}</span> records
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    ${paginationButton(safeCurrentPage - 1, safeCurrentPage, 'Prev', safeCurrentPage === 1, 'min-w-16')}
+                    ${pageButtons}
+                    ${paginationButton(safeCurrentPage + 1, safeCurrentPage, 'Next', safeCurrentPage === totalPages, 'min-w-16')}
+                </div>
+            </div>
+        `;
+
+        container.querySelectorAll('button[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const nextPage = parseInt(btn.dataset.page, 10);
+                if (!Number.isNaN(nextPage) && nextPage >= 1 && nextPage <= totalPages && nextPage !== safeCurrentPage) {
+                    loadAttendance(nextPage);
+                }
+            });
+        });
     }
 
     document.getElementById("searchInput").addEventListener("input", () => loadAttendance(1));

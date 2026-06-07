@@ -98,6 +98,8 @@ class ControllerAttendance
                 ],
                 'pagination' => [
                     'total'       => $total,
+                    'page'        => $page,
+                    'per_page'    => $perPage,
                     'total_pages' => (int)ceil($total / $perPage)
                 ]
             ]);
