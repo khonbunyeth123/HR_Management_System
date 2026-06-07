@@ -28,14 +28,20 @@ class Report
                 e.position,
                 e.department,
                 MAX(CASE WHEN a.check_type_id = 1 THEN a.check_time ELSE NULL END) as check_in_1,
+                MAX(CASE WHEN a.check_type_id = 1 THEN ct.standard_time ELSE NULL END) as check_in_1_standard_time,
                 MAX(CASE WHEN a.check_type_id = 2 THEN a.check_time ELSE NULL END) as check_out_1,
+                MAX(CASE WHEN a.check_type_id = 2 THEN ct.standard_time ELSE NULL END) as check_out_1_standard_time,
                 MAX(CASE WHEN a.check_type_id = 3 THEN a.check_time ELSE NULL END) as check_in_2,
-                MAX(CASE WHEN a.check_type_id = 4 THEN a.check_time ELSE NULL END) as check_out_2
+                MAX(CASE WHEN a.check_type_id = 3 THEN ct.standard_time ELSE NULL END) as check_in_2_standard_time,
+                MAX(CASE WHEN a.check_type_id = 4 THEN a.check_time ELSE NULL END) as check_out_2,
+                MAX(CASE WHEN a.check_type_id = 4 THEN ct.standard_time ELSE NULL END) as check_out_2_standard_time
             FROM tbl_employees e
             LEFT JOIN tbl_attendance_records a
                 ON e.id = a.employee_id
                 AND DATE(a.date) = :date
                 AND a.deleted_at IS NULL
+            LEFT JOIN tbl_check_types ct
+                ON ct.id = a.check_type_id
             WHERE e.status_id = 1
             GROUP BY e.id, e.full_name, e.username, e.position, e.department
             ORDER BY e.full_name ASC

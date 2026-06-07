@@ -96,15 +96,19 @@ async function loadReport() {
                     'Incomplete': 'orange'
                 };
                 const color = colorMap[status] || 'blue';
+                const punch1In  = renderPunchCell(emp.check_in_1, emp.check_in_1_note);
+                const punch1Out = renderPunchCell(emp.check_out_1, emp.check_out_1_note);
+                const punch2In  = renderPunchCell(emp.check_in_2, emp.check_in_2_note);
+                const punch2Out = renderPunchCell(emp.check_out_2, emp.check_out_2_note);
 
                 tbody.innerHTML += `
                     <tr class="border-b hover:bg-gray-50">
                         <td class="p-3">${emp.name}</td>
                         <td class="p-3 text-center">${emp.employee_id}</td>
-                        <td class="p-3 text-center text-${color}-600 font-semibold">${emp.check_in_1 || '--:--'}</td>
-                        <td class="p-3 text-center text-${color}-600 font-semibold">${emp.check_out_1 || '--:--'}</td>
-                        <td class="p-3 text-center text-${color}-600 font-semibold">${emp.check_in_2 || '--:--'}</td>
-                        <td class="p-3 text-center text-${color}-600 font-semibold">${emp.check_out_2 || '--:--'}</td>
+                        <td class="p-3 text-center">${punch1In}</td>
+                        <td class="p-3 text-center">${punch1Out}</td>
+                        <td class="p-3 text-center">${punch2In}</td>
+                        <td class="p-3 text-center">${punch2Out}</td>
                         <td class="p-3 text-center">
                             <span class="bg-${color}-100 text-${color}-800 px-3 py-1 rounded-full text-sm font-medium">${status}</span>
                         </td>
@@ -124,6 +128,58 @@ async function loadReport() {
         console.error('Error fetching report:', error);
         alert('Failed to load report. Check console for details.');
     }
+}
+
+function renderPunchCell(timeValue, note) {
+    const safeTime = timeValue || '--:--';
+    const safeNote = note || 'No record';
+    const tone = punchToneClass(safeNote);
+
+    return `
+        <div class="flex flex-col items-center gap-1">
+            <span class="font-semibold ${tone.text}">${safeTime}</span>
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${tone.badge}">
+                ${safeNote}
+            </span>
+        </div>
+    `;
+}
+
+function punchToneClass(note) {
+    const normalized = String(note || '').toLowerCase();
+
+    if (normalized.includes('late')) {
+        return {
+            text: 'text-amber-600',
+            badge: 'bg-amber-100 text-amber-700'
+        };
+    }
+
+    if (normalized.includes('early')) {
+        return {
+            text: 'text-orange-600',
+            badge: 'bg-orange-100 text-orange-700'
+        };
+    }
+
+    if (normalized.includes('on time')) {
+        return {
+            text: 'text-emerald-600',
+            badge: 'bg-emerald-100 text-emerald-700'
+        };
+    }
+
+    if (normalized.includes('recorded')) {
+        return {
+            text: 'text-slate-600',
+            badge: 'bg-slate-100 text-slate-600'
+        };
+    }
+
+    return {
+        text: 'text-slate-500',
+        badge: 'bg-slate-100 text-slate-500'
+    };
 }
 
 // Optional: load today by default

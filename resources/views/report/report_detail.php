@@ -162,14 +162,39 @@ function processAndRender() {
       grouped[r.employee_id] = { id: r.employee_id, name: r.name, department: r.department, days: {} };
     }
     if (!grouped[r.employee_id].days[r.date]) {
-      grouped[r.employee_id].days[r.date] = { date: r.date, day: r.day, c1: '--:--', o1: '--:--', c2: '--:--', o2: '--:--', status: 'Present', isLate: false };
+      grouped[r.employee_id].days[r.date] = {
+        date: r.date,
+        day: r.day,
+        c1: '--:--',
+        c1Note: 'No record',
+        o1: '--:--',
+        o1Note: 'No record',
+        c2: '--:--',
+        c2Note: 'No record',
+        o2: '--:--',
+        o2Note: 'No record',
+        status: 'Present',
+        isLate: false
+      };
     }
     const day = grouped[r.employee_id].days[r.date];
     const time = r.actual_time || '--:--';
-    if (r.check_type === 'Check-in 1')  day.c1 = time;
-    if (r.check_type === 'Check-out 1') day.o1 = time;
-    if (r.check_type === 'Check-in 2')  day.c2 = time;
-    if (r.check_type === 'Check-out 2') day.o2 = time;
+    if (r.check_type === 'Check-in 1') {
+      day.c1 = time;
+      day.c1Note = r.status;
+    }
+    if (r.check_type === 'Check-out 1') {
+      day.o1 = time;
+      day.o1Note = r.status;
+    }
+    if (r.check_type === 'Check-in 2') {
+      day.c2 = time;
+      day.c2Note = r.status;
+    }
+    if (r.check_type === 'Check-out 2') {
+      day.o2 = time;
+      day.o2Note = r.status;
+    }
     if (r.status === 'Late') day.isLate = true;
   });
 
@@ -180,7 +205,10 @@ function processAndRender() {
         emp.days[d] = { 
           date: d, 
           day: new Date(d).toLocaleDateString('en-US', { weekday: 'long' }), 
-          c1: '--:--', o1: '--:--', c2: '--:--', o2: '--:--', 
+          c1: '--:--', c1Note: 'No record',
+          o1: '--:--', o1Note: 'No record',
+          c2: '--:--', c2Note: 'No record',
+          o2: '--:--', o2Note: 'No record', 
           status: 'Absent', isLate: false 
         };
       }
@@ -262,12 +290,12 @@ function render() {
                 <tr class="hover:bg-slate-50/50 transition-colors">
                   <td class="px-8 py-2">
                     <div class="font-bold text-slate-700 text-sm">${d.date}</div>
-                    <div class="text-[10px] text-slate-300 bg-black font-bold uppercase tracking-tight">${d.day}</div>
+                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-tight">${d.day}</div>
                   </td>
-                  <td class="px-8 py-5 text-center font-mono font-bold text-sm ${d.c1 !== '--:--' ? 'text-indigo-500' : 'text-slate-200'}">${d.c1}</td>
-                  <td class="px-8 py-5 text-center font-mono font-medium text-xs ${d.o1 !== '--:--' ? 'text-slate-500' : 'text-slate-200'}">${d.o1}</td>
-                  <td class="px-8 py-5 text-center font-mono font-bold text-sm ${d.c2 !== '--:--' ? 'text-indigo-500' : 'text-slate-200'}">${d.c2}</td>
-                  <td class="px-8 py-5 text-center font-mono font-medium text-xs ${d.o2 !== '--:--' ? 'text-slate-500' : 'text-slate-200'}">${d.o2}</td>
+                  <td class="px-8 py-5 text-center">${renderPunchCell(d.c1, d.c1Note)}</td>
+                  <td class="px-8 py-5 text-center">${renderPunchCell(d.o1, d.o1Note)}</td>
+                  <td class="px-8 py-5 text-center">${renderPunchCell(d.c2, d.c2Note)}</td>
+                  <td class="px-8 py-5 text-center">${renderPunchCell(d.o2, d.o2Note)}</td>
                   <td class="px-8 py-5 text-center">${getStatusBadge(d)}</td>
                 </tr>
               `).join('')}
@@ -292,6 +320,38 @@ function getStatusBadge(d) {
   if (d.status === 'Absent') return `<span class="${base} bg-rose-50 text-rose-500 border-rose-100">Absent</span>`;
   if (d.isLate) return `<span class="${base} bg-orange-50 text-orange-500 border-orange-100">Late</span>`;
   return `<span class="${base} bg-teal-50 text-teal-600 border-teal-100">Present</span>`;
+}
+
+function renderPunchCell(timeValue, note) {
+  const safeTime = timeValue || '--:--';
+  const tone = punchToneClass(note);
+
+  return `
+    <div class="flex flex-col items-center gap-1">
+      <span class="font-mono font-bold text-sm ${tone.text}">${safeTime}</span>
+      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${tone.badge}">
+        ${note || 'No record'}
+      </span>
+    </div>
+  `;
+}
+
+function punchToneClass(note) {
+  const normalized = String(note || '').toLowerCase();
+
+  if (normalized.includes('late')) {
+    return { text: 'text-orange-600', badge: 'bg-orange-100 text-orange-700' };
+  }
+
+  if (normalized.includes('early')) {
+    return { text: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' };
+  }
+
+  if (normalized.includes('on time')) {
+    return { text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' };
+  }
+
+  return { text: 'text-slate-300', badge: 'bg-slate-100 text-slate-500' };
 }
 
 function getDateRange(start, end) {

@@ -26,14 +26,58 @@ class ReportService
                 'employee_id' => $row['employee_id'],
                 'name'        => $row['full_name'],
                 'check_in_1'  => $row['check_in_1'] ?? '--:--',
+                'check_in_1_note' => $this->buildPunchNote(
+                    $row['check_in_1'] ?? null,
+                    $row['check_in_1_standard_time'] ?? null,
+                    true
+                ),
                 'check_out_1' => $row['check_out_1'] ?? '--:--',
+                'check_out_1_note' => $this->buildPunchNote(
+                    $row['check_out_1'] ?? null,
+                    $row['check_out_1_standard_time'] ?? null,
+                    false
+                ),
                 'check_in_2'  => $row['check_in_2'] ?? '--:--',
+                'check_in_2_note' => $this->buildPunchNote(
+                    $row['check_in_2'] ?? null,
+                    $row['check_in_2_standard_time'] ?? null,
+                    true
+                ),
                 'check_out_2' => $row['check_out_2'] ?? '--:--',
+                'check_out_2_note' => $this->buildPunchNote(
+                    $row['check_out_2'] ?? null,
+                    $row['check_out_2_standard_time'] ?? null,
+                    false
+                ),
                 'status'      => $status
             ];
         }
 
         return $result;
+    }
+
+    private function buildPunchNote(?string $actualTime, ?string $standardTime, bool $isCheckIn): string
+    {
+        if (!$actualTime) {
+            return 'No record';
+        }
+
+        if (!$standardTime) {
+            return 'Recorded';
+        }
+
+        $actualTs   = strtotime($actualTime);
+        $standardTs = strtotime($standardTime);
+
+        if ($actualTs === false || $standardTs === false) {
+            return 'Recorded';
+        }
+
+        if ($isCheckIn) {
+            return $actualTs <= $standardTs ? 'On Time' : 'Late';
+        }
+
+        return $actualTs >= $standardTs ? 'On Time' : 'Early';
     }
 
     private function buildStatus(array $row): string
