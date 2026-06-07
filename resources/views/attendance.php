@@ -54,14 +54,14 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-500 border-b border-slate-100">
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Employee</th>
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Date</th>
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Time</th>
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Type</th>
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
-                        <th class="px-6 py-4 text-left font-bold uppercase tracking-wider text-[10px]">Log</th>
+                <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Employee</th>
+                        <th class="px-4 py-3 text-left font-semibold">Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Time</th>
+                        <th class="px-4 py-3 text-left font-semibold">Type</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Log</th>
                     </tr>
                 </thead>
                 <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
