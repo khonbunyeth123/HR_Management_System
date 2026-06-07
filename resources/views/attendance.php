@@ -358,7 +358,7 @@
             return;
         }
 
-        const visiblePages = getVisiblePages(safeCurrentPage, totalPages, 5);
+        const visiblePages = getVisiblePages(safeCurrentPage, totalPages, 2);
         let pageButtons = '';
 
         if (visiblePages[0] > 1) {
