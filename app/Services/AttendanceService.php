@@ -33,7 +33,6 @@ class AttendanceService
      public function scan(int $employeeId): array
     {
         $date = date('Y-m-d');
-        $time = date('H:i:s');
 
         $count = $this->model->getTodayScanCount($employeeId, $date);
 
@@ -52,6 +51,9 @@ class AttendanceService
         if (!$checkType) {
             return ['error' => 'Invalid check type'];
         }
+
+        $time = $checkType['standard_time'] ?? date('H:i:s');
+
         $this->model->insertScan([
             'uuid' => Uuid::v4(),
             'employee_id' => $employeeId,

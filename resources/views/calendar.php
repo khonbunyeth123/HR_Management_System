@@ -121,7 +121,7 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
     </div>
 </div>
 
-<div class="w-full h-full">
+<div class="w-full min-h-full">
     <div class="p-3 lg:p-4 space-y-4">
 
         <!-- Header -->
@@ -132,8 +132,8 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                         <span class="iconify text-sm" data-icon="mdi:calendar-multiselect" aria-hidden="true"></span>
                         HRM Admin Calendar
                     </div>
-                    <h1 class="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Plan schedules, leave approvals, and reminders in one place</h1>
-                    <p class="mt-2 max-w-2xl text-sm text-slate-300">Manage company-wide events, employee-specific schedules, leave requests, and recurring calendar items.</p>
+                    <!-- <h1 class="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Plan schedules, leave approvals, and reminders in one place</h1> -->
+                    <p class="mt-2 max-w-2xl text-sm text-slate-300">Schedules · leave approvals · reminders.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <button data-view-switch="month" class="view-switch rounded-2xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-lg shadow-slate-950/20" aria-pressed="true">Month</button>
@@ -145,7 +145,7 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         </div>
 
         <!-- 3-col layout -->
-        <div class="grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)_340px]">
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:items-stretch">
 
             <!-- Left: Filters + Quick Actions -->
             <aside class="space-y-4">
@@ -209,8 +209,8 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
             </aside>
 
             <!-- Center: Calendar -->
-            <section class="min-w-0 space-y-4">
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <section class="min-w-0 space-y-4 xl:flex xl:flex-col">
+                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm xl:flex xl:flex-1 xl:flex-col">
                     <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Calendar Panel</p>
@@ -228,12 +228,12 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                             <input id="dateJump" type="date" value="<?= htmlspecialchars($today) ?>" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">
                         </div>
                     </div>
-                    <div style="position:relative;" class="p-4 lg:p-5">
+                    <div style="position:relative;" class="p-4 lg:p-5 xl:flex-1 xl:min-h-0">
                         <div id="calendarLoadMask" aria-label="Loading calendar" role="status">
                             <div class="spinner"></div>
                         </div>
-                        <div id="calendarPanel" class="min-h-[640px]">
-                            <div class="flex h-full items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-24 text-slate-400">
+                        <div id="calendarPanel" class="min-h-[560px] xl:min-h-0 xl:h-full">
+                            <div class="flex h-full min-h-[520px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 py-24 text-slate-400">
                                 <div class="text-center">
                                     <div class="spinner mx-auto"></div>
                                     <p class="mt-3 text-sm font-semibold">Loading calendar...</p>
@@ -245,7 +245,7 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
             </section>
 
             <!-- Right: Summary + Event table -->
-            <aside class="space-y-4">
+            <aside class="space-y-4 xl:flex xl:flex-col">
                 <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Live Summary</h2>
@@ -271,12 +271,12 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                     </div>
                 </div>
 
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm xl:flex xl:flex-1 xl:flex-col">
                     <div class="border-b border-slate-100 px-4 py-4 flex items-center justify-between">
                         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Event List</h2>
                         <span id="eventListCount" class="text-xs font-bold text-slate-400"></span>
                     </div>
-                    <div class="events-table-wrap max-h-[580px] overflow-auto">
+                    <div class="events-table-wrap max-h-[420px] overflow-y-auto overscroll-contain xl:flex-1 xl:min-h-0 xl:max-h-[calc(100vh-320px)]">
                         <table class="min-w-full text-left text-sm" role="table">
                             <thead class="sticky top-0 bg-slate-900 text-white">
                                 <tr>
