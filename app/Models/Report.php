@@ -193,11 +193,8 @@ class Report
         $result = [];
         foreach ($rows as $row) {
             $diff   = (int)$row['diff_minutes'];
-            $status_val = match(true) {
-                $diff > 0  => 'Late',
-                $diff < 0  => 'Early',
-                default    => 'On Time',
-            };
+            $checkType = (string)($row['check_type'] ?? '');
+            $status_val = $this->resolvePunchStatus($checkType, $row['check_time'], $row['standard_time']);
 
             if ($status && $status !== $status_val) continue;
 
@@ -216,6 +213,21 @@ class Report
         }
 
         return $result;
+    }
+
+    private function resolvePunchStatus(string $checkType, ?string $actualTime, ?string $standardTime): string
+    {
+        if (!$actualTime || !$standardTime) {
+            return 'Recorded';
+        }
+
+        $isCheckIn = in_array($checkType, ['Check-in 1', 'Check-in 2'], true);
+
+        if (!$isCheckIn) {
+            return 'On Time';
+        }
+
+        return strtotime($actualTime) > strtotime($standardTime) ? 'Late' : 'On Time';
     }
 
     public function fetchTopEmployees(string $from, string $to): array

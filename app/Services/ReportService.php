@@ -74,10 +74,10 @@ class ReportService
         }
 
         if ($isCheckIn) {
-            return $actualTs <= $standardTs ? 'On Time' : 'Late';
+            return $actualTs > $standardTs ? 'Late' : 'On Time';
         }
 
-        return $actualTs >= $standardTs ? 'On Time' : 'Early';
+        return 'On Time';
     }
 
     private function buildStatus(array $row): string
@@ -95,7 +95,7 @@ class ReportService
             return 'Incomplete';
         }
 
-        // Late if check_in_1 > 08:00 or check_in_2 > 13:00
+        // Late only for the two check-in punches
         if ($c1 > '08:00:00' || $c2 > '13:00:00') {
             return 'Late';
         }
