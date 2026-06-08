@@ -8,6 +8,8 @@ use PDO;
 class Report
 {
     protected PDO $pdo;
+    private ?bool $hasScanDatetime = null;
+    private ?bool $hasStatus = null;
 
     public function __construct()
     {
@@ -27,14 +29,14 @@ class Report
                 e.username,
                 e.position,
                 e.department,
-                MAX(CASE WHEN a.check_type_id = 1 THEN a.check_time ELSE NULL END) as check_in_1,
-                MAX(CASE WHEN a.check_type_id = 1 THEN ct.standard_time ELSE NULL END) as check_in_1_standard_time,
-                MAX(CASE WHEN a.check_type_id = 2 THEN a.check_time ELSE NULL END) as check_out_1,
-                MAX(CASE WHEN a.check_type_id = 2 THEN ct.standard_time ELSE NULL END) as check_out_1_standard_time,
-                MAX(CASE WHEN a.check_type_id = 3 THEN a.check_time ELSE NULL END) as check_in_2,
-                MAX(CASE WHEN a.check_type_id = 3 THEN ct.standard_time ELSE NULL END) as check_in_2_standard_time,
-                MAX(CASE WHEN a.check_type_id = 4 THEN a.check_time ELSE NULL END) as check_out_2,
-                MAX(CASE WHEN a.check_type_id = 4 THEN ct.standard_time ELSE NULL END) as check_out_2_standard_time
+                MAX(CASE WHEN a.check_type_id = 1 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_in_1,
+                MAX(CASE WHEN a.check_type_id = 1 THEN {$this->statusExpr('a')} ELSE NULL END) as check_in_1_status,
+                MAX(CASE WHEN a.check_type_id = 2 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_out_1,
+                MAX(CASE WHEN a.check_type_id = 2 THEN {$this->statusExpr('a')} ELSE NULL END) as check_out_1_status,
+                MAX(CASE WHEN a.check_type_id = 3 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_in_2,
+                MAX(CASE WHEN a.check_type_id = 3 THEN {$this->statusExpr('a')} ELSE NULL END) as check_in_2_status,
+                MAX(CASE WHEN a.check_type_id = 4 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_out_2,
+                MAX(CASE WHEN a.check_type_id = 4 THEN {$this->statusExpr('a')} ELSE NULL END) as check_out_2_status
             FROM tbl_employees e
             LEFT JOIN tbl_attendance_records a
                 ON e.id = a.employee_id
@@ -63,19 +65,8 @@ class Report
 
                 COUNT(DISTINCT d.work_date) AS total_days,
 
-                SUM(
-                    CASE
-                        WHEN ar.check_type_id = 1 THEN 1
-                        ELSE 0
-                    END
-                ) AS present_days,
-
-                SUM(
-                    CASE
-                        WHEN ar.check_type_id = 1 AND ar.check_time > '08:00:00' THEN 1
-                        ELSE 0
-                    END
-                ) AS late_days,
+                SUM(CASE WHEN ar.check_type_id = 1 THEN 1 ELSE 0 END) AS present_days,
+                SUM(CASE WHEN ar.check_type_id IN (1,3) AND TIME({$this->scanDatetimeExpr('ar')}) > CASE WHEN ar.check_type_id = 1 THEN '08:00:00' ELSE '13:00:00' END THEN 1 ELSE 0 END) AS late_days,
 
                 COUNT(
                     CASE
@@ -154,11 +145,13 @@ class Report
                         DAYNAME(a.date) AS day_name,
                         ct.name         AS check_type,
                         ct.standard_time,
-                        a.check_time,
+                        {$this->scanDatetimeExpr('a')} AS scan_datetime,
+                        {$this->statusExpr('a')} AS status,
+                        TIME({$this->scanDatetimeExpr('a')}) AS check_time,
                         TIMESTAMPDIFF(
                             MINUTE,
                             ct.standard_time,
-                            a.check_time
+                            TIME({$this->scanDatetimeExpr('a')})
                         ) AS diff_minutes
                     FROM tbl_attendance_records a
                     JOIN tbl_employees e
@@ -194,7 +187,7 @@ class Report
         foreach ($rows as $row) {
             $diff   = (int)$row['diff_minutes'];
             $checkType = (string)($row['check_type'] ?? '');
-            $status_val = $this->resolvePunchStatus($checkType, $row['check_time'], $row['standard_time']);
+            $status_val = (string)($row['status'] ?: $this->resolvePunchStatus($checkType, $row['check_time'], $row['standard_time']));
 
             if ($status && $status !== $status_val) continue;
 
@@ -206,9 +199,12 @@ class Report
                 'day'           => $row['day_name'],
                 'check_type'    => $row['check_type'],
                 'standard_time' => date('h:i A', strtotime($row['standard_time'])),
-                'actual_time'   => date('h:i A', strtotime($row['check_time'])),
+                'actual_time'   => date('h:i A', strtotime($row['scan_datetime'])),
                 'diff'          => $diff,
                 'status'        => $status_val,
+                'late_minutes'  => in_array($status_val, ['Late', 'Overtime'], true) && $diff > 0 ? $diff : 0,
+                'early_leave_minutes' => $status_val === 'Early Leave' && $diff < 0 ? abs($diff) : 0,
+                'overtime_minutes' => $status_val === 'Overtime' && $diff > 0 ? $diff : 0,
             ];
         }
 
@@ -240,9 +236,7 @@ class Report
 
                 -- Count distinct days employee checked in
                 COUNT(DISTINCT CASE WHEN a.check_type_id = 1 THEN a.date END) AS present_days,
-
-                -- Count days where check-in was late
-                COUNT(DISTINCT CASE WHEN a.check_type_id = 1 AND a.check_time > '08:00:00' THEN a.date END) AS late_days,
+                COUNT(DISTINCT CASE WHEN a.check_type_id IN (1,3) AND {$this->statusExpr('a')} = 'Late' THEN a.date END) AS late_days,
 
                 -- Total working days in range
                 DATEDIFF(:to, :from) + 1 AS total_days
@@ -281,6 +275,82 @@ class Report
         }
 
         return $rows;
+    }
+
+    private function scanDatetimeExpr(string $alias = 'tbl_attendance_records'): string
+    {
+        if ($this->hasScanDatetimeColumn()) {
+            return "{$alias}.scan_datetime";
+        }
+
+        return "CONCAT({$alias}.date, ' ', {$alias}.check_time)";
+    }
+
+    private function hasScanDatetimeColumn(): bool
+    {
+        if ($this->hasScanDatetime !== null) {
+            return $this->hasScanDatetime;
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*)
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'tbl_attendance_records'
+               AND COLUMN_NAME = 'scan_datetime'"
+        );
+        $stmt->execute();
+        $this->hasScanDatetime = ((int) $stmt->fetchColumn()) > 0;
+        return $this->hasScanDatetime;
+    }
+
+    private function statusExpr(string $alias = 'tbl_attendance_records'): string
+    {
+        if ($this->hasStatusColumn()) {
+            return "{$alias}.status";
+        }
+
+        $scanExpr = $this->scanDatetimeExpr($alias);
+
+        return "CASE
+                    WHEN {$alias}.check_type_id IN (1, 3)
+                         AND {$scanExpr} > CASE WHEN {$alias}.check_type_id = 1
+                             THEN CONCAT({$alias}.date, ' 08:00:00')
+                             ELSE CONCAT({$alias}.date, ' 13:00:00')
+                         END
+                        THEN 'Late'
+                    WHEN {$alias}.check_type_id = 2
+                         AND {$scanExpr} < CONCAT({$alias}.date, ' 12:00:00')
+                        THEN 'Early Leave'
+                    WHEN {$alias}.check_type_id = 4
+                         AND {$scanExpr} > CONCAT({$alias}.date, ' 17:00:00')
+                        THEN 'Overtime'
+                    WHEN {$alias}.check_type_id IN (2, 4)
+                         AND {$scanExpr} < CASE WHEN {$alias}.check_type_id = 2
+                             THEN CONCAT({$alias}.date, ' 12:00:00')
+                             ELSE CONCAT({$alias}.date, ' 17:00:00')
+                         END
+                        THEN 'Early Leave'
+                    ELSE 'On Time'
+                END";
+    }
+
+    private function hasStatusColumn(): bool
+    {
+        if ($this->hasStatus !== null) {
+            return $this->hasStatus;
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*)
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'tbl_attendance_records'
+               AND COLUMN_NAME = 'status'"
+        );
+        $stmt->execute();
+        $this->hasStatus = ((int) $stmt->fetchColumn()) > 0;
+        return $this->hasStatus;
     }
 
     

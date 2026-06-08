@@ -25,35 +25,29 @@ class ReportService
             $result[] = [
                 'employee_id' => $row['employee_id'],
                 'name'        => $row['full_name'],
-                'check_in_1'  => $row['check_in_1'] ?? '--:--',
-                'check_in_1_note' => $this->buildPunchNote(
-                    $row['check_in_1'] ?? null,
-                    $row['check_in_1_standard_time'] ?? null,
-                    true
-                ),
-                'check_out_1' => $row['check_out_1'] ?? '--:--',
-                'check_out_1_note' => $this->buildPunchNote(
-                    $row['check_out_1'] ?? null,
-                    $row['check_out_1_standard_time'] ?? null,
-                    false
-                ),
-                'check_in_2'  => $row['check_in_2'] ?? '--:--',
-                'check_in_2_note' => $this->buildPunchNote(
-                    $row['check_in_2'] ?? null,
-                    $row['check_in_2_standard_time'] ?? null,
-                    true
-                ),
-                'check_out_2' => $row['check_out_2'] ?? '--:--',
-                'check_out_2_note' => $this->buildPunchNote(
-                    $row['check_out_2'] ?? null,
-                    $row['check_out_2_standard_time'] ?? null,
-                    false
-                ),
+                'check_in_1'  => $this->formatScan($row['check_in_1'] ?? null),
+                'check_in_1_note' => $row['check_in_1_status'] ?? $this->buildPunchNote($row['check_in_1'] ?? null, '08:00:00', true),
+                'check_out_1' => $this->formatScan($row['check_out_1'] ?? null),
+                'check_out_1_note' => $row['check_out_1_status'] ?? $this->buildPunchNote($row['check_out_1'] ?? null, '12:00:00', false),
+                'check_in_2'  => $this->formatScan($row['check_in_2'] ?? null),
+                'check_in_2_note' => $row['check_in_2_status'] ?? $this->buildPunchNote($row['check_in_2'] ?? null, '13:00:00', true),
+                'check_out_2' => $this->formatScan($row['check_out_2'] ?? null),
+                'check_out_2_note' => $row['check_out_2_status'] ?? $this->buildPunchNote($row['check_out_2'] ?? null, '17:00:00', false),
                 'status'      => $status
             ];
         }
 
         return $result;
+    }
+
+    private function formatScan(?string $value): string
+    {
+        if (!$value) {
+            return '--:--';
+        }
+
+        $ts = strtotime($value);
+        return $ts === false ? '--:--' : date('H:i:s', $ts);
     }
 
     private function buildPunchNote(?string $actualTime, ?string $standardTime, bool $isCheckIn): string
@@ -62,21 +56,21 @@ class ReportService
             return 'No record';
         }
 
-        if (!$standardTime) {
-            return 'Recorded';
+        if ($isCheckIn) {
+            return strtotime($actualTime) > strtotime($standardTime) ? 'Late' : 'On Time';
         }
 
-        $actualTs   = strtotime($actualTime);
+        $actualTs = strtotime($actualTime);
         $standardTs = strtotime($standardTime);
-
         if ($actualTs === false || $standardTs === false) {
             return 'Recorded';
         }
-
-        if ($isCheckIn) {
-            return $actualTs > $standardTs ? 'Late' : 'On Time';
+        if ($actualTs < $standardTs) {
+            return 'Early Leave';
         }
-
+        if ($actualTs > $standardTs) {
+            return 'Overtime';
+        }
         return 'On Time';
     }
 
@@ -86,18 +80,29 @@ class ReportService
         $o1 = $row['check_out_1'] ?? null;
         $c2 = $row['check_in_2'] ?? null;
         $o2 = $row['check_out_2'] ?? null;
+        $c1Status = $row['check_in_1_status'] ?? null;
+        $o1Status = $row['check_out_1_status'] ?? null;
+        $c2Status = $row['check_in_2_status'] ?? null;
+        $o2Status = $row['check_out_2_status'] ?? null;
 
         if (!$c1 && !$o1 && !$c2 && !$o2) {
             return 'Absent';
         }
 
         if (!$c1 || !$o1 || !$c2 || !$o2) {
-            return 'Incomplete';
+            return 'Missing Punch';
         }
 
-        // Late only for the two check-in punches
-        if ($c1 > '08:00:00' || $c2 > '13:00:00') {
+        if ($c1Status === 'Late' || $c2Status === 'Late') {
             return 'Late';
+        }
+
+        if ($o1Status === 'Early Leave' || $o2Status === 'Early Leave') {
+            return 'Early Leave';
+        }
+
+        if ($o2Status === 'Overtime') {
+            return 'Overtime';
         }
 
         return 'On Time';
