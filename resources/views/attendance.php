@@ -80,8 +80,8 @@
     </div>
 
     <!-- QR Modal Overlay -->
-    <div id="qrModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform" id="qrModalContent">
+    <div id="qrModal" class="fixed inset-0 z-[9999] hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm px-4 py-6 md:items-center">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform max-h-[calc(100vh-3rem)] overflow-y-auto" id="qrModalContent">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold text-slate-900">Attendance QR</h3>
                 <button onclick="closeQRModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors">✕</button>
@@ -121,9 +121,10 @@
     const qrDarkColor = '#0f172a';
     const qrLightColor = '#ffffff';
     const qrContent = 'DOORSTEP_ATTENDANCE';
+    const qrcode = document.getElementById('qrcode');
 
     // Init QR
-    new QRCode(document.getElementById('qrcode'), {
+    new QRCode(qrcode, {
         text: qrContent,
         width: 256,
         height: 256,
@@ -135,6 +136,9 @@
     function openQRModal() {
         const modal = document.getElementById('qrModal');
         const content = document.getElementById('qrModalContent');
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => content.classList.replace('scale-90', 'scale-100'), 10);
