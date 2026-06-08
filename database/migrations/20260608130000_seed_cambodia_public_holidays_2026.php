@@ -34,13 +34,16 @@ final class SeedCambodiaPublicHolidays2026 extends AbstractMigration
         ];
 
         foreach ($events as [$startDate, $endDate, $title]) {
+            $safeTitle = addslashes($title);
+            $safeStartAt = $startDate . ' 00:00:00';
+            $safeEndAt = $endDate . ' 23:59:59';
             $existing = $this->fetchRow(
-                "SELECT id FROM tbl_calendar_events WHERE title = ? AND start_at = ? AND end_at = ? AND deleted_at IS NULL LIMIT 1",
-                [
-                    $title,
-                    $startDate . ' 00:00:00',
-                    $endDate . ' 23:59:59',
-                ]
+                "SELECT id FROM tbl_calendar_events
+                 WHERE title = '{$safeTitle}'
+                   AND start_at = '{$safeStartAt}'
+                   AND end_at = '{$safeEndAt}'
+                   AND deleted_at IS NULL
+                 LIMIT 1"
             );
 
             if ($existing) {

@@ -11,14 +11,16 @@ class LeaveRefactorMigration extends AbstractMigration
     public function change(): void
     {
         // Improvement 3: Create tbl_leave_audit
-        $table = $this->table('tbl_leave_audit');
-        $table->addColumn('leave_id', 'integer')
-              ->addColumn('action', 'enum', ['values' => ['approved', 'rejected', 'created', 'cancelled']])
-              ->addColumn('performed_by_user_id', 'integer')
-              ->addColumn('performed_at', 'timestamp', ['default' => 'CURRENT_TIMESTAMP'])
-              ->addColumn('ip_address', 'string', ['limit' => 45, 'null' => true])
-              ->addForeignKey('leave_id', 'tbl_leave_applications', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO_ACTION'])
-              ->create();
+        if (!$this->hasTable('tbl_leave_audit')) {
+            $table = $this->table('tbl_leave_audit', ['signed' => false]);
+            $table->addColumn('leave_id', 'integer', ['signed' => false])
+                  ->addColumn('action', 'enum', ['values' => ['approved', 'rejected', 'created', 'cancelled']])
+                  ->addColumn('performed_by_user_id', 'integer', ['signed' => false])
+                  ->addColumn('performed_at', 'timestamp', ['default' => 'CURRENT_TIMESTAMP'])
+                  ->addColumn('ip_address', 'string', ['limit' => 45, 'null' => true])
+                  ->addForeignKey('leave_id', 'tbl_leave_applications', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO_ACTION'])
+                  ->create();
+        }
 
         // Improvement 5: SQL indexes
         $leaveApplications = $this->table('tbl_leave_applications');
