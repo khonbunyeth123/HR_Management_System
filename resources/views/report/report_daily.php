@@ -169,6 +169,13 @@ function punchToneClass(note) {
         };
     }
 
+    if (normalized.includes('overtime')) {
+        return {
+            text: 'text-amber-600',
+            badge: 'bg-amber-100 text-amber-700'
+        };
+    }
+
     if (normalized.includes('recorded')) {
         return {
             text: 'text-slate-600',

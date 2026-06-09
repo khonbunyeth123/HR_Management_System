@@ -211,6 +211,97 @@ class Report
         return $result;
     }
 
+    public function fetchAttendanceDailyRows(string $from, string $to, ?string $department = null, ?string $search = null): array
+    {
+        $sql = "
+            SELECT
+                e.id AS employee_id,
+                e.full_name,
+                e.department,
+                a.date,
+                DAYNAME(a.date) AS day_name,
+                ct.name AS check_type,
+                ct.standard_time,
+                {$this->scanDatetimeExpr('a')} AS scan_datetime,
+                {$this->statusExpr('a')} AS status
+            FROM tbl_employees e
+            LEFT JOIN tbl_attendance_records a
+                ON a.employee_id = e.id
+               AND a.deleted_at IS NULL
+               AND a.date BETWEEN :from AND :to
+            LEFT JOIN tbl_check_types ct
+                ON ct.id = a.check_type_id
+            WHERE e.status_id = 1
+        ";
+
+        $params = [':from' => $from, ':to' => $to];
+
+        if ($department) {
+            $sql .= " AND e.department = :department";
+            $params[':department'] = $department;
+        }
+
+        if ($search) {
+            $sql .= " AND (e.full_name LIKE :search OR CAST(e.id AS CHAR) LIKE :search2)";
+            $params[':search'] = "%$search%";
+            $params[':search2'] = "%$search%";
+        }
+
+        $sql .= " ORDER BY e.full_name ASC, a.date ASC, ct.id ASC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function fetchApprovedLeaves(string $from, string $to, ?array $employeeIds = null): array
+    {
+        $sql = "
+            SELECT employee_id, start_date, end_date, lt.name AS leave_type
+            FROM tbl_leave_applications la
+            INNER JOIN tbl_leave_types lt ON lt.id = la.leave_type_id
+            WHERE la.status_id = 1
+              AND la.deleted_at IS NULL
+              AND la.start_date <= :to
+              AND la.end_date >= :from
+        ";
+
+        $params = [':from' => $from, ':to' => $to];
+        if (!empty($employeeIds)) {
+            $placeholders = implode(',', array_fill(0, count($employeeIds), '?'));
+            $sql .= " AND la.employee_id IN ($placeholders)";
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $i = 1;
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        if (!empty($employeeIds)) {
+            foreach ($employeeIds as $id) {
+                $stmt->bindValue($i++, (int) $id, PDO::PARAM_INT);
+            }
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function fetchPublicHolidays(string $from, string $to): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT DISTINCT DATE(start_at) AS holiday_date, title
+            FROM tbl_calendar_events
+            WHERE deleted_at IS NULL
+              AND event_type = 'holiday'
+              AND status = 'approved'
+              AND DATE(start_at) <= :to
+              AND DATE(end_at) >= :from
+            ORDER BY holiday_date ASC, title ASC
+        ");
+        $stmt->execute([':from' => $from, ':to' => $to]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     private function resolvePunchStatus(string $checkType, ?string $actualTime, ?string $standardTime): string
     {
         if (!$actualTime || !$standardTime) {

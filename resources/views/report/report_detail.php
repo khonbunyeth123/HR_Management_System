@@ -151,72 +151,15 @@ async function fetchData() {
 }
 
 function processAndRender() {
-  const from = document.getElementById('fromDate').value;
-  const to = document.getElementById('toDate').value;
-  const dateRange = getDateRange(from, to);
-  const grouped = {};
-  
-  // Group flat API data by Employee -> Date
-  RAW_DATA.forEach(r => {
-    if (!grouped[r.employee_id]) {
-      grouped[r.employee_id] = { id: r.employee_id, name: r.name, department: r.department, days: {} };
-    }
-    if (!grouped[r.employee_id].days[r.date]) {
-      grouped[r.employee_id].days[r.date] = {
-        date: r.date,
-        day: r.day,
-        c1: '--:--',
-        c1Note: 'No record',
-        o1: '--:--',
-        o1Note: 'No record',
-        c2: '--:--',
-        c2Note: 'No record',
-        o2: '--:--',
-        o2Note: 'No record',
-        status: 'Present',
-        isLate: false
-      };
-    }
-    const day = grouped[r.employee_id].days[r.date];
-    const time = r.actual_time || '--:--';
-    if (r.check_type === 'Check-in 1') {
-      day.c1 = time;
-      day.c1Note = r.status;
-    }
-    if (r.check_type === 'Check-out 1') {
-      day.o1 = time;
-      day.o1Note = r.status;
-    }
-    if (r.check_type === 'Check-in 2') {
-      day.c2 = time;
-      day.c2Note = r.status;
-    }
-    if (r.check_type === 'Check-out 2') {
-      day.o2 = time;
-      day.o2Note = r.status;
-    }
-    if (r.status === 'Late') day.isLate = true;
-  });
+  if (RAW_DATA.length > 0 && RAW_DATA[0].days) {
+    GROUPED_DATA = RAW_DATA.map(emp => ({
+      id: emp.employee_id,
+      name: emp.name,
+      department: emp.department,
+      days: emp.days,
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }
 
-  // Fill in absences for the selected range
-  Object.values(grouped).forEach(emp => {
-    dateRange.forEach(d => {
-      if (!emp.days[d]) {
-        emp.days[d] = { 
-          date: d, 
-          day: new Date(d).toLocaleDateString('en-US', { weekday: 'long' }), 
-          c1: '--:--', c1Note: 'No record',
-          o1: '--:--', o1Note: 'No record',
-          c2: '--:--', c2Note: 'No record',
-          o2: '--:--', o2Note: 'No record', 
-          status: 'Absent', isLate: false 
-        };
-      }
-    });
-  });
-
-  // Sort by Name & Update State
-  GROUPED_DATA = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
   updateStats();
   render();
 }
@@ -226,7 +169,8 @@ function updateStats() {
   GROUPED_DATA.forEach(emp => {
     Object.values(emp.days).forEach(d => {
       if (d.status === 'Absent') absent++;
-      else { present++; if (d.isLate) late++; }
+      else if (d.status === 'Late') { present++; late++; }
+      else if (d.status === 'Present' || d.status === 'Leave' || d.status === 'Public Holiday' || d.status === 'Day Off' || d.status === 'Missing Checkout') present++;
     });
   });
   document.getElementById('statTotalEmployees').textContent = GROUPED_DATA.length;
@@ -317,9 +261,17 @@ function toggleAccordion(id) {
 
 function getStatusBadge(d) {
   const base = "px-4 py-1.5 rounded-xl font-bold text-[9px] uppercase tracking-wider shadow-sm border";
-  if (d.status === 'Absent') return `<span class="${base} bg-rose-50 text-rose-500 border-rose-100">Absent</span>`;
-  if (d.isLate) return `<span class="${base} bg-orange-50 text-orange-500 border-orange-100">Late</span>`;
-  return `<span class="${base} bg-teal-50 text-teal-600 border-teal-100">Present</span>`;
+  const map = {
+    'Present': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+    'Late': 'bg-orange-50 text-orange-600 border-orange-100',
+    'Absent': 'bg-rose-50 text-rose-600 border-rose-100',
+    'Leave': 'bg-sky-50 text-sky-700 border-sky-100',
+    'Public Holiday': 'bg-violet-50 text-violet-700 border-violet-100',
+    'Day Off': 'bg-slate-100 text-slate-600 border-slate-200',
+    'Missing Checkout': 'bg-amber-50 text-amber-700 border-amber-100',
+  };
+  const label = d.status || 'Present';
+  return `<span class="${base} ${map[label] || map.Present}">${label}</span>`;
 }
 
 function renderPunchCell(timeValue, note) {
@@ -349,6 +301,10 @@ function punchToneClass(note) {
 
   if (normalized.includes('on time')) {
     return { text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' };
+  }
+
+  if (normalized.includes('overtime')) {
+    return { text: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' };
   }
 
   return { text: 'text-slate-300', badge: 'bg-slate-100 text-slate-500' };

@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Report;
+use DateInterval;
+use DatePeriod;
+use DateTimeImmutable;
 
 class ReportService
 {
@@ -115,9 +118,175 @@ class ReportService
 
     public function getDetailedAttendance(string $from,string $to,?string $department = null,?string $search = null,?string $status = null): array 
     {
-        return $this->model->fetchDetailedAttendance(
-            $from, $to, $department, $search, $status
-        );
+        $rows = $this->model->fetchAttendanceDailyRows($from, $to, $department, $search);
+        $leaves = $this->model->fetchApprovedLeaves($from, $to);
+        $holidays = $this->model->fetchPublicHolidays($from, $to);
+        $dayOffDays = $this->getDayOffDays();
+
+        $leaveMap = [];
+        foreach ($leaves as $leave) {
+            $employeeId = (int) ($leave['employee_id'] ?? 0);
+            $start = new DateTimeImmutable((string) $leave['start_date']);
+            $end = new DateTimeImmutable((string) $leave['end_date']);
+            $period = new DatePeriod($start, new DateInterval('P1D'), $end->modify('+1 day'));
+
+            foreach ($period as $date) {
+                $leaveMap[$employeeId][$date->format('Y-m-d')] = (string) ($leave['leave_type'] ?? 'Leave');
+            }
+        }
+
+        $holidayMap = [];
+        foreach ($holidays as $holiday) {
+            $holidayMap[(string) ($holiday['holiday_date'] ?? '')] = (string) ($holiday['title'] ?? 'Public Holiday');
+        }
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $employeeId = (int) $row['employee_id'];
+            $date = (string) ($row['date'] ?? '');
+            if ($date === '') {
+                continue;
+            }
+
+            if (!isset($grouped[$employeeId])) {
+                $grouped[$employeeId] = [
+                    'employee_id' => $employeeId,
+                    'name' => (string) $row['full_name'],
+                    'department' => (string) $row['department'],
+                    'days' => [],
+                ];
+            }
+
+            if (!isset($grouped[$employeeId]['days'][$date])) {
+                $grouped[$employeeId]['days'][$date] = [
+                    'date' => $date,
+                    'day' => (string) ($row['day_name'] ?? date('l', strtotime($date))),
+                    'c1' => '--:--', 'c1Note' => 'No record',
+                    'o1' => '--:--', 'o1Note' => 'No record',
+                    'c2' => '--:--', 'c2Note' => 'No record',
+                    'o2' => '--:--', 'o2Note' => 'No record',
+                    'status' => 'Absent',
+                    'isLate' => false,
+                    'overtime' => null,
+                ];
+            }
+
+            $day = &$grouped[$employeeId]['days'][$date];
+            $checkType = (string) ($row['check_type'] ?? '');
+            $time = $this->formatScan($row['scan_datetime'] ?? null);
+            $rawStatus = (string) ($row['status'] ?? 'Recorded');
+
+            if ($checkType === 'Check-in 1') {
+                $day['c1'] = $time;
+                $day['c1Note'] = $rawStatus;
+                if ($rawStatus === 'Late') {
+                    $day['isLate'] = true;
+                }
+            } elseif ($checkType === 'Check-out 1') {
+                $day['o1'] = $time;
+                $day['o1Note'] = $rawStatus;
+            } elseif ($checkType === 'Check-in 2') {
+                $day['c2'] = $time;
+                $day['c2Note'] = $rawStatus;
+                if ($rawStatus === 'Late') {
+                    $day['isLate'] = true;
+                }
+            } elseif ($checkType === 'Check-out 2') {
+                $day['o2'] = $time;
+                $day['o2Note'] = $rawStatus;
+                if ($rawStatus === 'Overtime') {
+                    $day['overtime'] = $time;
+                }
+            }
+
+            unset($day);
+        }
+
+        $dates = $this->buildDateRange($from, $to);
+        $result = [];
+
+        foreach ($grouped as $employee) {
+            foreach ($dates as $date) {
+                if (!isset($employee['days'][$date])) {
+                    $employee['days'][$date] = [
+                        'date' => $date,
+                        'day' => date('l', strtotime($date)),
+                        'c1' => '--:--', 'c1Note' => 'No record',
+                        'o1' => '--:--', 'o1Note' => 'No record',
+                        'c2' => '--:--', 'c2Note' => 'No record',
+                        'o2' => '--:--', 'o2Note' => 'No record',
+                        'status' => 'Absent',
+                        'isLate' => false,
+                        'overtime' => null,
+                    ];
+                }
+
+                $day = $employee['days'][$date];
+                $day['status'] = $this->resolveFinalStatus(
+                    $employee['employee_id'],
+                    $date,
+                    $day,
+                    $leaveMap,
+                    $holidayMap,
+                    $dayOffDays
+                );
+                $employee['days'][$date] = $day;
+            }
+
+            $result[] = $employee;
+        }
+
+        return $result;
+    }
+
+    private function buildDateRange(string $from, string $to): array
+    {
+        $dates = [];
+        $cursor = new DateTimeImmutable($from);
+        $end = new DateTimeImmutable($to);
+        while ($cursor <= $end) {
+            $dates[] = $cursor->format('Y-m-d');
+            $cursor = $cursor->add(new DateInterval('P1D'));
+        }
+        return $dates;
+    }
+
+    private function getDayOffDays(): array
+    {
+        $config = require __DIR__ . '/../../config/attendance_config.php';
+        $days = $config['day_off_days'] ?? ['Sunday'];
+        return array_map(static fn ($day) => strtolower(trim((string) $day)), $days);
+    }
+
+    private function resolveFinalStatus(int $employeeId, string $date, array $day, array $leaveMap, array $holidayMap, array $dayOffDays): string
+    {
+        if (isset($holidayMap[$date])) {
+            return 'Public Holiday';
+        }
+
+        if (isset($leaveMap[$employeeId][$date])) {
+            return 'Leave';
+        }
+
+        $weekday = strtolower(date('l', strtotime($date)));
+        if (in_array($weekday, $dayOffDays, true)) {
+            return 'Day Off';
+        }
+
+        $hasAnyPunch = ($day['c1'] !== '--:--') || ($day['o1'] !== '--:--') || ($day['c2'] !== '--:--') || ($day['o2'] !== '--:--');
+        if (!$hasAnyPunch) {
+            return 'Absent';
+        }
+
+        if ($day['c1'] !== '--:--' && $day['o1'] === '--:--' && $day['c2'] === '--:--' && $day['o2'] === '--:--') {
+            return 'Missing Checkout';
+        }
+
+        if ($day['isLate']) {
+            return 'Late';
+        }
+
+        return 'Present';
     }
     public function getTopEmployees(string $from, string $to): array
     {
