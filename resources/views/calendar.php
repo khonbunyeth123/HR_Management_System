@@ -144,71 +144,47 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
             </div>
         </div>
 
-        <!-- 3-col layout -->
-        <div class="grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:items-stretch">
-
-            <!-- Left: Filters + Quick Actions -->
-            <aside class="space-y-4">
-                <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
-                        <button id="clearFilters" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">Reset</button>
+        <!-- Main layout -->
+        <div class="space-y-4">
+            <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
+                    <button id="clearFilters" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">Reset</button>
+                </div>
+                <div id="filterPanel" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                    <div>
+                        <label for="employeeFilter" class="mb-1 block text-xs font-bold text-slate-500">Employee</label>
+                        <select id="employeeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="">All employees</option>
+                        </select>
                     </div>
-                    <div id="filterPanel" class="mt-4 space-y-3">
-                        <div>
-                            <label for="employeeFilter" class="mb-1 block text-xs font-bold text-slate-500">Employee</label>
-                            <select id="employeeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
-                                <option value="">All employees</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="departmentFilter" class="mb-1 block text-xs font-bold text-slate-500">Department</label>
-                            <select id="departmentFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
-                                <option value="">All departments</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="branchFilter" class="mb-1 block text-xs font-bold text-slate-500">Branch</label>
-                            <select id="branchFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
-                                <option value="">All branches</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="eventTypeFilter" class="mb-1 block text-xs font-bold text-slate-500">Event Type</label>
-                            <select id="eventTypeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
-                                <option value="">All types</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="statusFilter" class="mb-1 block text-xs font-bold text-slate-500">Status</label>
-                            <select id="statusFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
-                                <option value="">All status</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label for="departmentFilter" class="mb-1 block text-xs font-bold text-slate-500">Department</label>
+                        <select id="departmentFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="">All departments</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="branchFilter" class="mb-1 block text-xs font-bold text-slate-500">Branch</label>
+                        <select id="branchFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="">All branches</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="eventTypeFilter" class="mb-1 block text-xs font-bold text-slate-500">Event Type</label>
+                        <select id="eventTypeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="">All types</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="statusFilter" class="mb-1 block text-xs font-bold text-slate-500">Status</label>
+                        <select id="statusFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="">All status</option>
+                        </select>
                     </div>
                 </div>
+            </div>
 
-                <div class="rounded-3xl border border-slate-200 bg-slate-950 p-4 text-white shadow-sm">
-                    <h3 class="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Quick Actions</h3>
-                    <div class="mt-4 space-y-3 text-sm">
-                        <button id="jumpToday" class="flex w-full items-center justify-between rounded-2xl bg-white/10 px-4 py-3 font-bold transition hover:bg-white/15">
-                            <span>Jump to today</span>
-                            <span class="iconify" data-icon="mdi:calendar-today" aria-hidden="true"></span>
-                        </button>
-                        <button id="reloadCalendar" class="flex w-full items-center justify-between rounded-2xl bg-indigo-500 px-4 py-3 font-black transition hover:bg-indigo-400">
-                            <span>Refresh data</span>
-                            <span class="iconify" data-icon="mdi:refresh" aria-hidden="true"></span>
-                        </button>
-                    </div>
-                    <div class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Current date</p>
-                        <p id="currentFocusDate" class="mt-2 text-2xl font-black"><?= htmlspecialchars($today) ?></p>
-                        <p class="mt-1 text-xs text-slate-300">Use the view controls to switch between month, week, and day.</p>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Center: Calendar -->
             <section class="min-w-0 space-y-4 xl:flex xl:flex-col">
                 <div class="rounded-3xl border border-slate-200 bg-white shadow-sm xl:flex xl:flex-1 xl:flex-col">
                     <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
@@ -244,14 +220,14 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                 </div>
             </section>
 
-            <!-- Right: Summary + Event table -->
-            <aside class="space-y-4 xl:flex xl:flex-col">
+            <!-- Bottom: Summary + Event table -->
+            <div class="space-y-4">
                 <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Live Summary</h2>
                         <span id="eventCountBadge" class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black text-indigo-700" aria-live="polite">0 events</span>
                     </div>
-                    <div id="summaryGrid" class="mt-4 grid grid-cols-2 gap-3">
+                    <div id="summaryGrid" class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pending</p>
                             <p id="summaryPending" class="mt-2 text-2xl font-black text-slate-900">0</p>
@@ -271,12 +247,12 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                     </div>
                 </div>
 
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm xl:flex xl:flex-1 xl:flex-col">
+                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-100 px-4 py-4 flex items-center justify-between">
                         <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Event List</h2>
                         <span id="eventListCount" class="text-xs font-bold text-slate-400"></span>
                     </div>
-                    <div class="events-table-wrap max-h-[420px] overflow-y-auto overscroll-contain xl:flex-1 xl:min-h-0 xl:max-h-[calc(100vh-320px)]">
+                    <div class="events-table-wrap max-h-[420px] overflow-y-auto overscroll-contain">
                         <table class="min-w-full text-left text-sm" role="table">
                             <thead class="sticky top-0 bg-slate-900 text-white">
                                 <tr>
@@ -292,7 +268,7 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                         </table>
                     </div>
                 </div>
-            </aside>
+            </div>
         </div>
     </div>
 </div>
@@ -468,7 +444,6 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         statusFilter: el('statusFilter'),
         filterPanel: el('filterPanel'),
         dateJump: el('dateJump'),
-        currentFocusDate: el('currentFocusDate'),
         modal: el('eventModal'),
         form: el('eventForm'),
         modalTitle: el('modalTitle'),
@@ -687,7 +662,6 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
     /* ── Render dispatch ── */
     function renderCalendar() {
         const d = new Date(state.current);
-        els.currentFocusDate.textContent = localDateKey(d);
         if (state.view === 'month')      { els.calendarHeading.textContent = monthName(d); renderMonthView(); }
         else if (state.view === 'week')  { els.calendarHeading.textContent = `Week · ${weekRange(d)}`; renderWeekView(); }
         else                             { els.calendarHeading.textContent = `Day · ${dayLabel(d)}`; renderDayView(); }
@@ -1117,8 +1091,6 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         loadEvents().catch(console.error);
     });
     el('todayPeriod').addEventListener('click', () => { state.current = new Date(); els.dateJump.value = localDateKey(state.current); loadEvents().catch(console.error); });
-    el('jumpToday').addEventListener('click', () => { state.current = new Date(); els.dateJump.value = localDateKey(state.current); loadEvents().catch(console.error); });
-    el('reloadCalendar').addEventListener('click', () => loadEvents().catch(console.error));
     el('openCreateEvent').addEventListener('click', () => openEventModal());
     el('closeEventModal').addEventListener('click', closeModal);
     el('clearFilters').addEventListener('click', () => {
