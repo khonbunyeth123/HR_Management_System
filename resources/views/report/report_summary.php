@@ -63,16 +63,17 @@
                         <th class="p-3 text-center">Department</th>
                         <th class="p-3 text-center">Total Days</th>
                         <th class="p-3 text-center">Present</th>
-                        <th class="p-3 text-center">Absent</th>
                         <th class="p-3 text-center">Late</th>
                         <th class="p-3 text-center">Leave</th>
+                        <th class="p-3 text-center">Day Off</th>
+                        <th class="p-3 text-center">Absent</th>
                         <th class="p-3 text-center">Attendance %</th>
                         <th class="p-3 text-center">Performance</th>
                     </tr>
                 </thead>
                 <tbody id="summaryTableBody">
                     <tr>
-                        <td colspan="10" class="p-4 text-center text-gray-500">⏳ Loading...</td>
+                        <td colspan="12" class="p-4 text-center text-gray-500">⏳ Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -155,7 +156,7 @@
 
         summaryBody.innerHTML = `
             <tr>
-                <td colspan="10" class="p-4 text-center text-gray-500">⏳ Loading...</td>
+                <td colspan="12" class="p-4 text-center text-gray-500">⏳ Loading...</td>
             </tr>
         `;
 
@@ -182,7 +183,7 @@
         if (!rows || rows.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="p-4 text-center text-gray-500">No data found for selected period</td>
+                    <td colspan="12" class="p-4 text-center text-gray-500">No data found for selected period</td>
                 </tr>
             `;
             return;
@@ -194,6 +195,7 @@
             const late    = Number(r.late_days    || 0);
             const absent  = Number(r.absent_days  || 0);
             const leave   = Number(r.leave_days   || 0);
+            const dayOff  = Number(r.day_off_days  || 0);
             const percent = total > 0 ? ((present / total) * 100).toFixed(1) : '0.0';
 
             let stars = '⭐⭐';
@@ -210,9 +212,10 @@
                     </td>
                     <td class="p-3 text-center font-semibold">${total}</td>
                     <td class="p-3 text-center text-green-600 font-semibold">${present}</td>
-                    <td class="p-3 text-center text-red-600">${absent}</td>
                     <td class="p-3 text-center text-yellow-600">${late}</td>
                     <td class="p-3 text-center text-gray-600">${leave}</td>
+                    <td class="p-3 text-center text-slate-600">${dayOff}</td>
+                    <td class="p-3 text-center text-red-600">${absent}</td>
                     <td class="p-3 text-center">
                         <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">${percent}%</span>
                     </td>
@@ -243,9 +246,10 @@
                 'Department'    : r.department ?? 'N/A',
                 'Total Days'    : total,
                 'Present'       : present,
-                'Absent'        : Number(r.absent_days  || 0),
                 'Late'          : Number(r.late_days    || 0),
                 'Leave'         : Number(r.leave_days   || 0),
+                'Day Off'       : Number(r.day_off_days || 0),
+                'Absent'        : Number(r.absent_days  || 0),
                 'Attendance %'  : percent + '%',
             };
         });

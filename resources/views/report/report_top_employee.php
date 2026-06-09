@@ -39,6 +39,8 @@
                         <th class="p-3 text-center">Department</th>
                         <th class="p-3 text-center">Total Present</th>
                         <th class="p-3 text-center">Total Late</th>
+                        <th class="p-3 text-center">Total Leave</th>
+                        <th class="p-3 text-center">Day Off</th>
                         <th class="p-3 text-center">Total Absent</th>
                         <th class="p-3 text-center">Attendance Score</th>
                         <th class="p-3 text-center">Rating</th>
@@ -46,7 +48,7 @@
                 </thead>
                 <tbody id="leaderboardTableBody">
                     <tr>
-                        <td colspan="8" class="text-center p-4 text-gray-500">Select a period and click Load Report</td>
+                        <td colspan="10" class="text-center p-4 text-gray-500">Select a period and click Load Report</td>
                     </tr>
                 </tbody>
             </table>
@@ -162,7 +164,7 @@ function renderTable(data) {
     const tbody = document.getElementById('leaderboardTableBody');
 
     if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-4 text-gray-500">No data found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center p-4 text-gray-500">No data found.</td></tr>`;
         return;
     }
 
@@ -178,6 +180,8 @@ function renderTable(data) {
             </td>
             <td class="p-3 text-center text-green-600 font-semibold">${r.present_days}</td>
             <td class="p-3 text-center text-yellow-600 font-semibold">${r.late_days}</td>
+            <td class="p-3 text-center text-gray-600 font-semibold">${r.leave_days || 0}</td>
+            <td class="p-3 text-center text-slate-600 font-semibold">${r.day_off_days || 0}</td>
             <td class="p-3 text-center text-red-600 font-semibold">${r.absent_days}</td>
             <td class="p-3 text-center">
                 <span class="${scoreBadge(percent)} px-3 py-1 rounded-full text-sm font-bold">${percent}%</span>

@@ -113,10 +113,78 @@ class ReportService
 
     public function getSummary(string $from, string $to, ?string $department = null): array
     {
-        return $this->model->summary($from, $to, $department);
+        $data = $this->getAttendanceData($from, $to, $department);
+        $summary = [];
+
+        foreach ($data as $employee) {
+            $totalDays = count($employee['days']);
+            $present = 0;
+            $late = 0;
+            $leave = 0;
+            $absent = 0;
+            $holiday = 0;
+            $dayOff = 0;
+
+            foreach ($employee['days'] as $day) {
+                switch ($day['status']) {
+                    case 'Present':
+                    case 'Late':
+                    case 'Missing Checkout':
+                    case 'Overtime':
+                        $present++;
+                        if ($day['isLate']) {
+                            $late++;
+                        }
+                        break;
+                    case 'Leave':
+                        $leave++;
+                        break;
+                    case 'Absent':
+                        $absent++;
+                        break;
+                    case 'Public Holiday':
+                        $holiday++;
+                        break;
+                    case 'Day Off':
+                        $dayOff++;
+                        break;
+                }
+            }
+
+            $summary[] = [
+                'id' => $employee['employee_id'],
+                'full_name' => $employee['name'],
+                'department' => $employee['department'],
+                'total_days' => $totalDays,
+                'present_days' => $present,
+                'late_days' => $late,
+                'leave_days' => $leave,
+                'absent_days' => $absent,
+                'holiday_days' => $holiday,
+                'day_off_days' => $dayOff,
+                'attendance_percent' => $totalDays > 0 ? round(($present / $totalDays) * 100, 2) : 0
+            ];
+        }
+
+        return $summary;
     }
 
-    public function getDetailedAttendance(string $from,string $to,?string $department = null,?string $search = null,?string $status = null): array 
+    public function getDetailedAttendance(string $from, string $to, ?string $department = null, ?string $search = null, ?string $status = null): array
+    {
+        $result = $this->getAttendanceData($from, $to, $department, $search);
+
+        if ($status) {
+            foreach ($result as &$employee) {
+                $employee['days'] = array_filter($employee['days'], function ($day) use ($status) {
+                    return $day['status'] === $status;
+                });
+            }
+        }
+
+        return $result;
+    }
+
+    private function getAttendanceData(string $from, string $to, ?string $department = null, ?string $search = null): array
     {
         $rows = $this->model->fetchAttendanceDailyRows($from, $to, $department, $search);
         $leaves = $this->model->fetchApprovedLeaves($from, $to);
@@ -125,25 +193,25 @@ class ReportService
 
         $leaveMap = [];
         foreach ($leaves as $leave) {
-            $employeeId = (int) ($leave['employee_id'] ?? 0);
-            $start = new DateTimeImmutable((string) $leave['start_date']);
-            $end = new DateTimeImmutable((string) $leave['end_date']);
+            $employeeId = (int)($leave['employee_id'] ?? 0);
+            $start = new DateTimeImmutable((string)$leave['start_date']);
+            $end = new DateTimeImmutable((string)$leave['end_date']);
             $period = new DatePeriod($start, new DateInterval('P1D'), $end->modify('+1 day'));
 
             foreach ($period as $date) {
-                $leaveMap[$employeeId][$date->format('Y-m-d')] = (string) ($leave['leave_type'] ?? 'Leave');
+                $leaveMap[$employeeId][$date->format('Y-m-d')] = (string)($leave['leave_type'] ?? 'Leave');
             }
         }
 
         $holidayMap = [];
         foreach ($holidays as $holiday) {
-            $holidayMap[(string) ($holiday['holiday_date'] ?? '')] = (string) ($holiday['title'] ?? 'Public Holiday');
+            $holidayMap[(string)($holiday['holiday_date'] ?? '')] = (string)($holiday['title'] ?? 'Public Holiday');
         }
 
         $grouped = [];
         foreach ($rows as $row) {
-            $employeeId = (int) $row['employee_id'];
-            $date = (string) ($row['date'] ?? '');
+            $employeeId = (int)$row['employee_id'];
+            $date = (string)($row['date'] ?? '');
             if ($date === '') {
                 continue;
             }
@@ -151,8 +219,8 @@ class ReportService
             if (!isset($grouped[$employeeId])) {
                 $grouped[$employeeId] = [
                     'employee_id' => $employeeId,
-                    'name' => (string) $row['full_name'],
-                    'department' => (string) $row['department'],
+                    'name' => (string)$row['full_name'],
+                    'department' => (string)$row['department'],
                     'days' => [],
                 ];
             }
@@ -160,7 +228,7 @@ class ReportService
             if (!isset($grouped[$employeeId]['days'][$date])) {
                 $grouped[$employeeId]['days'][$date] = [
                     'date' => $date,
-                    'day' => (string) ($row['day_name'] ?? date('l', strtotime($date))),
+                    'day' => (string)($row['day_name'] ?? date('l', strtotime($date))),
                     'c1' => '--:--', 'c1Note' => 'No record',
                     'o1' => '--:--', 'o1Note' => 'No record',
                     'c2' => '--:--', 'c2Note' => 'No record',
@@ -172,9 +240,9 @@ class ReportService
             }
 
             $day = &$grouped[$employeeId]['days'][$date];
-            $checkType = (string) ($row['check_type'] ?? '');
+            $checkType = (string)($row['check_type'] ?? '');
             $time = $this->formatScan($row['scan_datetime'] ?? null);
-            $rawStatus = (string) ($row['status'] ?? 'Recorded');
+            $rawStatus = (string)($row['status'] ?? 'Recorded');
 
             if ($checkType === 'Check-in 1') {
                 $day['c1'] = $time;
@@ -290,6 +358,43 @@ class ReportService
     }
     public function getTopEmployees(string $from, string $to): array
     {
-        return $this->model->fetchTopEmployees($from, $to);
+        $data = $this->getAttendanceData($from, $to);
+        $top = [];
+
+        foreach ($data as $employee) {
+            $present = 0;
+            $late = 0;
+            $totalDays = count($employee['days']);
+
+            foreach ($employee['days'] as $day) {
+                if (in_array($day['status'], ['Present', 'Late', 'Missing Checkout', 'Overtime'], true)) {
+                    $present++;
+                    if ($day['isLate']) {
+                        $late++;
+                    }
+                }
+            }
+
+            $top[] = [
+                'id' => $employee['employee_id'],
+                'full_name' => $employee['name'],
+                'department' => $employee['department'],
+                'present_days' => $present,
+                'late_days' => $late,
+                'total_days' => $totalDays,
+                'absent_days' => max(0, $totalDays - $present), // Simplified for top list
+                'attendance_percent' => $totalDays > 0 ? round(($present / $totalDays) * 100, 1) : 0
+            ];
+        }
+
+        // Sort by present_days DESC, late_days ASC
+        usort($top, function ($a, $b) {
+            if ($a['present_days'] !== $b['present_days']) {
+                return $b['present_days'] <=> $a['present_days'];
+            }
+            return $a['late_days'] <=> $b['late_days'];
+        });
+
+        return $top;
     }
 }
