@@ -65,6 +65,8 @@ $router->post('/api/leave/approve',  'ControllerLeave@approve');
 $router->patch('/api/leaves/{uuid}/approve', 'ControllerLeave@approve');
 $router->post('/api/leave/reject',   'ControllerLeave@reject');
 $router->patch('/api/leaves/{uuid}/reject',  'ControllerLeave@reject');
+$router->patch('/api/leaves/{uuid}/reopen', 'ControllerLeave@reopen');
+$router->patch('/api/leaves/{uuid}/cancel-approval', 'ControllerLeave@cancelApproval');
 
 /* ================= CALENDAR ROUTES ================= */
 $router->get('/api/calendar/events',            'ControllerCalendar@index');

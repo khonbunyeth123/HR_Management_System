@@ -265,6 +265,48 @@ class ControllerLeave extends BaseController
         ], 400);
     }
 
+    #[Route('/api/leaves/{uuid}/reopen', name: 'api_leaves_reopen', methods: ['PATCH'])]
+    public function reopen(Request $request, ?string $uuid = null): JsonResponse
+    {
+        $uuid = trim((string) ($uuid ?? ''));
+        if ($uuid === '') {
+            return $this->json(['success' => false, 'message' => 'UUID is required'], 422);
+        }
+
+        $leave = $this->service->getLeaveByUuid($uuid);
+        $this->denyAccessUnlessGranted(LeaveVoter::LEAVE_REJECT, $leave);
+
+        $actorId = (int)$this->getUser()?->id;
+        $result = $this->service->reopenLeave($uuid, $actorId);
+
+        if ($result) {
+            return $this->json(['success' => true, 'message' => 'Leave application reopened successfully']);
+        }
+
+        return $this->json(['success' => false, 'message' => 'Failed to reopen leave application'], 400);
+    }
+
+    #[Route('/api/leaves/{uuid}/cancel-approval', name: 'api_leaves_cancel_approval', methods: ['PATCH'])]
+    public function cancelApproval(Request $request, ?string $uuid = null): JsonResponse
+    {
+        $uuid = trim((string) ($uuid ?? ''));
+        if ($uuid === '') {
+            return $this->json(['success' => false, 'message' => 'UUID is required'], 422);
+        }
+
+        $leave = $this->service->getLeaveByUuid($uuid);
+        $this->denyAccessUnlessGranted(LeaveVoter::LEAVE_APPROVE, $leave);
+
+        $actorId = (int)$this->getUser()?->id;
+        $result = $this->service->cancelApproval($uuid, $actorId);
+
+        if ($result) {
+            return $this->json(['success' => true, 'message' => 'Leave approval cancelled successfully']);
+        }
+
+        return $this->json(['success' => false, 'message' => 'Failed to cancel leave approval'], 400);
+    }
+
     /**
      * Get employee leave history.
      */

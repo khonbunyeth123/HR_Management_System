@@ -127,6 +127,34 @@ class LeaveService
         return $ok;
     }
 
+    public function reopenLeave(string $uuid, int $actorId): bool
+    {
+        $leave = $this->repository->findByUuid($uuid);
+        if (!$leave) {
+            return false;
+        }
+
+        if ((int) ($leave['status_id'] ?? 0) !== LeaveStatus::REJECTED->value) {
+            throw new LogicException('Only rejected leaves can be reopened.');
+        }
+
+        return $this->repository->reopen((int) $leave['id'], $actorId);
+    }
+
+    public function cancelApproval(string $uuid, int $actorId): bool
+    {
+        $leave = $this->repository->findByUuid($uuid);
+        if (!$leave) {
+            return false;
+        }
+
+        if ((int) ($leave['status_id'] ?? 0) !== LeaveStatus::APPROVED->value) {
+            throw new LogicException('Only approved leaves can be cancelled.');
+        }
+
+        return $this->repository->cancelApproval((int) $leave['id'], $actorId);
+    }
+
     /**
      * Create a new leave application.
      * 

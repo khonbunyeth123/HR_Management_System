@@ -73,6 +73,30 @@ class LeaveRepository implements LeaveRepositoryInterface
         return $this->model->rejectLeave($uuid, $rejectedBy, $reason);
     }
 
+    public function reopen(int $id, int $actorId): bool
+    {
+        $db = \App\Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT uuid FROM tbl_leave_applications WHERE id = ?");
+        $stmt->execute([$id]);
+        $uuid = $stmt->fetchColumn();
+
+        if (!$uuid) return false;
+
+        return $this->model->reopenLeave($uuid, $actorId);
+    }
+
+    public function cancelApproval(int $id, int $actorId): bool
+    {
+        $db = \App\Core\Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT uuid FROM tbl_leave_applications WHERE id = ?");
+        $stmt->execute([$id]);
+        $uuid = $stmt->fetchColumn();
+
+        if (!$uuid) return false;
+
+        return $this->model->cancelApproval($uuid, $actorId);
+    }
+
     /**
      * @inheritDoc
      */

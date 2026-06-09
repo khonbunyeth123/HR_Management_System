@@ -36,6 +36,21 @@ class CalendarEvent
         }));
 
         usort($events, static function (array $left, array $right): int {
+            $dateCompare = strcmp((string) ($left['start_date'] ?? ''), (string) ($right['start_date'] ?? ''));
+            if ($dateCompare !== 0) {
+                return $dateCompare;
+            }
+
+            $allDayCompare = ((int) ($left['sort_all_day'] ?? 0) <=> (int) ($right['sort_all_day'] ?? 0));
+            if ($allDayCompare !== 0) {
+                return $allDayCompare;
+            }
+
+            $timeCompare = strcmp((string) ($left['sort_start_time'] ?? ''), (string) ($right['sort_start_time'] ?? ''));
+            if ($timeCompare !== 0) {
+                return $timeCompare;
+            }
+
             return strcmp((string) ($left['start'] ?? ''), (string) ($right['start'] ?? ''));
         });
 
@@ -482,6 +497,16 @@ class CalendarEvent
     private function hydrateEvent(array $row, array $targets, bool $isOccurrence = false): array
     {
         $scope = $this->summarizeTargets($targets);
+        $dateRange = $this->formatEventDateRange(
+            (string) ($row['start_at'] ?? ''),
+            (string) ($row['end_at'] ?? ''),
+            (bool) ($row['all_day'] ?? false)
+        );
+        $timeRange = $this->formatEventTimeRange(
+            (string) ($row['start_at'] ?? ''),
+            (string) ($row['end_at'] ?? ''),
+            (bool) ($row['all_day'] ?? false)
+        );
 
         return [
             'id' => $row['id'],
@@ -493,7 +518,16 @@ class CalendarEvent
             'status' => $row['status'],
             'start' => $row['start_at'],
             'end' => $row['end_at'],
+            'start_date' => substr((string) ($row['start_at'] ?? ''), 0, 10),
+            'end_date' => substr((string) ($row['end_at'] ?? ''), 0, 10),
+            'start_time' => $this->extractTime((string) ($row['start_at'] ?? '')),
+            'end_time' => $this->extractTime((string) ($row['end_at'] ?? '')),
             'all_day' => (bool) ($row['all_day'] ?? false),
+            'is_all_day' => (bool) ($row['all_day'] ?? false),
+            'date_label' => $dateRange,
+            'time_label' => $timeRange,
+            'sort_all_day' => (bool) ($row['all_day'] ?? false) ? 0 : 1,
+            'sort_start_time' => $this->extractTime((string) ($row['start_at'] ?? '')),
             'is_recurring' => !empty($row['recurrence_rule']),
             'is_occurrence' => $isOccurrence,
             'recurrence_rule' => $row['recurrence_rule'] ? json_decode((string) $row['recurrence_rule'], true) : null,
@@ -512,6 +546,86 @@ class CalendarEvent
                 'cancelled_by' => $row['cancelled_by'] ?? null,
             ],
         ];
+    }
+
+    public function formatEventDate(array $event): string
+    {
+        return $this->formatEventDateRange(
+            (string) ($event['start_at'] ?? $event['start'] ?? ''),
+            (string) ($event['end_at'] ?? $event['end'] ?? ''),
+            (bool) ($event['all_day'] ?? $event['is_all_day'] ?? false)
+        );
+    }
+
+    public function formatEventTime(array $event): string
+    {
+        return $this->formatEventTimeRange(
+            (string) ($event['start_at'] ?? $event['start'] ?? ''),
+            (string) ($event['end_at'] ?? $event['end'] ?? ''),
+            (bool) ($event['all_day'] ?? $event['is_all_day'] ?? false)
+        );
+    }
+
+    private function formatEventDateRange(string $startAt, string $endAt, bool $allDay): string
+    {
+        $startDate = $this->parseDatePart($startAt);
+        $endDate = $this->parseDatePart($endAt);
+
+        if ($startDate === null) {
+            return '--';
+        }
+
+        if ($allDay && $endDate !== null && $startDate !== $endDate) {
+            return $startDate->format('M d') . ' - ' . $endDate->format('M d, Y');
+        }
+
+        return $startDate->format('M d, Y');
+    }
+
+    private function formatEventTimeRange(string $startAt, string $endAt, bool $allDay): string
+    {
+        if ($allDay) {
+            return 'All Day';
+        }
+
+        $startTime = $this->extractTime($startAt);
+        $endTime = $this->extractTime($endAt);
+        if ($startTime === '--' || $endTime === '--') {
+            return '--';
+        }
+
+        return $this->formatTimeForDisplay($startAt) . ' - ' . $this->formatTimeForDisplay($endAt);
+    }
+
+    private function parseDatePart(string $value): ?\DateTimeImmutable
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return new \DateTimeImmutable(substr($value, 0, 10));
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function extractTime(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '--';
+        }
+
+        $ts = strtotime($value);
+        return $ts === false ? '--' : date('H:i:s', $ts);
+    }
+
+    private function formatTimeForDisplay(string $value): string
+    {
+        $ts = strtotime($value);
+        return $ts === false ? '--' : date('h:i A', $ts);
     }
 
     private function summarizeTargets(array $targets): array

@@ -53,6 +53,16 @@ interface LeaveRepositoryInterface
     public function reject(int $id, int $rejectedBy, string $reason): bool;
 
     /**
+     * Reopen a rejected leave application.
+     */
+    public function reopen(int $id, int $actorId): bool;
+
+    /**
+     * Cancel an approved leave application.
+     */
+    public function cancelApproval(int $id, int $actorId): bool;
+
+    /**
      * Create a new leave application.
      * 
      * @param array $data

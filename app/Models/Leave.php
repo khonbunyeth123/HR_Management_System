@@ -116,6 +116,44 @@ class Leave {
         return $this->updateByUuid($uuid, $fields);
     }
 
+    public function reopenLeave(string $uuid, int $actorId): bool
+    {
+        $fields = [
+            'status_id' => LeaveStatus::PENDING->value,
+        ];
+
+        if ($this->hasColumn('approved_at')) {
+            $fields['approved_at'] = null;
+        }
+        if ($this->hasColumn('approved_by')) {
+            $fields['approved_by'] = null;
+        }
+        if ($this->hasColumn('rejected_at')) {
+            $fields['rejected_at'] = null;
+        }
+        if ($this->hasColumn('rejected_by')) {
+            $fields['rejected_by'] = null;
+        }
+
+        return $this->updateByUuid($uuid, $fields);
+    }
+
+    public function cancelApproval(string $uuid, int $actorId): bool
+    {
+        $fields = [
+            'status_id' => LeaveStatus::PENDING->value,
+        ];
+
+        if ($this->hasColumn('approved_at')) {
+            $fields['approved_at'] = null;
+        }
+        if ($this->hasColumn('approved_by')) {
+            $fields['approved_by'] = null;
+        }
+
+        return $this->updateByUuid($uuid, $fields);
+    }
+
     /**
      * Create a new leave application.
      */

@@ -3,8 +3,12 @@ $requestedDate = $_GET['date'] ?? date('Y-m-d');
 $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
     ? (string) $requestedDate
     : date('Y-m-d');
+$currentRole = strtolower((string) ($_SESSION['role'] ?? $_SESSION['role_name'] ?? ''));
+$currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
 ?>
 <script>window.__calendarInitialDate = <?= json_encode($today) ?>;</script>
+<script>window.__calendarUserRole = <?= json_encode($currentRole) ?>;</script>
+<script>window.__calendarUserRoleId = <?= json_encode($currentRoleId) ?>;</script>
 
 <style>
 /* ── Toast ── */
@@ -253,17 +257,18 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
                         <span id="eventListCount" class="text-xs font-bold text-slate-400"></span>
                     </div>
                     <div class="events-table-wrap max-h-[420px] overflow-y-auto overscroll-contain">
-                        <table class="min-w-full text-left text-sm" role="table">
-                            <thead class="sticky top-0 bg-slate-900 text-white">
+                        <table class="min-w-[920px] w-full text-left text-sm" role="table">
+                            <thead class="sticky top-0 z-40 hidden bg-slate-900 text-white md:table-header-group">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Time</th>
-                                    <th scope="col" class="px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Event</th>
-                                    <th scope="col" class="px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Status</th>
-                                    <th scope="col" class="px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Actions</th>
+                                    <th scope="col" class="w-[22%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Date</th>
+                                    <th scope="col" class="w-[18%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap">Time</th>
+                                    <th scope="col" class="w-[34%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Event</th>
+                                    <th scope="col" class="w-[14%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Status</th>
+                                    <th scope="col" class="sticky right-0 z-50 w-[12%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em] shadow-[-12px_0_24px_rgba(15,23,42,0.12)]">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="eventTableBody" class="divide-y divide-slate-100 bg-white">
-                                <tr><td colspan="4" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>
+                                <tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -541,13 +546,80 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
     }
     function formatTimeRange(ev) {
-        if (ev.all_day) return 'All day';
-        const s = parseApiDate(ev.start), e = parseApiDate(ev.end);
-        return `${s.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} – ${e.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+        if ((ev.is_all_day ?? ev.all_day) || ['holiday', 'leave'].includes(String(ev.event_type || '').toLowerCase())) return 'All Day';
+        if (!ev.start_time || !ev.end_time || ev.start_time === '--' || ev.end_time === '--') return '--';
+        return `${formatTimeValue(ev.start_time)} - ${formatTimeValue(ev.end_time)}`;
+    }
+    function formatTimeValue(value) {
+        if (!value || value === '--') return '--';
+        const [h, m] = String(value).split(':');
+        const date = new Date();
+        date.setHours(Number(h), Number(m), 0, 0);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    function formatDateRange(ev) {
+        if (ev.date_label) return ev.date_label;
+        const start = ev.start_date || String(ev.start || '').slice(0, 10);
+        const end = ev.end_date || String(ev.end || '').slice(0, 10);
+        if (!start) return '--';
+        const s = new Date(`${start}T12:00:00`);
+        const e = end ? new Date(`${end}T12:00:00`) : s;
+        const startLabel = s.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+        const endLabel = e.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        return start === end ? `${startLabel}, ${endLabel.slice(-4)}` : `${startLabel} - ${endLabel}`;
+    }
+    function timeCell(ev) {
+        const label = formatTimeRange(ev);
+        if (label === 'All Day') {
+            return `<span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-black text-indigo-700 whitespace-nowrap">All Day</span>`;
+        }
+        return `<span class="whitespace-nowrap">${escapeHtml(label)}</span>`;
+    }
+    function timeBadge(ev) {
+        return timeCell(ev);
     }
     function badge(status) {
         const map = { pending:'bg-amber-100 text-amber-700', approved:'bg-emerald-100 text-emerald-700', rejected:'bg-rose-100 text-rose-700', cancelled:'bg-slate-100 text-slate-700' };
         return `<span class="inline-flex rounded-full px-2 py-1 text-[11px] font-black ${map[status]||map.cancelled}">${escapeHtml(status)}</span>`;
+    }
+    function currentUserRole() {
+        return String(window.__calendarUserRole || '').toLowerCase();
+    }
+    function isAdmin() {
+        return currentUserRole() === 'admin' || Number(window.__calendarUserRoleId || 0) === 1;
+    }
+    function canManageLeaves() {
+        return isAdmin() || currentUserRole() === 'manager';
+    }
+    function canManageEvents() {
+        return isAdmin();
+    }
+    function isCompletedEvent(ev) {
+        if (!ev || !ev.end) return false;
+        const end = parseApiDate(ev.end);
+        if (Number.isNaN(end.getTime())) return false;
+        const compare = new Date();
+        compare.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+        return end < compare;
+    }
+    function buildActionMenu(items, compact = false) {
+        if (!items.length) return '';
+        const itemCls = compact ? 'px-3 py-2 text-xs' : 'px-3 py-2 text-sm';
+        return `
+            <div class="relative inline-flex overflow-visible">
+                <button type="button" class="action-menu-toggle inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white ${compact ? 'px-3 py-2 text-xs' : 'px-3 py-2 text-sm'} font-black text-slate-700 hover:bg-slate-50 transition" aria-expanded="false">
+                    <span class="iconify" data-icon="mdi:dots-vertical" aria-hidden="true"></span>
+                </button>
+                <div class="action-menu-panel absolute right-0 top-full z-50 mt-2 hidden w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
+                    ${items.map(item => `
+                        <button type="button" class="flex w-full items-center gap-2 border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-700 last:border-b-0 hover:bg-slate-50 ${item.className || ''}" data-action="${escapeHtml(item.action)}" data-uuid="${escapeHtml(item.uuid)}">
+                            ${item.icon ? `<span class="iconify text-base ${item.iconClass || ''}" data-icon="${item.icon}" aria-hidden="true"></span>` : ''}
+                            <span>${escapeHtml(item.label)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>`;
     }
     function typeBadge(type) {
         const map = { holiday:'bg-indigo-100 text-indigo-700', shift:'bg-sky-100 text-sky-700', leave:'bg-amber-100 text-amber-700', meeting:'bg-violet-100 text-violet-700', reminder:'bg-emerald-100 text-emerald-700', task:'bg-slate-100 text-slate-700' };
@@ -799,16 +871,52 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
     }
 
     /* ── Action buttons ── */
-    function actionButtons(ev, compact = false) {
-        const b = compact ? 'text-[11px] px-2 py-1' : 'px-3 py-2 text-xs';
-        const btns = [`<button class="rounded-xl border border-slate-200 ${b} font-black text-slate-700 hover:bg-slate-50 transition" onclick="openEventFromView('${ev.uuid}','${ev.source_type}')">View</button>`];
-        if (ev.source_type === 'leave') {
-            btns.push(`<button class="rounded-xl border border-emerald-200 bg-emerald-50 ${b} font-black text-emerald-700 hover:bg-emerald-100 transition" onclick="approveLeaveRequest('${ev.uuid}')">Approve</button>`);
-            btns.push(`<button class="rounded-xl border border-rose-200 bg-rose-50 ${b} font-black text-rose-700 hover:bg-rose-100 transition" onclick="rejectLeaveRequest('${ev.uuid}')">Reject</button>`);
+    function actionButtons(ev) {
+        const role = currentUserRole();
+        const isLeave = ev.source_type === 'leave';
+        const completed = !isLeave && isCompletedEvent(ev);
+        const primary = [];
+        const secondary = [];
+
+        primary.push({ label: 'View', action: 'view', uuid: ev.uuid, icon: 'mdi:eye-outline', className: '' });
+
+        if (isLeave) {
+            const status = String(ev.status || '').toLowerCase();
+            if (status === 'pending' && canManageLeaves()) {
+                primary.push({ label: 'Approve', action: 'approve', uuid: ev.uuid, icon: 'mdi:check', className: 'text-emerald-700' });
+                secondary.push({ label: 'Reject', action: 'reject', uuid: ev.uuid, icon: 'mdi:close-circle-outline', className: 'text-rose-700' });
+            } else if (status === 'approved' && canManageLeaves()) {
+                secondary.push({ label: 'Cancel Approval', action: 'cancel-approval', uuid: ev.uuid, icon: 'mdi:undo', className: 'text-amber-700' });
+            } else if (status === 'rejected' && canManageLeaves()) {
+                secondary.push({ label: 'Reopen', action: 'reopen', uuid: ev.uuid, icon: 'mdi:restart', className: 'text-indigo-700' });
+            }
         } else {
-            btns.push(`<button class="rounded-xl border border-indigo-200 bg-indigo-50 ${b} font-black text-indigo-700 hover:bg-indigo-100 transition" onclick="editEvent('${ev.uuid}')">Edit</button>`);
+            if (!completed && canManageEvents()) {
+                primary.push({ label: 'Edit', action: 'edit', uuid: ev.uuid, icon: 'mdi:pencil-outline', className: '' });
+                secondary.push({ label: 'Delete', action: 'delete', uuid: ev.uuid, icon: 'mdi:trash-can-outline', className: 'text-rose-700' });
+            }
         }
-        return btns.join('');
+
+        const desktopPrimary = primary[0] ? `
+            <button type="button"
+                class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                data-action="${escapeHtml(primary[0].action)}"
+                data-uuid="${escapeHtml(ev.uuid)}">
+                ${escapeHtml(primary[0].label)}
+            </button>` : '';
+        const desktopSecondary = (primary.length > 1 || secondary.length > 0) ? buildActionMenu([...primary.slice(1), ...secondary], false) : '';
+        const mobileMenu = buildActionMenu([...primary, ...secondary], true);
+
+        return `
+            <div class="flex items-center gap-2">
+                <div class="hidden md:flex items-center gap-2">
+                    ${desktopPrimary}
+                    ${desktopSecondary}
+                </div>
+                <div class="md:hidden">
+                    ${mobileMenu}
+                </div>
+            </div>`;
     }
 
     /* ── Event table ── */
@@ -816,18 +924,29 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         const count = state.events.length;
         els.eventListCount.textContent = count ? `${count} event${count!==1?'s':''}` : '';
         if (!count) {
-            els.eventTableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-slate-400">No events found</td></tr>';
+            els.eventTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">No events found</td></tr>';
             return;
         }
         els.eventTableBody.innerHTML = state.events.map(ev=>`
-            <tr class="hover:bg-slate-50 transition">
-                <td class="px-4 py-3 align-top text-xs font-bold text-slate-500 whitespace-nowrap">${formatTimeRange(ev)}</td>
-                <td class="px-4 py-3 align-top">
-                    <div class="font-black text-slate-900 text-sm">${escapeHtml(ev.title)}</div>
-                    <div class="mt-1 flex flex-wrap items-center gap-2">${typeBadge(ev.event_type)}<span class="text-xs text-slate-500">${escapeHtml(ev.scope?.label||'Company-wide')}</span></div>
+            <tr class="block border-b border-slate-100 md:table-row hover:bg-slate-50 transition">
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
+                    <div class="text-xs font-bold text-slate-900 md:whitespace-nowrap">${escapeHtml(formatDateRange(ev))}</div>
+                    <div class="mt-1 flex md:hidden items-center gap-2">
+                        ${timeBadge(ev)}
+                    </div>
                 </td>
-                <td class="px-4 py-3 align-top">${badge(ev.status)}</td>
-                <td class="px-4 py-3 align-top"><div class="flex flex-wrap gap-2">${actionButtons(ev, true)}</div></td>
+                <td class="hidden px-4 py-3 align-top text-xs font-bold text-slate-500 whitespace-nowrap md:table-cell md:align-top">${timeCell(ev)}</td>
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
+                    <div class="font-black text-slate-900 text-sm">${escapeHtml(ev.title)}</div>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                        ${typeBadge(ev.event_type)}
+                        <span class="text-xs text-slate-500">${escapeHtml(ev.scope?.label||'Company-wide')}</span>
+                    </div>
+                </td>
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">${badge(ev.status)}</td>
+                <td class="sticky right-0 z-10 block border-l border-slate-100 bg-white px-4 py-2 align-top overflow-visible md:table-cell md:px-4 md:py-3 md:sticky md:right-0 md:bg-white md:shadow-[-12px_0_24px_rgba(15,23,42,0.06)]">
+                    <div class="flex flex-wrap gap-2 md:justify-start">${actionButtons(ev)}</div>
+                </td>
             </tr>`).join('');
     }
 
@@ -1012,6 +1131,40 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
         }
     }
 
+    async function requestActionConfirmation(action, uuid) {
+        const labels = {
+            approve: { title: 'Approve leave request', message: 'Are you sure you want to approve this leave request?', okLabel: 'Approve', okClass: 'success-btn' },
+            reject: { title: 'Reject leave request', message: 'Provide a reason for rejecting this leave request.', okLabel: 'Reject', okClass: 'danger', withRemark: true },
+            'cancel-approval': { title: 'Cancel approval', message: 'Are you sure you want to cancel this approval?', okLabel: 'Cancel approval', okClass: 'danger' },
+            delete: { title: 'Delete event', message: 'This will permanently delete the event. This action cannot be undone.', okLabel: 'Delete', okClass: 'danger' },
+        };
+        const cfg = labels[action];
+        if (!cfg) return;
+        const result = await openConfirm(cfg);
+        if (!result.confirmed) return;
+
+        try {
+            let res;
+            if (action === 'approve') {
+                res = await fetch(`/api/calendar/leaves/${uuid}/approve`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({uuid}) });
+            } else if (action === 'reject') {
+                res = await fetch(`/api/calendar/leaves/${uuid}/reject`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({uuid, remark: result.remark}) });
+            } else if (action === 'cancel-approval') {
+                res = await fetch(`/api/leaves/${uuid}/cancel-approval`, { method:'PATCH', headers:{'Content-Type':'application/json'} });
+            } else if (action === 'reopen') {
+                res = await fetch(`/api/leaves/${uuid}/reopen`, { method:'PATCH', headers:{'Content-Type':'application/json'} });
+            } else if (action === 'delete') {
+                res = await fetch(`/api/calendar/events/${uuid}`, { method:'DELETE' });
+            }
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message || 'Action failed');
+            showToast(json.message || 'Action completed.', 'success');
+            await loadEvents();
+        } catch (err) {
+            showToast(err.message || 'Action failed', 'error');
+        }
+    }
+
     /* ── Leave approve/reject ── */
     async function approveLeaveRequest(uuid) {
         const { confirmed } = await openConfirm({ title:'Approve leave request', message:'Are you sure you want to approve this leave request?', okLabel:'Approve', okClass:'success-btn' });
@@ -1060,6 +1213,44 @@ $today = preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $requestedDate)
     window.editEvent = editEvent;
     window.approveLeaveRequest = approveLeaveRequest;
     window.rejectLeaveRequest = rejectLeaveRequest;
+
+    function closeActionMenus() {
+        document.querySelectorAll('.action-menu-panel').forEach(menu => menu.classList.add('hidden'));
+        document.querySelectorAll('.action-menu-toggle').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    }
+
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.action-menu-toggle');
+        if (toggle) {
+            const wrapper = toggle.parentElement;
+            const panel = wrapper?.querySelector('.action-menu-panel');
+            const willOpen = panel?.classList.contains('hidden');
+            closeActionMenus();
+            if (panel && willOpen) {
+                panel.classList.remove('hidden');
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+            return;
+        }
+
+        const menuAction = e.target.closest('[data-action]');
+        if (menuAction && menuAction.dataset.uuid) {
+            const { action, uuid } = menuAction.dataset;
+            closeActionMenus();
+            if (action === 'view') openEventFromView(uuid, state.events.find(ev => ev.uuid === uuid)?.source_type || 'calendar');
+            else if (action === 'edit') editEvent(uuid);
+            else if (action === 'delete') requestActionConfirmation('delete', uuid);
+            else if (action === 'approve') requestActionConfirmation('approve', uuid);
+            else if (action === 'reject') requestActionConfirmation('reject', uuid);
+            else if (action === 'cancel-approval') requestActionConfirmation('cancel-approval', uuid);
+            else if (action === 'reopen') requestActionConfirmation('reopen', uuid);
+            return;
+        }
+
+        if (!e.target.closest('.action-menu-panel')) {
+            closeActionMenus();
+        }
+    });
 
     /* ── Event listeners ── */
     document.querySelectorAll('.view-switch').forEach(btn => {
