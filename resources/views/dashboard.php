@@ -277,6 +277,32 @@
             </div>`;
         }
 
+        function formatRelativeLeaveDate(dateValue) {
+            if (!dateValue) {
+                return 'N/A';
+            }
+
+            const input = new Date(`${dateValue}T12:00:00`);
+            if (Number.isNaN(input.getTime())) {
+                return dateValue;
+            }
+
+            const today = new Date();
+            const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const startOfInput = new Date(input.getFullYear(), input.getMonth(), input.getDate());
+            const diffDays = Math.round((startOfInput - startOfToday) / 86400000);
+
+            if (diffDays === 0) {
+                return 'Today';
+            }
+
+            if (diffDays === 1) {
+                return 'Tomorrow';
+            }
+
+            return input.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
         function createMiniLeave(req) {
             const statusColors = {
                 'pending': 'bg-amber-400',
@@ -284,6 +310,10 @@
                 'rejected': 'bg-rose-400'
             };
             const statusDot = statusColors[req.status?.toLowerCase()] || 'bg-slate-300';
+            const leaveDateLabel = formatRelativeLeaveDate(req.start_date);
+            const endDateLabel = req.end_date && req.end_date !== req.start_date
+                ? ` - ${formatRelativeLeaveDate(req.end_date)}`
+                : '';
             
             return `
             <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-100 group">
@@ -292,10 +322,43 @@
                 </div>
                 <div class="flex-grow min-w-0">
                     <div class="text-xs font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">${req.name || 'Unknown'}</div>
-                    <div class="text-[10px] text-slate-500 truncate">${req.type || 'N/A'} • ${req.start_date_formatted || ''}</div>
+                    <div class="text-[10px] text-slate-500 truncate">${req.type || 'N/A'} • ${leaveDateLabel}${endDateLabel}</div>
                 </div>
                 <div class="w-2 h-2 rounded-full ${statusDot}"></div>
             </div>`;
+        }
+
+        function groupLeavesByStartDate(leaves) {
+            const grouped = [];
+            const bucket = new Map();
+
+            leaves.forEach((leave) => {
+                const key = leave.start_date || 'unknown';
+                if (!bucket.has(key)) {
+                    const label = formatRelativeLeaveDate(key);
+                    const bucketItem = { key, label, items: [] };
+                    bucket.set(key, bucketItem);
+                    grouped.push(bucketItem);
+                }
+
+                bucket.get(key).items.push(leave);
+            });
+
+            return grouped;
+        }
+
+        function createMiniLeaveGroup(group) {
+            return `
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between px-1">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-indigo-500">${group.label}</div>
+                        <div class="text-[10px] font-bold text-slate-400">${group.items.length}</div>
+                    </div>
+                    <div class="space-y-2">
+                        ${group.items.map((leave) => createMiniLeave(leave)).join('')}
+                    </div>
+                </div>
+            `;
         }
 
         function createDepartment(dept) {
@@ -378,8 +441,9 @@
                     div.innerHTML = '<p class="text-[10px] text-slate-400 text-center py-4">No recent requests</p>';
                     return;
                 }
-                
-                div.innerHTML = data.map(r => createMiniLeave(r)).join('');
+
+                const grouped = groupLeavesByStartDate(data);
+                div.innerHTML = grouped.map(group => createMiniLeaveGroup(group)).join('');
             })
             .catch(() => {
                 const div = document.getElementById("miniLeaveRequests");

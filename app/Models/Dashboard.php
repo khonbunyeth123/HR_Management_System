@@ -130,6 +130,7 @@ class Dashboard
     {
         $sql = "
             SELECT la.id, la.uuid, e.full_name AS name, lt.name AS type,
+                   la.start_date, la.end_date,
                    DATE_FORMAT(la.start_date, '%M %d') AS start_date_formatted,
                    DATE_FORMAT(la.end_date, '%M %d') AS end_date_formatted,
                    DATEDIFF(la.end_date, la.start_date) + 1 AS total_days,
@@ -137,8 +138,10 @@ class Dashboard
             FROM tbl_leave_applications la
             INNER JOIN tbl_employees e ON la.employee_id = e.id
             INNER JOIN tbl_leave_types lt ON la.leave_type_id = lt.id
-            WHERE la.deleted_at IS NULL AND e.deleted_at IS NULL
-            ORDER BY la.created_at DESC LIMIT :limit
+            WHERE la.deleted_at IS NULL
+              AND e.deleted_at IS NULL
+              AND CURDATE() BETWEEN la.start_date AND la.end_date
+            ORDER BY la.start_date DESC, la.created_at DESC LIMIT :limit
         ";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
