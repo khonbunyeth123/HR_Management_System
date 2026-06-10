@@ -196,7 +196,8 @@
             const absent  = Number(r.absent_days  || 0);
             const leave   = Number(r.leave_days   || 0);
             const dayOff  = Number(r.day_off_days  || 0);
-            const percent = total > 0 ? ((present / total) * 100).toFixed(1) : '0.0';
+            const workdays = present + absent;
+            const percent = workdays > 0 ? ((present / workdays) * 100).toFixed(1) : '0.0';
 
             let stars = '⭐⭐';
             if (percent >= 95)      stars = '⭐⭐⭐⭐⭐';
@@ -239,7 +240,9 @@
         const rows = reportData.map(r => {
             const total   = Number(r.total_days   || 0);
             const present = Number(r.present_days || 0);
-            const percent = total > 0 ? ((present / total) * 100).toFixed(1) : '0.0';
+            const absent  = Number(r.absent_days  || 0);
+            const workdays = present + absent;
+            const percent = workdays > 0 ? ((present / workdays) * 100).toFixed(1) : '0.0';
             return {
                 'Employee Name' : r.full_name ?? 'N/A',
                 'ID'            : r.id ?? '-',
@@ -292,14 +295,16 @@
         const body = reportData.map(r => {
             const total   = Number(r.total_days   || 0);
             const present = Number(r.present_days || 0);
-            const percent = total > 0 ? ((present / total) * 100).toFixed(1) + '%' : '0.0%';
+            const absent  = Number(r.absent_days  || 0);
+            const workdays = present + absent;
+            const percent = workdays > 0 ? ((present / workdays) * 100).toFixed(1) + '%' : '0.0%';
             return [
                 r.full_name    ?? 'N/A',
                 r.id           ?? '-',
                 r.department   ?? 'N/A',
                 total,
                 present,
-                Number(r.absent_days || 0),
+                absent,
                 Number(r.late_days   || 0),
                 Number(r.leave_days  || 0),
                 percent

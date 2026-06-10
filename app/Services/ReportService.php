@@ -151,6 +151,7 @@ class ReportService
                 }
             }
 
+            $workdays = $present + $absent;
             $summary[] = [
                 'id' => $employee['employee_id'],
                 'full_name' => $employee['name'],
@@ -162,7 +163,7 @@ class ReportService
                 'absent_days' => $absent,
                 'holiday_days' => $holiday,
                 'day_off_days' => $dayOff,
-                'attendance_percent' => $totalDays > 0 ? round(($present / $totalDays) * 100, 2) : 0
+                'attendance_percent' => $workdays > 0 ? round(($present / $workdays) * 100, 2) : 0
             ];
         }
 
@@ -364,26 +365,46 @@ class ReportService
         foreach ($data as $employee) {
             $present = 0;
             $late = 0;
+            $absent = 0;
+            $leave = 0;
+            $dayOff = 0;
             $totalDays = count($employee['days']);
 
             foreach ($employee['days'] as $day) {
-                if (in_array($day['status'], ['Present', 'Late', 'Missing Checkout', 'Overtime'], true)) {
-                    $present++;
-                    if ($day['isLate']) {
-                        $late++;
-                    }
+                switch ($day['status']) {
+                    case 'Present':
+                    case 'Late':
+                    case 'Missing Checkout':
+                    case 'Overtime':
+                        $present++;
+                        if ($day['isLate']) {
+                            $late++;
+                        }
+                        break;
+                    case 'Leave':
+                        $leave++;
+                        break;
+                    case 'Absent':
+                        $absent++;
+                        break;
+                    case 'Day Off':
+                        $dayOff++;
+                        break;
                 }
             }
 
+            $workdays = $present + $absent;
             $top[] = [
                 'id' => $employee['employee_id'],
                 'full_name' => $employee['name'],
                 'department' => $employee['department'],
                 'present_days' => $present,
                 'late_days' => $late,
+                'leave_days' => $leave,
+                'day_off_days' => $dayOff,
                 'total_days' => $totalDays,
-                'absent_days' => max(0, $totalDays - $present), // Simplified for top list
-                'attendance_percent' => $totalDays > 0 ? round(($present / $totalDays) * 100, 1) : 0
+                'absent_days' => $absent,
+                'attendance_percent' => $workdays > 0 ? round(($present / $workdays) * 100, 1) : 0
             ];
         }
 
