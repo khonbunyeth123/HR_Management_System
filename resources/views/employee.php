@@ -813,7 +813,7 @@ employeeForm.addEventListener('submit', async e => {
     };
 
     const url    = id ? `/api/employees/${id}` : '/api/employees';
-    const method = id ? 'PUT' : 'POST';
+    const method = 'POST'; // Always use POST to support multipart/form-data (required for file uploads in PHP)
 
     const btn = employeeForm.querySelector('[type="submit"]');
     btn.disabled = true;

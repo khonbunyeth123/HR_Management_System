@@ -126,7 +126,8 @@ class ControllerCalendar
     public function approveLeave(string $uuid): void
     {
         try {
-            $ok = $this->service->approveLeave($uuid);
+            $actorId = (int) ($_SESSION['user_id'] ?? 0);
+            $ok = $this->service->approveLeave($uuid, $actorId);
             Response::json([
                 'success' => $ok,
                 'message' => $ok ? 'Leave request approved' : 'Unable to approve leave request',
@@ -147,7 +148,8 @@ class ControllerCalendar
                 return;
             }
 
-            $ok = $this->service->rejectLeave($uuid, $remark);
+            $actorId = (int) ($_SESSION['user_id'] ?? 0);
+            $ok = $this->service->rejectLeave($uuid, $remark, $actorId);
             Response::json([
                 'success' => $ok,
                 'message' => $ok ? 'Leave request rejected' : 'Unable to reject leave request',

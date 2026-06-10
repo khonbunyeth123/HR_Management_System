@@ -189,20 +189,26 @@ class Report
 
         $params = [':from' => $from, ':to' => $to];
         if (!empty($employeeIds)) {
-            $placeholders = implode(',', array_fill(0, count($employeeIds), '?'));
-            $sql .= " AND la.employee_id IN ($placeholders)";
+            $i = 0;
+            $placeholders = [];
+            foreach ($employeeIds as $id) {
+                $key = ":emp_id_$i";
+                $placeholders[] = $key;
+                $params[$key] = (int) $id;
+                $i++;
+            }
+            $sql .= " AND la.employee_id IN (" . implode(',', $placeholders) . ")";
         }
 
         $stmt = $this->pdo->prepare($sql);
-        $i = 1;
         foreach ($params as $k => $v) {
-            $stmt->bindValue($k, $v);
-        }
-        if (!empty($employeeIds)) {
-            foreach ($employeeIds as $id) {
-                $stmt->bindValue($i++, (int) $id, PDO::PARAM_INT);
+            if (is_int($v)) {
+                $stmt->bindValue($k, $v, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($k, $v);
             }
         }
+        
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

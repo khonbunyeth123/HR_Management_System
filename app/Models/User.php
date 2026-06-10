@@ -59,7 +59,15 @@ class User
             $orderBy
             LIMIT ?, ?
         ");
-        $stmt->execute(array_merge($params, [$offset, $limit]));
+        
+        $i = 1;
+        foreach ($params as $val) {
+            $stmt->bindValue($i++, $val);
+        }
+        $stmt->bindValue($i++, $offset, PDO::PARAM_INT);
+        $stmt->bindValue($i++, $limit, PDO::PARAM_INT);
+        
+        $stmt->execute();
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return ['data' => $users, 'total' => $total];

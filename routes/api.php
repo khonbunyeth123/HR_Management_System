@@ -48,6 +48,7 @@ $router->get('/api/employees/show',  'ControllerEmployee@index');
 $router->get('/api/employee/calendar-events', 'ControllerEmployee@calendarEvents');
 $router->get('/api/employees/{id}',  'ControllerEmployee@show');
 $router->post('/api/employees',      'ControllerEmployee@store');
+$router->post('/api/employees/{id}', 'ControllerEmployee@update');
 $router->put('/api/employees/{id}',  'ControllerEmployee@update');
 $router->delete('/api/employees/{id}','ControllerEmployee@delete');
 

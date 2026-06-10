@@ -68,14 +68,14 @@ class CalendarService
         return $ok;
     }
 
-    public function approveLeave(string $uuid, string $remark = ''): bool
+    public function approveLeave(string $uuid, int $actorId): bool
     {
-        return $this->leaveService->approveLeave($uuid);
+        return $this->leaveService->approveLeave($uuid, $actorId);
     }
 
-    public function rejectLeave(string $uuid, string $remark): bool
+    public function rejectLeave(string $uuid, string $remark, int $actorId): bool
     {
-        return $this->leaveService->rejectLeave($uuid, $remark);
+        return $this->leaveService->rejectLeave($uuid, $remark, $actorId);
     }
 
     public function updateStatus(string $uuid, string $status, ?int $actorId = null): bool
