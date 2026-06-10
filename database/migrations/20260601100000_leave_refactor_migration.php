@@ -18,7 +18,6 @@ class LeaveRefactorMigration extends AbstractMigration
                   ->addColumn('performed_by_user_id', 'integer', ['signed' => false])
                   ->addColumn('performed_at', 'timestamp', ['default' => 'CURRENT_TIMESTAMP'])
                   ->addColumn('ip_address', 'string', ['limit' => 45, 'null' => true])
-                  ->addForeignKey('leave_id', 'tbl_leave_applications', 'id', ['delete'=> 'CASCADE', 'update'=> 'NO_ACTION'])
                   ->create();
         }
 

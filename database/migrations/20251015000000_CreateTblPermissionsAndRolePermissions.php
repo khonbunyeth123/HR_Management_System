@@ -31,8 +31,6 @@ final class CreateTblPermissionsAndRolePermissions extends AbstractMigration
         $pivot
             ->addColumn('role_id',       'integer', ['signed' => false])
             ->addColumn('permission_id', 'integer', ['signed' => false])
-            ->addForeignKey('role_id',       'tbl_roles',       'id', ['delete' => 'CASCADE', 'update' => 'CASCADE'])
-            ->addForeignKey('permission_id', 'tbl_permissions', 'id', ['delete' => 'CASCADE', 'update' => 'CASCADE'])
             ->addIndex(['role_id', 'permission_id'], ['unique' => true])
             ->create();
 

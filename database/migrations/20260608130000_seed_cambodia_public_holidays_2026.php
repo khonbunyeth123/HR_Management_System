@@ -16,7 +16,7 @@ final class SeedCambodiaPublicHolidays2026 extends AbstractMigration
         $now = date('Y-m-d H:i:s');
 
         $events = [
-            ['2026-01-01', '2026-01-01', 'International New Year Day'],
+            ['2026-01-01', '2026-01-01', 'Internaand tional New Year Day'],
             ['2026-01-07', '2026-01-07', 'Day of Victory over the Genocidal Regime'],
             ['2026-03-08', '2026-03-08', 'International Women\'s Rights Day'],
             ['2026-04-14', '2026-04-16', 'Khmer New Year\'s Day'],

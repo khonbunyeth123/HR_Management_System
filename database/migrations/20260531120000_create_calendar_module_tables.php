@@ -79,10 +79,6 @@ final class CreateCalendarModuleTables extends AbstractMigration
                 ->addColumn('created_at', 'datetime')
                 ->addIndex(['event_id'])
                 ->addIndex(['target_type'])
-                ->addForeignKey('event_id', 'tbl_calendar_events', 'id', [
-                    'delete' => 'CASCADE',
-                    'update' => 'CASCADE',
-                ])
                 ->create();
         }
 

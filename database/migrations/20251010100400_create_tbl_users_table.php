@@ -25,7 +25,6 @@ final class CreateTblUsersTable extends AbstractMigration
             ->addColumn('deleted_by', 'integer', ['null' => true])
             ->addIndex(['uuid'], ['unique' => true])
             ->addIndex(['email'], ['unique' => true])
-            ->addForeignKey('role_id', 'tbl_roles', 'id', ['delete' => 'SET_NULL', 'update' => 'CASCADE'])
             ->create();
 
         $adminUsername = trim((string) ($_ENV['HRMS_INITIAL_ADMIN_USERNAME'] ?? getenv('HRMS_INITIAL_ADMIN_USERNAME') ?? ''));
