@@ -1,49 +1,49 @@
-<div class="w-full max-w-7xl mx-auto space-y-6">
+<div class="w-full max-w-7xl mx-auto space-y-3">
     <!-- Header Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
-                    <span class="iconify text-2xl text-indigo-600" data-icon="mdi:clock-check"></span>
+    <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+                    <span class="iconify text-base text-indigo-600" data-icon="mdi:clock-check"></span>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900">Attendance Records</h1>
-                    <p class="text-sm text-slate-500" id="totalCount">0 Records found</p>
+                    <h1 class="text-sm font-bold text-slate-900">Attendance</h1>
+                    <p class="text-[10px] text-slate-500" id="totalCount">0 Records found</p>
                 </div>
             </div>
             
             <div class="flex items-center gap-2 w-full md:w-auto">
                 <button onclick="openQRModal()"
-                    class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-sm shadow-indigo-100">
-                    <span class="iconify text-lg" data-icon="mdi:qrcode"></span>
+                    class="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-1 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm shadow-indigo-100">
+                    <span class="iconify text-sm" data-icon="mdi:qrcode"></span>
                     Generate QR
                 </button>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 mt-6">
-            <div class="relative sm:col-span-4">
-                <span class="iconify absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
-                <input type="text" id="searchInput" placeholder="Search Name, ID or Date..."
-                    class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-3">
+            <div class="relative sm:col-span-5">
+                <span class="iconify absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
+                <input type="text" id="searchInput" placeholder="Search..."
+                    class="w-full pl-8 pr-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-[10px]">
         </div>
             <div class="sm:col-span-3">
                 <select id="checkTypeFilter"
-                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all cursor-pointer">
-                    <option value="">All Check Types</option>
-                    <option value="check-in">Check In Only</option>
-                    <option value="check-out">Check Out Only</option>
+                    class="w-full px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-[10px] transition-all cursor-pointer">
+                    <option value="">All Types</option>
+                    <option value="check-in">Check In</option>
+                    <option value="check-out">Check Out</option>
                 </select>
             </div>
-            <div class="sm:col-span-3">
+            <div class="sm:col-span-2">
                 <input type="date" id="dateFilter"
-                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all">
+                    class="w-full px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-[10px] transition-all">
             </div>
             <div class="sm:col-span-2">
                 <button onclick="setTodayFilter()"
-                    class="w-full h-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-xl transition-all">
-                    <span class="iconify text-lg" data-icon="mdi:calendar-today"></span>
+                    class="w-full h-full flex items-center justify-center gap-1.5 px-2 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-lg transition-all">
+                    <span class="iconify text-sm" data-icon="mdi:calendar-today"></span>
                     Today
                 </button>
             </div>
@@ -51,53 +51,53 @@
     </div>
 
     <!-- Table Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
+            <table class="w-full text-[10px]">
+                <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Employee</th>
-                        <th class="px-4 py-3 text-left font-semibold">Date</th>
-                        <th class="px-4 py-3 text-left font-semibold">Time</th>
-                        <th class="px-4 py-3 text-left font-semibold">Type</th>
-                        <th class="px-4 py-3 text-left font-semibold">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold">Log</th>
+                        <th class="px-3 py-2 text-left font-semibold">Employee</th>
+                        <th class="px-3 py-2 text-left font-semibold">Date</th>
+                        <th class="px-3 py-2 font-semibold">Time</th>
+                        <th class="px-3 py-2 font-semibold">Type</th>
+                        <th class="px-3 py-2 font-semibold">Status</th>
+                        <th class="px-3 py-2 font-semibold">Log</th>
                     </tr>
                 </thead>
                 <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-slate-400">
-                            <div class="flex flex-col items-center justify-center gap-2">
-                                <span class="iconify text-3xl animate-spin" data-icon="mdi:loading"></span>
-                                <p class="text-xs font-medium">Loading records...</p>
+                        <td colspan="6" class="px-3 py-6 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center gap-1">
+                                <span class="iconify text-base animate-spin" data-icon="mdi:loading"></span>
+                                <p class="text-[10px] font-medium">Loading...</p>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div id="paginationContainer" class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-center gap-2"></div>
+        <div id="paginationContainer" class="px-3 py-2 bg-slate-50/50 border-t border-slate-100 flex justify-center gap-1"></div>
     </div>
 
     <!-- QR Modal Overlay -->
     <div id="qrModal" class="fixed inset-0 z-[9999] hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm px-4 py-6 md:items-center">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform max-h-[calc(100vh-3rem)] overflow-y-auto" id="qrModalContent">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-slate-900">Attendance QR</h3>
-                <button onclick="closeQRModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors">✕</button>
+        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform max-h-[calc(100vh-3rem)] overflow-y-auto" id="qrModalContent">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-bold text-slate-900">Attendance QR</h3>
+                <button onclick="closeQRModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors text-xs">✕</button>
             </div>
 
-            <div class="bg-indigo-50 p-6 rounded-2xl inline-block mb-4 border border-indigo-100">
+            <div class="bg-indigo-50 p-4 rounded-2xl inline-block mb-4 border border-indigo-100">
                 <div id="qrcode" class="rounded-lg overflow-hidden border-4 border-white shadow-sm"></div>
             </div>
 
-            <p class="text-xs text-slate-500 mb-8" id="qrUrlLabel">Scan to record your attendance</p>
+            <p class="text-[10px] text-slate-500 mb-6" id="qrUrlLabel">Scan to record your attendance</p>
 
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="downloadQR()" class="flex items-center justify-center gap-2 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="downloadQR()" class="flex items-center justify-center gap-2 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">
                     <span class="iconify" data-icon="mdi:download"></span> Download
                 </button>
-                <button onclick="printQR()" class="flex items-center justify-center gap-2 py-3 border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all">
+                <button onclick="printQR()" class="flex items-center justify-center gap-2 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">
                     <span class="iconify" data-icon="mdi:printer"></span> Print
                 </button>
             </div>
@@ -107,8 +107,8 @@
 
 <style>
     #qrcode canvas, #qrcode img {
-        width: 200px !important;
-        height: 200px !important;
+        width: 180px !important;
+        height: 180px !important;
         margin: 0 auto;
     }
 </style>
@@ -122,6 +122,14 @@
     const qrLightColor = '#ffffff';
     const qrContent = 'DOORSTEP_ATTENDANCE';
     const qrcode = document.getElementById('qrcode');
+
+    // Helper for date
+    function getCurrentDateString() {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const localDate = new Date(now.getTime() - offset * 60000);
+        return localDate.toISOString().split('T')[0];
+    }
 
     // Init QR
     new QRCode(qrcode, {
@@ -194,8 +202,7 @@
     function printQR() { generateQRCard(800, c => { const w = window.open('', '_blank'); w.document.write(`<body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f3f4f6;"><img src="${c.toDataURL()}" style="width:400px;"></body>`); w.print(); }); }
 
     function setTodayFilter() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dateFilter').value = today;
+        document.getElementById('dateFilter').value = getCurrentDateString();
         loadAttendance(1);
     }
 
@@ -241,7 +248,7 @@
     function renderTable(records) {
         const tbody = document.getElementById("attendanceTableBody");
         if (!records.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No records matching your filters</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-slate-400">No records matching your filters</td></tr>';
             return;
         }
 
@@ -254,7 +261,7 @@
             let typeLabel = '';
             
             if (isLeave) {
-                typeClass = 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                typeClass = 'bg-indigo-50 text-indigo-700 border border-indigo-100';
                 typeLabel = 'Leave';
             } else if (isCheckIn) {
                 typeClass = 'bg-emerald-50 text-emerald-600';
@@ -264,39 +271,39 @@
                 typeLabel = 'Out';
             }
             
-            const timeDisplay = isLeave ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full Day</span>' : rec.check_time;
+            const timeDisplay = isLeave ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full</span>' : rec.check_time;
             
             return `
             <tr class="${isLeave ? 'bg-indigo-50/30' : ''} hover:bg-slate-50 transition-colors group">
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg ${isLeave ? 'bg-indigo-100 text-indigo-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-xs font-bold">
+                <td class="px-3 py-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md ${isLeave ? 'bg-indigo-100 text-indigo-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-[10px] font-bold">
                             ${(rec.full_name || rec.emp_code || '#').charAt(0)}
                         </div>
                         <div class="flex flex-col">
-                            <span class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            <span class="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                                 ${rec.full_name || 'N/A'}
                             </span>
-                            <span class="text-[10px] text-slate-400 font-medium">
+                            <span class="text-[9px] text-slate-400 font-medium">
                                 ${rec.emp_code ? '#' + rec.emp_code : ''}
                             </span>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 text-slate-500">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</td>
-                <td class="px-6 py-4 font-mono font-bold ${isLeave ? 'text-indigo-600' : 'text-indigo-600'}">${timeDisplay}</td>
-                <td class="px-6 py-4">
-                    <span class="${typeClass} px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                <td class="px-3 py-2 text-[11px] text-slate-500">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'2-digit'})}</td>
+                <td class="px-3 py-2 text-[11px] font-mono font-bold text-slate-700">${timeDisplay}</td>
+                <td class="px-3 py-2">
+                    <span class="${typeClass} px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
                         ${typeLabel}
                     </span>
                 </td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-1.5 text-xs ${rec.status_id == 1 ? 'text-emerald-600' : 'text-slate-400'}">
-                        <span class="w-1.5 h-1.5 rounded-full ${rec.status_id == 1 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                <td class="px-3 py-2">
+                    <div class="flex items-center gap-1 text-[10px] ${rec.status_id == 1 ? 'text-emerald-600' : 'text-slate-400'}">
+                        <span class="w-1 h-1 rounded-full ${rec.status_id == 1 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
                         ${rec.status_id == 1 ? 'Active' : 'Archived'}
                     </div>
                 </td>
-                <td class="px-6 py-4 text-[10px] text-slate-400 uppercase">${new Date(rec.created_at).toLocaleDateString()}</td>
+                <td class="px-3 py-2 text-[9px] text-slate-400 uppercase">${new Date(rec.created_at).toLocaleDateString()}</td>
             </tr>
         `;}).join('');
     }
@@ -322,7 +329,7 @@
         const isActive = page === currentPageNumber;
         const isDisabled = disabled || isActive;
         const text = label ?? page;
-        const baseClass = 'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-3 text-sm font-bold transition-all';
+        const baseClass = 'inline-flex h-6 min-w-6 items-center justify-center rounded-md border px-1.5 text-[9px] font-bold transition-all';
         const activeClass = 'bg-indigo-600 text-white border-indigo-600 shadow-sm';
         const inactiveClass = 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-700';
         const disabledClass = 'opacity-40 cursor-not-allowed';
@@ -346,7 +353,7 @@
 
         if (totalRecords === 0) {
             container.innerHTML = `
-                <div class="w-full flex items-center justify-between gap-4 text-sm text-slate-500">
+                <div class="w-full flex items-center justify-between gap-4 text-[9px] text-slate-500">
                     <span>Showing 0 of 0 records</span>
                 </div>
             `;
@@ -355,7 +362,7 @@
 
         if (totalPages <= 1) {
             container.innerHTML = `
-                <div class="w-full flex items-center justify-between gap-4 text-sm text-slate-500">
+                <div class="w-full flex items-center justify-between gap-4 text-[9px] text-slate-500">
                     <span>Showing ${showingFrom} to ${showingTo} of ${totalRecords} records</span>
                 </div>
             `;
@@ -385,17 +392,17 @@
         }
 
         container.innerHTML = `
-            <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="text-sm text-slate-500">
+            <div class="w-full flex flex-col sm:flex-row items-center justify-between gap-2 px-1">
+                <div class="text-[9px] text-slate-500">
                     Showing <span class="font-semibold text-slate-700">${showingFrom}</span>
                     to <span class="font-semibold text-slate-700">${showingTo}</span>
                     of <span class="font-semibold text-slate-700">${totalRecords}</span> records
                 </div>
 
-                <div class="flex flex-wrap items-center justify-center gap-2">
-                    ${paginationButton(safeCurrentPage - 1, safeCurrentPage, 'Prev', safeCurrentPage === 1, 'min-w-16')}
+                <div class="flex flex-wrap items-center justify-center gap-1">
+                    ${paginationButton(safeCurrentPage - 1, safeCurrentPage, 'Prev', safeCurrentPage === 1, 'min-w-[40px]')}
                     ${pageButtons}
-                    ${paginationButton(safeCurrentPage + 1, safeCurrentPage, 'Next', safeCurrentPage === totalPages, 'min-w-16')}
+                    ${paginationButton(safeCurrentPage + 1, safeCurrentPage, 'Next', safeCurrentPage === totalPages, 'min-w-[40px]')}
                 </div>
             </div>
         `;
@@ -415,6 +422,6 @@
     document.getElementById("dateFilter").addEventListener("change", () => loadAttendance(1));
     
     // Set default filter to today
-    document.getElementById('dateFilter').value = new Date().toISOString().split('T')[0];
+    document.getElementById('dateFilter').value = getCurrentDateString();
     loadAttendance();
 </script>

@@ -126,63 +126,61 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
 </div>
 
 <div class="w-full min-h-full">
-    <div class="p-3 lg:p-4 space-y-4">
+    <div class="p-2 space-y-2">
 
         <!-- Header -->
-        <div class="rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-5 py-5 text-white shadow-xl shadow-slate-200/60">
-            <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                <div class="max-w-3xl">
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-indigo-200">
-                        <span class="iconify text-sm" data-icon="mdi:calendar-multiselect" aria-hidden="true"></span>
-                        HRM Admin Calendar
+        <div class="rounded-lg bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-3 py-2 text-white shadow-sm">
+            <div class="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+                <div>
+                    <div class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.25em] text-indigo-200">
+                        <span class="iconify text-[10px]" data-icon="mdi:calendar-multiselect" aria-hidden="true"></span>
+                        HRM Calendar
                     </div>
-                    <!-- <h1 class="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Plan schedules, leave approvals, and reminders in one place</h1> -->
-                    <p class="mt-2 max-w-2xl text-sm text-slate-300">Schedules · leave approvals · reminders.</p>
                 </div>
-                <div class="flex flex-wrap gap-2">
-                    <button data-view-switch="month" class="view-switch rounded-2xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-lg shadow-slate-950/20" aria-pressed="true">Month</button>
-                    <button data-view-switch="week"  class="view-switch rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15" aria-pressed="false">Week</button>
-                    <button data-view-switch="day"   class="view-switch rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15" aria-pressed="false">Day</button>
-                    <button id="openCreateEvent" class="rounded-2xl bg-indigo-500 px-4 py-2 text-sm font-black text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-400">+ New Event</button>
+                <div class="flex flex-wrap gap-1">
+                    <button data-view-switch="month" class="view-switch rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-slate-900 shadow-sm" aria-pressed="true">Month</button>
+                    <button data-view-switch="week"  class="view-switch rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-bold text-white transition hover:bg-white/15" aria-pressed="false">Week</button>
+                    <button data-view-switch="day"   class="view-switch rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-bold text-white transition hover:bg-white/15" aria-pressed="false">Day</button>
+                    <button id="openCreateEvent" class="rounded-lg bg-indigo-500 px-2 py-1 text-[10px] font-black text-white shadow-sm transition hover:bg-indigo-400">+ New</button>
                 </div>
             </div>
         </div>
 
         <!-- Main layout -->
-        <div class="space-y-4">
-            <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="space-y-2">
+            <div class="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
-                    <button id="clearFilters" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">Reset</button>
+                    <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
+                    <button id="clearFilters" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-700">Reset</button>
                 </div>
-                <div id="filterPanel" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                <div id="filterPanel" class="mt-2 grid grid-cols-2 gap-2 md:grid-cols-5">
                     <div>
-                        <label for="employeeFilter" class="mb-1 block text-xs font-bold text-slate-500">Employee</label>
-                        <select id="employeeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                        <label for="employeeFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Employee</label>
+                        <select id="employeeFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
                             <option value="">All employees</option>
                         </select>
                     </div>
                     <div>
-                        <label for="departmentFilter" class="mb-1 block text-xs font-bold text-slate-500">Department</label>
-                        <select id="departmentFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                        <label for="departmentFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Department</label>
+                        <select id="departmentFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
                             <option value="">All departments</option>
                         </select>
                     </div>
                     <div>
-                        <label for="branchFilter" class="mb-1 block text-xs font-bold text-slate-500">Branch</label>
-                        <select id="branchFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                        <label for="branchFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Branch</label>
+                        <select id="branchFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
                             <option value="">All branches</option>
                         </select>
                     </div>
                     <div>
-                        <label for="eventTypeFilter" class="mb-1 block text-xs font-bold text-slate-500">Event Type</label>
-                        <select id="eventTypeFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                        <label for="eventTypeFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Event Type</label>
+                        <select id="eventTypeFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
                             <option value="">All types</option>
                         </select>
                     </div>
                     <div>
-                        <label for="statusFilter" class="mb-1 block text-xs font-bold text-slate-500">Status</label>
-                        <select id="statusFilter" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                        <label for="statusFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Status</label>
+                        <select id="statusFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
                             <option value="">All status</option>
                         </select>
                     </div>

@@ -75,7 +75,8 @@ class ControllerDashboard extends BaseController
     {
         try {
             $month = $request->query->get('month', date('Y-m'));
-            $events = $this->dashboardModel->getCalendarEvents($month);
+            $employeeId = (int) ($_SESSION['employee_id'] ?? 0);
+            $events = $this->dashboardModel->getCalendarEvents($month, $employeeId);
             return $this->json([
                 'success' => true,
                 'message' => 'Calendar events retrieved',

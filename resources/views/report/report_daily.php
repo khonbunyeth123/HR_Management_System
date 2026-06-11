@@ -1,63 +1,70 @@
 <div class="w-full h-full">
-    <div class="bg-white shadow-lg p-4">
-        <h1 class="text-3xl font-bold text-slate-800 mb-6">Daily Attendance Report</h1>
+    <div class="bg-white rounded-lg shadow-sm p-3 border border-slate-100">
+        <h1 class="text-sm font-bold text-slate-800 mb-3">Daily Attendance Report</h1>
 
         <!-- Date Picker -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Date:</label>
-            <input type="date" id="selectedDate" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="">
-            <button onclick="loadReport()" class="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Load Report</button>
+        <div class="mb-3 flex items-center gap-2">
+            <label class="text-[10px] font-medium text-gray-500">Select Date:</label>
+            <input type="date" id="selectedDate" class="p-1 border border-gray-200 rounded-lg text-[10px] focus:ring-1 focus:ring-blue-500" value="">
+            <button onclick="loadReport()" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Load</button>
         </div>
 
         <!-- Attendance Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg text-[10px]">
                 <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th class="p-3 text-left">Employee Name</th>
-                        <th class="p-3 text-center">Employee ID</th>
-                        <th class="p-3 text-center">Check-in 1</th>
-                        <th class="p-3 text-center">Check-out 1</th>
-                        <th class="p-3 text-center">Check-in 2</th>
-                        <th class="p-3 text-center">Check-out 2</th>
-                        <th class="p-3 text-center">Status</th>
+                        <th class="p-2 text-left">Employee</th>
+                        <th class="p-2 text-center">Emp ID</th>
+                        <th class="p-2 text-center">In 1</th>
+                        <th class="p-2 text-center">Out 1</th>
+                        <th class="p-2 text-center">In 2</th>
+                        <th class="p-2 text-center">Out 2</th>
+                        <th class="p-2 text-center">Status</th>
                     </tr>
                 </thead>
                 <tbody id="attendanceTableBody">
                     <tr>
-                        <td colspan="7" class="text-center p-4 text-gray-500">No data loaded</td>
+                        <td colspan="7" class="text-center p-3 text-gray-500">No data loaded</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                <p class="text-green-600 text-sm font-medium">On Time</p>
-                <p class="text-2xl font-bold text-green-800" id="summaryOnTime">0</p>
+        <div class="grid grid-cols-5 gap-2 mt-3 text-[10px]">
+            <div class="bg-green-50 p-2 rounded-lg border border-green-200 text-center">
+                <p class="text-green-600 font-medium">On Time</p>
+                <p class="text-lg font-bold text-green-800" id="summaryOnTime">0</p>
             </div>
-            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <p class="text-yellow-600 text-sm font-medium">Late</p>
-                <p class="text-2xl font-bold text-yellow-800" id="summaryLate">0</p>
+            <div class="bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-center">
+                <p class="text-yellow-600 font-medium">Late</p>
+                <p class="text-lg font-bold text-yellow-800" id="summaryLate">0</p>
             </div>
-            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                <p class="text-red-600 text-sm font-medium">Absent</p>
-                <p class="text-2xl font-bold text-red-800" id="summaryAbsent">0</p>
+            <div class="bg-red-50 p-2 rounded-lg border border-red-200 text-center">
+                <p class="text-red-600 font-medium">Absent</p>
+                <p class="text-lg font-bold text-red-800" id="summaryAbsent">0</p>
             </div>
-            <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                <p class="text-orange-600 text-sm font-medium">Incomplete</p>
-                <p class="text-2xl font-bold text-orange-800" id="summaryIncomplete">0</p>
+            <div class="bg-orange-50 p-2 rounded-lg border border-orange-200 text-center">
+                <p class="text-orange-600 font-medium">Inc.</p>
+                <p class="text-lg font-bold text-orange-800" id="summaryIncomplete">0</p>
             </div>
-            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <p class="text-blue-600 text-sm font-medium">Total Employees</p>
-                <p class="text-2xl font-bold text-blue-800" id="summaryTotal">0</p>
+            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 text-center">
+                <p class="text-blue-600 font-medium">Total</p>
+                <p class="text-lg font-bold text-blue-800" id="summaryTotal">0</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+function getCurrentDateString() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - offset * 60000);
+    return localDate.toISOString().split('T')[0];
+}
+
 async function loadReport() {
     const selectedDate = document.getElementById('selectedDate').value;
 
@@ -191,7 +198,7 @@ function punchToneClass(note) {
 
 // Optional: load today by default
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('selectedDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('selectedDate').value = getCurrentDateString();
     loadReport();
 });
 </script>

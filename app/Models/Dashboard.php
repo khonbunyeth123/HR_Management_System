@@ -152,12 +152,12 @@ class Dashboard
     /**
      * Get calendar events.
      */
-    public function getCalendarEvents(string $month): array
+    public function getCalendarEvents(string $month, int $employeeId): array
     {
         $calendar = new CalendarEvent();
         $rangeStart = $month . '-01';
         $rangeEnd = date('Y-m-t', strtotime($rangeStart));
-        $result = $calendar->list(['employee_id' => 0, 'department' => '', 'branch' => '', 'event_type' => '', 'status' => ''], $rangeStart, $rangeEnd);
+        $result = $calendar->list(['employee_id' => $employeeId, 'department' => '', 'branch' => '', 'event_type' => '', 'status' => ''], $rangeStart, $rangeEnd);
         return array_map(static function (array $event): array {
             return [
                 'uuid' => (string)($event['uuid'] ?? ''),

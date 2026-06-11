@@ -9,55 +9,55 @@ $uname = $_SESSION['uname'] ?? 'User';
 ?>
 <!-- Top Navigation -->
 <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 w-full border-b border-slate-100">
-  <div class="w-full px-8">
-    <div class="flex items-center justify-between w-full h-[64px]">
+  <div class="w-full px-4">
+    <div class="flex items-center justify-between w-full h-[50px]">
 
       <!-- Logo & Brand -->
-      <div class="flex items-center gap-4 min-w-0">
+      <div class="flex items-center gap-2 min-w-0">
         <button id="sidebarToggle" type="button"
-          class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 border border-slate-100 transition-all hover:bg-slate-100"
+          class="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-100 transition-all hover:bg-slate-100"
           aria-label="Open menu" aria-controls="appSidebar" aria-expanded="false">
-          <span class="iconify text-xl" data-icon="mdi:menu"></span>
+          <span class="iconify text-lg" data-icon="mdi:menu"></span>
         </button>
-        <div class="w-10 h-10 bg-indigo-600 rounded-xl p-0.5 shadow-lg shadow-indigo-100">
-          <img src="/assets/img/logo.png" alt="Logo" class="w-full h-full rounded-[10px] object-cover border border-white/20">
+        <div class="w-8 h-8 bg-indigo-600 rounded-lg p-0.5 shadow-md shadow-indigo-100">
+          <img src="/assets/img/logo.png" alt="Logo" class="w-full h-full rounded-[6px] object-cover border border-white/20">
         </div>
         <div class="hidden sm:flex flex-col">
-          <h1 class="text-slate-900 text-sm font-black leading-tight tracking-tight">Doorstep</h1>
-          <span class="text-slate-400 text-[9px] font-bold uppercase tracking-[0.2em]">Admin Portal</span>
+          <h1 class="text-slate-900 text-xs font-black leading-tight tracking-tight">Doorstep</h1>
+          <span class="text-slate-400 text-[8px] font-bold uppercase tracking-[0.2em]">Admin</span>
         </div>
       </div>
 
       <!-- Clock -->
       <div class="hidden min-[420px]:block flex-1 text-center">
-        <h2 id="clock" class="text-slate-900 text-xs font-black tabular-nums tracking-wider opacity-80"></h2>
+        <h2 id="clock" class="text-slate-900 text-[10px] font-black tabular-nums tracking-wider opacity-80"></h2>
       </div>
 
       <!-- User Section -->
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
         <!-- User Info -->
-        <div class="hidden md:flex items-center gap-3 pl-2 border-l border-slate-100">
+        <div class="hidden md:flex items-center gap-2 pl-2 border-l border-slate-100">
           <div
-            class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-black shadow-lg shadow-indigo-100">
+            class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-md shadow-indigo-100">
             <?php
             $name = htmlspecialchars($_SESSION['uname'] ?? 'User');
             echo strtoupper(substr($name, 0, 1));
             ?>
           </div>
           <div class="flex flex-col">
-            <span class="text-slate-900 text-xs font-black leading-none mb-0.5">
+            <span class="text-slate-900 text-[10px] font-black leading-none mb-0.5">
                 <?= htmlspecialchars($_SESSION['uname'] ?? 'User'); ?>
             </span>
-            <span class="text-slate-400 text-[10px] font-bold">Administrator</span>
+            <span class="text-slate-400 text-[9px] font-bold">Admin</span>
           </div>
         </div>
 
         <!-- Logout Button -->
         <button id="logoutBtn"
-          class="flex items-center justify-center h-10 w-10 md:w-auto md:px-4 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white rounded-xl text-xs font-black transition-all duration-300 border border-rose-100 group"
+          class="flex items-center justify-center h-8 w-8 md:w-auto md:px-3 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white rounded-lg text-[10px] font-black transition-all duration-300 border border-rose-100 group"
           title="Logout">
-          <span class="iconify text-xl md:mr-2 group-hover:rotate-12 transition-transform" data-icon="mdi:logout-variant"></span>
-          <span class="hidden md:inline">Logout</span>
+          <span class="iconify text-lg md:mr-1 group-hover:rotate-12 transition-transform" data-icon="mdi:logout-variant"></span>
+          <span class="hidden md:inline">Exit</span>
         </button>
       </div>
 

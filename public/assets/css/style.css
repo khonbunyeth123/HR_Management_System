@@ -7,6 +7,18 @@
     --toast-warning: #f59e0b;
 }
 
+/* Sticky Header */
+.sticky-table-wrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.sticky-table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
 /* Toast Notification System */
 #toast-container {
     position: fixed;

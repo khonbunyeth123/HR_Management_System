@@ -1,93 +1,76 @@
 <?php
 // resources/views/report/report_detail.php
 ?>
-<body class="bg-[#FBFCFD] min-h-screen p-4 md:p-10 transition-colors duration-200 font-sans">
-<div class="max-w-7xl mx-auto">
+<div class="w-full h-full p-2">
   
   <!-- Header Section -->
-  <div class="flex flex-col md:flex-row justify-between items-end mb-1 gap-6 border-b border-slate-100 pb-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-2 gap-2 border-b border-slate-100 pb-2">
     <div>
-      <!-- <div class="flex items-center gap-2 mb-2">
-        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Live Analysis</span>
-      </div> -->
-      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
-      <p class="text-sm text-slate-500 mt-2 font-medium">Detailed audit of daily shift performance and employee punctuality.</p>
+      <h1 class="text-sm font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
     </div>
-    <div class="flex gap-3 w-full md:w-auto">
-      <button onclick="exportExcel()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 text-[11px] font-bold px-6 py-3 rounded-2xl hover:bg-slate-50 transition shadow-sm group">
-        <span class="iconify text-emerald-500 text-lg group-hover:scale-110 transition-transform" data-icon="mdi:file-excel"></span> EXCEL
-      </button>
-      <button onclick="exportPDF()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 text-[11px] font-bold px-6 py-3 rounded-2xl hover:bg-slate-50 transition shadow-sm group">
-        <span class="iconify text-rose-500 text-lg group-hover:scale-110 transition-transform" data-icon="mdi:file-pdf-box"></span> PDF
-      </button>
+    <div class="flex gap-1">
+      <button onclick="exportExcel()" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-slate-50 transition shadow-sm">EXCEL</button>
+      <button onclick="exportPDF()" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-slate-50 transition shadow-sm">PDF</button>
     </div>
   </div>
 
   <!-- Summary Metric Cards -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-6">
-    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-indigo-100 transition-colors group">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-indigo-400 transition-colors">Total Staff</p>
-      <div class="text-4xl font-bold text-slate-900" id="statTotalEmployees">0</div>
+  <div class="grid grid-cols-4 gap-2 mb-3">
+    <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+      <div class="text-lg font-bold text-slate-900" id="statTotalEmployees">0</div>
     </div>
-    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-teal-100 transition-colors group">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-teal-500 transition-colors">Present</p>
-      <div class="text-4xl font-bold text-slate-900" id="statTotalPresent">0</div>
+    <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Present</p>
+      <div class="text-lg font-bold text-slate-900" id="statTotalPresent">0</div>
     </div>
-    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-rose-100 transition-colors group">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-rose-500 transition-colors">Absent</p>
-      <div class="text-4xl font-bold text-slate-900" id="statTotalAbsent">0</div>
+    <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Absent</p>
+      <div class="text-lg font-bold text-slate-900" id="statTotalAbsent">0</div>
     </div>
-    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:border-orange-100 transition-colors group">
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 group-hover:text-orange-500 transition-colors">Late Arrivals</p>
-      <div class="text-4xl font-bold text-slate-900" id="statTotalLate">0</div>
+    <div class="bg-white p-2 rounded-lg border border-slate-100 text-center">
+      <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Late</p>
+      <div class="text-lg font-bold text-slate-900" id="statTotalLate">0</div>
     </div>
   </div>
 
   <!-- Filter Bar -->
-  <div class="bg-white border border-slate-100 p-2 rounded-[2rem] shadow-sm mb-6 flex flex-wrap items-center gap-2">
-    <div class="flex items-center px-6 py-2">
-      <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest mr-4">Period</span>
-      <input type="date" id="fromDate" oninput="fetchData()" class="bg-transparent text-sm font-bold text-slate-700 outline-none">
-      <span class="mx-3 text-slate-200">/</span>
-      <input type="date" id="toDate" oninput="fetchData()" class="bg-transparent text-sm font-bold text-slate-700 outline-none">
+  <div class="bg-white border border-slate-100 p-2 rounded-lg shadow-sm mb-3 flex flex-wrap items-center gap-2 text-[10px]">
+    <div class="flex items-center">
+      <span class="font-black text-slate-300 uppercase mr-2">Period</span>
+      <input type="date" id="fromDate" oninput="fetchData()" class="bg-transparent font-bold text-slate-700 outline-none">
+      <span class="mx-1 text-slate-200">/</span>
+      <input type="date" id="toDate" oninput="fetchData()" class="bg-transparent font-bold text-slate-700 outline-none">
     </div>
-    
-    <div class="h-8 w-px bg-slate-100 mx-2"></div>
-
-    <div class="flex items-center px-6 py-2">
-      <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest mr-4">Department</span>
-      <select id="deptFilter" onchange="fetchData()" class="text-sm font-bold text-slate-700 outline-none border-none cursor-pointer bg-transparent">
-        <option value="">All Departments</option>
+    <div class="h-4 w-px bg-slate-100 mx-1"></div>
+    <div class="flex items-center">
+      <span class="font-black text-slate-300 uppercase mr-2">Dept</span>
+      <select id="deptFilter" onchange="fetchData()" class="font-bold text-slate-700 outline-none border-none cursor-pointer bg-transparent">
+        <option value="">All</option>
       </select>
     </div>
-
-    <div class="relative flex-1 min-w-[280px] ml-auto">
-      <span class="iconify absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-lg" data-icon="mdi:magnify"></span>
-      <input type="text" id="searchInput" placeholder="Search name or employee ID..." oninput="render()" 
-             class="w-full bg-slate-50 text-sm font-semibold text-slate-600 pl-14 pr-6 py-4 rounded-3xl outline-none border border-transparent focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-500/5 transition-all">
-    </div>
-
-    <div id="loadingIndicator" class="hidden px-6">
-      <span class="iconify animate-spin text-indigo-400 text-xl" data-icon="mdi:loading"></span>
+    <div class="relative flex-1 min-w-[200px] ml-auto">
+      <span class="iconify absolute left-2 top-1/2 -translate-y-1/2 text-slate-300" data-icon="mdi:magnify"></span>
+      <input type="text" id="searchInput" placeholder="Search..." oninput="render()" 
+             class="w-full bg-slate-50 text-[10px] font-semibold text-slate-600 pl-6 pr-3 py-1 rounded-lg outline-none border border-transparent focus:bg-white focus:border-indigo-100 transition-all">
     </div>
   </div>
 
-  <!-- START: Employee Accordion -->
-  <div id="accordionContainer" class="space-y-6">
-    <!-- Content dynamically rendered -->
+  <!-- Accordion Container -->
+  <div id="accordionContainer" class="space-y-2"></div>
+
+  <!-- Loading Indicator -->
+  <div id="loadingIndicator" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/10 backdrop-blur-sm">
+      <div class="flex flex-col items-center gap-3 bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+          <div class="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-600 rounded-full animate-spin"></div>
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading Report...</p>
+      </div>
   </div>
-  <!-- END: Employee Accordion -->
 
   <!-- Empty State -->
-  <div id="emptyState" class="hidden py-40 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
-    <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
-      <span class="iconify text-5xl text-slate-200" data-icon="mdi:database-search-outline"></span>
-    </div>
-    <h3 class="text-xl font-bold text-slate-900">No records found</h3>
-    <p class="text-sm text-slate-400 mt-2 font-medium">Try adjusting your filters or search keywords.</p>
+  <div id="emptyState" class="hidden py-10 text-center bg-white rounded-lg border border-dashed border-slate-200">
+    <p class="text-[10px] text-slate-400 font-medium">No records found.</p>
   </div>
-
 </div>
 
 <!-- Scripts -->
@@ -96,6 +79,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <script>
+// Helper for date
+function getCurrentDateString() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - offset * 60000);
+    return localDate.toISOString().split('T')[0];
+}
+
 // ── Core Data ──
 let RAW_DATA = [];
 let GROUPED_DATA = [];
@@ -104,7 +95,7 @@ let GROUPED_DATA = [];
 (function init() {
   const today = new Date();
   const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-  const lastDay  = today.toISOString().split('T')[0];
+  const lastDay  = getCurrentDateString();
   document.getElementById('fromDate').value = firstDay;
   document.getElementById('toDate').value   = lastDay;
   
@@ -195,52 +186,52 @@ function render() {
 
   empty.classList.add('hidden');
   container.innerHTML = filtered.map(emp => `
-    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden transition-all duration-300">
-      <button onclick="toggleAccordion('${emp.id}')" class="w-full flex items-center justify-between p-2 hover:bg-slate-50/30 transition-colors group">
-        <div class="flex items-center gap-6">
-          <div class="w-14 h-14 rounded-[1.25rem] bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xl border border-slate-100 shadow-inner">
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.03)] overflow-hidden transition-all duration-300">
+      <button onclick="toggleAccordion('${emp.id}')" class="w-full flex items-center justify-between p-1 hover:bg-slate-50/30 transition-colors group">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-lg border border-slate-100 shadow-inner">
             ${emp.name.charAt(0)}
           </div>
           <div class="text-left">
-            <h4 class="font-bold text-slate-800 text-xl tracking-tight">${emp.name}</h4>
-            <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">${emp.department} • ID: ${emp.id}</p>
+            <h4 class="font-bold text-slate-800 text-sm tracking-tight">${emp.name}</h4>
+            <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-0.5">${emp.department} • ID: ${emp.id}</p>
           </div>
         </div>
-        <div class="flex items-center gap-6">
-          <span class="px-5 py-2 rounded-2xl bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-xl bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest border border-slate-100">
             ${Object.keys(emp.days).length} Records
           </span>
-          <div id="icon-${emp.id}" class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:text-indigo-400 transition-all duration-300 border border-slate-100">
-            <span class="iconify text-2xl" data-icon="mdi:chevron-down"></span>
+          <div id="icon-${emp.id}" class="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 group-hover:text-indigo-400 transition-all duration-300 border border-slate-100">
+            <span class="iconify text-xl" data-icon="mdi:chevron-down"></span>
           </div>
         </div>
       </button>
 
       <div id="content-${emp.id}" class="hidden border-t border-slate-50 p-4 bg-slate-50/[0.2]">
-        <div class="overflow-x-auto rounded-3xl border border-slate-100 bg-white shadow-inner">
-          <table class="w-full text-left text-xs min-w-[800px]">
+        <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white shadow-inner">
+          <table class="w-full text-left text-[10px] min-w-[600px]">
             <thead>
               <tr class="text-slate-300 font-bold uppercase tracking-widest bg-black border-b border-slate-50">
-                <th class="px-4 py-4">Date</th>
-                <th class="px-4 py-4 text-center">In 1</th>
-                <th class="px-4 py-4 text-center">Out 1</th>
-                <th class="px-4 py-4 text-center">In 2</th>
-                <th class="px-4 py-4 text-center">Out 2</th>
-                <th class="px-4 py-4 text-center">Status</th>
+                <th class="px-3 py-2">Date</th>
+                <th class="px-3 py-2 text-center">In 1</th>
+                <th class="px-3 py-2 text-center">Out 1</th>
+                <th class="px-3 py-2 text-center">In 2</th>
+                <th class="px-3 py-2 text-center">Out 2</th>
+                <th class="px-3 py-2 text-center">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
               ${Object.values(emp.days).sort((a,b) => b.date.localeCompare(a.date)).map(d => `
                 <tr class="hover:bg-slate-50/50 transition-colors">
-                  <td class="px-8 py-2">
-                    <div class="font-bold text-slate-700 text-sm">${d.date}</div>
-                    <div class="text-[10px] text-slate-300 font-bold uppercase tracking-tight">${d.day}</div>
+                  <td class="px-3 py-1.5">
+                    <div class="font-bold text-slate-700 text-xs">${d.date}</div>
+                    <div class="text-[9px] text-slate-300 font-bold uppercase tracking-tight">${d.day}</div>
                   </td>
-                  <td class="px-8 py-5 text-center">${renderPunchCell(d.c1, d.c1Note)}</td>
-                  <td class="px-8 py-5 text-center">${renderPunchCell(d.o1, d.o1Note)}</td>
-                  <td class="px-8 py-5 text-center">${renderPunchCell(d.c2, d.c2Note)}</td>
-                  <td class="px-8 py-5 text-center">${renderPunchCell(d.o2, d.o2Note)}</td>
-                  <td class="px-8 py-5 text-center">${getStatusBadge(d)}</td>
+                  <td class="px-3 py-1.5 text-center">${renderPunchCell(d.c1, d.c1Note)}</td>
+                  <td class="px-3 py-1.5 text-center">${renderPunchCell(d.o1, d.o1Note)}</td>
+                  <td class="px-3 py-1.5 text-center">${renderPunchCell(d.c2, d.c2Note)}</td>
+                  <td class="px-3 py-1.5 text-center">${renderPunchCell(d.o2, d.o2Note)}</td>
+                  <td class="px-3 py-1.5 text-center">${getStatusBadge(d)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -260,7 +251,7 @@ function toggleAccordion(id) {
 }
 
 function getStatusBadge(d) {
-  const base = "px-4 py-1.5 rounded-xl font-bold text-[9px] uppercase tracking-wider shadow-sm border";
+  const base = "px-2 py-0.5 rounded-lg font-bold text-[9px] uppercase tracking-wider border";
   const map = {
     'Present': 'bg-emerald-50 text-emerald-700 border-emerald-100',
     'Late': 'bg-orange-50 text-orange-600 border-orange-100',
@@ -269,6 +260,7 @@ function getStatusBadge(d) {
     'Public Holiday': 'bg-violet-50 text-violet-700 border-violet-100',
     'Day Off': 'bg-slate-100 text-slate-600 border-slate-200',
     'Missing Checkout': 'bg-amber-50 text-amber-700 border-amber-100',
+    'Missing Punch': 'bg-amber-50 text-amber-700 border-amber-100',
   };
   const label = d.status || 'Present';
   return `<span class="${base} ${map[label] || map.Present}">${label}</span>`;
@@ -279,9 +271,9 @@ function renderPunchCell(timeValue, note) {
   const tone = punchToneClass(note);
 
   return `
-    <div class="flex flex-col items-center gap-1">
-      <span class="font-mono font-bold text-sm ${tone.text}">${safeTime}</span>
-      <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-widest ${tone.badge}">
+    <div class="flex flex-col items-center gap-0.5">
+      <span class="font-mono font-bold text-[10px] ${tone.text}">${safeTime}</span>
+      <span class="inline-flex items-center rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest ${tone.badge}">
         ${note || 'No record'}
       </span>
     </div>
@@ -328,8 +320,8 @@ function exportExcel() {
   });
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, 'Report', ws);
-  XLSX.writeFile(wb, `Attendance_Detailed_${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, `Attendance_Detailed_${getCurrentDateString()}.xlsx`);
 }
 
 function exportPDF() {

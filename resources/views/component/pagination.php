@@ -28,7 +28,7 @@ function renderPagination($options = [])
         'total_records' => 0,
         'show_page_numbers' => true,
         'max_page_buttons' => 5,
-        'prev_text' => 'Previous',
+        'prev_text' => 'Prev',
         'next_text' => 'Next',
         'show_icons' => true
     ];
@@ -59,20 +59,20 @@ function renderPagination($options = [])
     $show_last_ellipsis = !empty($page_numbers) && end($page_numbers) < $total_pages - 1;
     ?>
 
-    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-        <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="bg-gray-50 px-3 py-2 border-t border-gray-200">
+        <div class="flex items-center justify-between flex-wrap gap-2">
             <!-- Pagination Info -->
-            <div class="text-sm text-gray-600">
-                Showing <span class="font-medium"><?= $showing_from ?></span> to
-                <span class="font-medium"><?= $showing_to ?></span> of
-                <span class="font-medium"><?= $total_records ?></span> results
+            <div class="text-[10px] text-gray-500 font-medium">
+                Showing <span class="font-bold text-gray-700"><?= $showing_from ?></span> to
+                <span class="font-bold text-gray-700"><?= $showing_to ?></span> of
+                <span class="font-bold text-gray-700"><?= $total_records ?></span> results
             </div>
 
             <!-- Pagination Controls -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
                 <!-- Previous Button -->
                 <button id="paginationPrevBtn"
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
+                    class="inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     <?= $current_page === 1 ? 'disabled' : '' ?> data-page="<?= $current_page - 1 ?>">
                     <?php if ($show_icons): ?>
                         <span class="iconify mr-1" data-icon="mdi:chevron-left"></span>
@@ -84,19 +84,19 @@ function renderPagination($options = [])
                     <!-- First Page -->
                     <?php if (!empty($page_numbers) && $page_numbers[0] > 1): ?>
                         <button
-                            class="pagination-page-btn w-10 h-10 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
+                            class="pagination-page-btn w-7 h-7 flex items-center justify-center bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
                             data-page="1">
                             1
                         </button>
                         <?php if ($show_first_ellipsis): ?>
-                            <span class="px-2 text-gray-500">...</span>
+                            <span class="px-1 text-gray-400 text-[10px]">...</span>
                         <?php endif; ?>
                     <?php endif; ?>
 
                     <!-- Page Numbers -->
                     <?php foreach ($page_numbers as $page): ?>
                         <button
-                            class="pagination-page-btn w-10 h-10 border rounded-lg text-sm font-medium transition-all <?= $page === $current_page ? 'bg-indigo-600 text-white border-indigo-600 cursor-default' : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600' ?>"
+                            class="pagination-page-btn w-7 h-7 flex items-center justify-center border rounded-md text-[10px] font-bold transition-all <?= $page === $current_page ? 'bg-indigo-600 text-white border-indigo-600 cursor-default' : 'bg-white text-gray-600 border-gray-200 hover:bg-indigo-600 hover:text-white hover:border-indigo-600' ?>"
                             data-page="<?= $page ?>" <?= $page === $current_page ? 'disabled' : '' ?>>
                             <?= $page ?>
                         </button>
@@ -105,24 +105,24 @@ function renderPagination($options = [])
                     <!-- Last Page -->
                     <?php if (!empty($page_numbers) && end($page_numbers) < $total_pages): ?>
                         <?php if ($show_last_ellipsis): ?>
-                            <span class="px-2 text-gray-500">...</span>
+                            <span class="px-1 text-gray-400 text-[10px]">...</span>
                         <?php endif; ?>
                         <button
-                            class="pagination-page-btn w-10 h-10 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
+                            class="pagination-page-btn w-7 h-7 flex items-center justify-center bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
                             data-page="<?= $total_pages ?>">
                             <?= $total_pages ?>
                         </button>
                     <?php endif; ?>
                 <?php else: ?>
                     <!-- Simple Page Display -->
-                    <div class="text-sm font-medium text-gray-700 px-4">
-                        Page <?= $current_page ?> of <?= $total_pages ?>
+                    <div class="text-[10px] font-bold text-gray-600 px-2">
+                        Page <?= $current_page ?> / <?= $total_pages ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- Next Button -->
                 <button id="paginationNextBtn"
-                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
+                    class="inline-flex items-center px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] font-bold text-gray-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     <?= $current_page === $total_pages ? 'disabled' : '' ?> data-page="<?= $current_page + 1 ?>">
                     <?= $next_text ?>
                     <?php if ($show_icons): ?>
@@ -143,8 +143,11 @@ function renderPagination($options = [])
             if (prevBtn && !prevBtn.disabled) {
                 prevBtn.addEventListener('click', function () {
                     const page = parseInt(this.dataset.page);
-                    if (page > 0 && typeof loadEmployees === 'function') {
-                        loadEmployees(page);
+                    if (page > 0) {
+                        if (typeof loadEmployees === 'function') loadEmployees(page);
+                        else if (typeof loadAttendance === 'function') loadAttendance(page);
+                        else if (typeof loadLeaves === 'function') loadLeaves(page);
+                        else if (typeof loadData === 'function') loadData(page);
                     }
                 });
             }
@@ -152,8 +155,11 @@ function renderPagination($options = [])
             if (nextBtn && !nextBtn.disabled) {
                 nextBtn.addEventListener('click', function () {
                     const page = parseInt(this.dataset.page);
-                    if (page > 0 && typeof loadEmployees === 'function') {
-                        loadEmployees(page);
+                    if (page > 0) {
+                        if (typeof loadEmployees === 'function') loadEmployees(page);
+                        else if (typeof loadAttendance === 'function') loadAttendance(page);
+                        else if (typeof loadLeaves === 'function') loadLeaves(page);
+                        else if (typeof loadData === 'function') loadData(page);
                     }
                 });
             }
@@ -162,8 +168,11 @@ function renderPagination($options = [])
                 if (!btn.disabled) {
                     btn.addEventListener('click', function () {
                         const page = parseInt(this.dataset.page);
-                        if (page > 0 && typeof loadEmployees === 'function') {
-                            loadEmployees(page);
+                        if (page > 0) {
+                            if (typeof loadEmployees === 'function') loadEmployees(page);
+                            else if (typeof loadAttendance === 'function') loadAttendance(page);
+                            else if (typeof loadLeaves === 'function') loadLeaves(page);
+                            else if (typeof loadData === 'function') loadData(page);
                         }
                     });
                 }

@@ -74,21 +74,51 @@ final class SeedLeaveAndAttendance2026 extends AbstractMigration
             }
 
             foreach ($employees as $emp) {
+                // Check-in 1 (08:00)
                 $attendanceData[] = [
                     'uuid'          => Uuid::v4(),
                     'employee_id'   => $emp['id'],
                     'date'          => $dateStr,
                     'check_time'    => '08:00:00',
+                    'scan_datetime' => $dateStr . ' 08:00:00',
                     'check_type_id' => 1,
+                    'status'        => 'On Time',
                     'status_id'     => 1,
                     'created_at'    => $createdAt,
                 ];
+                // Check-out 1 (12:00)
+                $attendanceData[] = [
+                    'uuid'          => Uuid::v4(),
+                    'employee_id'   => $emp['id'],
+                    'date'          => $dateStr,
+                    'check_time'    => '12:00:00',
+                    'scan_datetime' => $dateStr . ' 12:00:00',
+                    'check_type_id' => 2,
+                    'status'        => 'On Time',
+                    'status_id'     => 1,
+                    'created_at'    => $createdAt,
+                ];
+                // Check-in 2 (13:00)
+                $attendanceData[] = [
+                    'uuid'          => Uuid::v4(),
+                    'employee_id'   => $emp['id'],
+                    'date'          => $dateStr,
+                    'check_time'    => '13:00:00',
+                    'scan_datetime' => $dateStr . ' 13:00:00',
+                    'check_type_id' => 3,
+                    'status'        => 'On Time',
+                    'status_id'     => 1,
+                    'created_at'    => $createdAt,
+                ];
+                // Check-out 2 (17:00)
                 $attendanceData[] = [
                     'uuid'          => Uuid::v4(),
                     'employee_id'   => $emp['id'],
                     'date'          => $dateStr,
                     'check_time'    => '17:00:00',
-                    'check_type_id' => 2,
+                    'scan_datetime' => $dateStr . ' 17:00:00',
+                    'check_type_id' => 4,
+                    'status'        => 'On Time',
                     'status_id'     => 1,
                     'created_at'    => $createdAt,
                 ];

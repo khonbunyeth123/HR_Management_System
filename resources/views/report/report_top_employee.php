@@ -1,78 +1,87 @@
-<div class="w-full h-full">
-    <div class="bg-white shadow-lg p-4">
-        <h1 class="text-3xl font-bold text-slate-800 mb-6">Top Employees - Attendance Leaderboard</h1>
+<div class="w-full h-full p-2">
+    <div class="bg-white rounded-lg shadow-sm p-3 border border-slate-100">
+        <h1 class="text-sm font-bold text-slate-800 mb-2">Attendance Leaderboard</h1>
 
         <!-- Period Selector -->
-        <div class="mb-6 flex flex-wrap gap-4 items-end">
+        <div class="mb-2 flex flex-wrap gap-2 items-end text-[10px]">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Period:</label>
-                <select id="periodFilter" onchange="handlePeriodChange()" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="block font-medium text-gray-700 mb-0.5">Period:</label>
+                <select id="periodFilter" onchange="handlePeriodChange()" class="p-1 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500">
                     <option value="week">This Week</option>
                     <option value="month" selected>This Month</option>
                     <option value="quarter">This Quarter</option>
                     <option value="year">This Year</option>
-                    <option value="custom">Custom Range</option>
+                    <option value="custom">Custom</option>
                 </select>
             </div>
             <div id="customRange" class="hidden">
-                <label class="block text-sm font-medium text-gray-700 mb-2">From:</label>
-                <input type="date" id="fromDate" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="block font-medium text-gray-700 mb-0.5">From:</label>
+                <input type="date" id="fromDate" class="p-1 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500">
             </div>
             <div id="customRangeTo" class="hidden">
-                <label class="block text-sm font-medium text-gray-700 mb-2">To:</label>
-                <input type="date" id="toDate" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <label class="block font-medium text-gray-700 mb-0.5">To:</label>
+                <input type="date" id="toDate" class="p-1 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500">
             </div>
-            <button onclick="loadReport()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Load Report</button>
+            <button onclick="loadReport()" class="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition font-bold">Load</button>
         </div>
 
         <!-- Loading -->
-        <div id="loadingMsg" class="hidden text-center py-6 text-blue-500 animate-pulse">⏳ Loading...</div>
+        <div id="loadingMsg" class="hidden text-center py-3 text-blue-500 animate-pulse text-[10px]">⏳ Loading...</div>
 
         <!-- Leaderboard Table -->
-        <h2 class="text-2xl font-bold text-slate-800 mb-4">Complete Leaderboard</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="min-w-full bg-white text-[10px]">
                 <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th class="p-3 text-center">Rank</th>
-                        <th class="p-3 text-left">Employee Name</th>
-                        <th class="p-3 text-center">Department</th>
-                        <th class="p-3 text-center">Total Present</th>
-                        <th class="p-3 text-center">Total Late</th>
-                        <th class="p-3 text-center">Total Leave</th>
-                        <th class="p-3 text-center">Day Off</th>
-                        <th class="p-3 text-center">Total Absent</th>
-                        <th class="p-3 text-center">Attendance Score</th>
-                        <th class="p-3 text-center">Rating</th>
+                        <th class="p-2 text-center">Rank</th>
+                        <th class="p-2 text-left">Employee</th>
+                        <th class="p-2 text-center">Dept</th>
+                        <th class="p-2 text-center">Pres</th>
+                        <th class="p-2 text-center">Late</th>
+                        <th class="p-2 text-center">Leave</th>
+                        <th class="p-2 text-center">Off</th>
+                        <th class="p-2 text-center">Abs</th>
+                        <th class="p-2 text-center">Score</th>
+                        <th class="p-2 text-center">Rating</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboardTableBody">
                     <tr>
-                        <td colspan="10" class="text-center p-4 text-gray-500">Select a period and click Load Report</td>
+                        <td colspan="10" class="text-center p-3 text-gray-500">Select a period and click Load</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Recognition Section -->
-        <div id="recognitionBox" class="hidden mt-8 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-            <h3 class="text-lg font-bold text-blue-900 mb-2">🏆 Recognition</h3>
+        <div id="recognitionBox" class="hidden mt-3 bg-blue-50 border-l-4 border-blue-500 p-2 rounded text-[10px]">
+            <h3 class="font-bold text-blue-900 mb-0.5">🏆 Recognition</h3>
             <p class="text-blue-800" id="recognitionText"></p>
         </div>
     </div>
 </div>
 
 <script>
+// Helper for date
+function getCurrentDateString() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - offset * 60000);
+    return localDate.toISOString().split('T')[0];
+}
+
 // ── Get date range based on period ──
 function getDateRange(period) {
     const today = new Date();
-    let from, to = today.toISOString().split('T')[0];
+    const todayStr = getCurrentDateString();
+    let from, to = todayStr;
 
     if (period === 'week') {
         const day  = today.getDay();
         const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-        from = new Date(today.setDate(diff)).toISOString().split('T')[0];
-        to   = new Date().toISOString().split('T')[0];
+        const firstDayOfWeek = new Date(today);
+        firstDayOfWeek.setDate(diff);
+        from = firstDayOfWeek.toISOString().split('T')[0];
     } else if (period === 'month') {
         from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
     } else if (period === 'quarter') {
@@ -155,7 +164,7 @@ async function loadReport() {
         console.error(err);
         alert('Network error. Please try again.');
     } finally {
-        document.getElementById('loadingMsg').classList.add('hidden');
+        document.getElementById('loadingMsg').classList.remove('hidden');
     }
 }
 

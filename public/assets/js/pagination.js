@@ -74,14 +74,14 @@ function renderPagination(options) {
         if (pageNumbers.length > 0 && pageNumbers[0] > 1) {
             pageNumbersHTML += `
                 <button 
-                    class="pagination-page-btn w-10 h-10 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
+stil                     class="pagination-page-btn w-8 h-8 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
                     data-page="1"
                 >
                     1
                 </button>
             `;
             if (showFirstEllipsis) {
-                pageNumbersHTML += '<span class="px-2 text-gray-500">...</span>';
+                pageNumbersHTML += '<span class="px-1 text-gray-500">...</span>';
             }
         }
 
@@ -90,7 +90,7 @@ function renderPagination(options) {
             const isActive = page === currentPage;
             pageNumbersHTML += `
                 <button 
-                    class="pagination-page-btn w-10 h-10 border rounded-lg text-sm font-medium transition-all ${isActive
+                    class="pagination-page-btn w-8 h-8 border rounded-lg text-xs font-medium transition-all ${isActive
                     ? 'bg-indigo-600 text-white border-indigo-600 cursor-default'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600'
                 }"
@@ -105,11 +105,11 @@ function renderPagination(options) {
         // Last page button
         if (pageNumbers.length > 0 && pageNumbers[pageNumbers.length - 1] < totalPages) {
             if (showLastEllipsis) {
-                pageNumbersHTML += '<span class="px-2 text-gray-500">...</span>';
+                pageNumbersHTML += '<span class="px-1 text-gray-500">...</span>';
             }
             pageNumbersHTML += `
                 <button 
-                    class="pagination-page-btn w-10 h-10 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
+                    class="pagination-page-btn w-8 h-8 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
                     data-page="${totalPages}"
                 >
                     ${totalPages}
@@ -119,7 +119,7 @@ function renderPagination(options) {
     } else {
         // Simple page display
         pageNumbersHTML = `
-            <div class="text-sm font-medium text-gray-700 px-4">
+            <div class="text-xs font-medium text-gray-700 px-2">
                 Page ${currentPage} of ${totalPages}
             </div>
         `;
@@ -128,23 +128,23 @@ function renderPagination(options) {
     // Build full pagination HTML
     const paginationHTML = `
         <div class="bg-gray-50 px-2 py-1 border-t border-gray-200">
-            <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
                 <!-- Pagination Info -->
-                <div class="text-sm text-gray-600">
+                <div class="text-xs text-gray-600">
                     Showing <span class="font-medium">${showingFrom}</span> to 
                     <span class="font-medium">${showingTo}</span> of 
                     <span class="font-medium">${totalRecords}</span> results
                 </div>
 
                 <!-- Pagination Controls -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1">
                     <!-- Previous Button -->
                     <button 
                         id="paginationPrevBtn" 
-                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
+                        class="inline-flex items-center px-2 py-1 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
                         ${currentPage === 1 ? 'disabled' : ''}
                     >
-                        ${showIcons ? '<span class="iconify mr-1" data-icon="mdi:chevron-left"></span>' : ''}
+                        ${showIcons ? '<span class="iconify mr-0.5" data-icon="mdi:chevron-left"></span>' : ''}
                         ${prevText}
                     </button>
 
@@ -153,12 +153,12 @@ function renderPagination(options) {
                     <!-- Next Button -->
                     <button 
                         id="paginationNextBtn" 
-                        class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
+                        class="inline-flex items-center px-2 py-1 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-700 disabled:hover:border-gray-300"
                         ${currentPage === totalPages ? 'disabled' : ''}
                     >
                         ${nextText}
-                        ${showIcons ? '<span class="iconify ml-1" data-icon="mdi:chevron-right"></span>' : ''}
-                    </button>
+                        ${showIcons ? '<span class="iconify ml-0.5" data-icon="mdi:chevron-right"></span>' : ''}
+                        </button>
                 </div>
             </div>
         </div>

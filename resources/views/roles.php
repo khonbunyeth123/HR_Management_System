@@ -81,60 +81,41 @@ $activeMenu = "roles";
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
+<div class="w-full h-full p-2">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-gray-200 mb-6">
-        <div class="flex items-center gap-3 mb-4 sm:mb-0">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                <i class="fas fa-crown"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Role Management</h1>
-                <p class="text-gray-500 text-sm">Manage roles and assign permissions</p>
-            </div>
+    <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+        <div>
+            <h1 class="text-sm font-bold text-gray-900">Role Management</h1>
         </div>
         <button onclick="openAddRoleModal()"
-            class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm text-sm">
+            class="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 text-[10px]">
             <i class="fas fa-plus"></i> Add Role
         </button>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Total Roles</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statTotalRoles">—</p>
-            </div>
-            <i class="fas fa-crown text-blue-300 text-3xl"></i>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Total</p>
+            <p class="text-lg font-bold text-gray-900" id="statTotalRoles">—</p>
         </div>
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Pending Approval</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statPendingRoles">—</p>
-            </div>
-            <i class="fas fa-clock text-yellow-300 text-3xl"></i>
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Pending</p>
+            <p class="text-lg font-bold text-gray-900" id="statPendingRoles">—</p>
         </div>
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Active Users</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statActiveUsers">—</p>
-            </div>
-            <i class="fas fa-users text-purple-300 text-3xl"></i>
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Active</p>
+            <p class="text-lg font-bold text-gray-900" id="statActiveUsers">—</p>
         </div>
     </div>
 
-    <!-- Search + Filter -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-5">
-        <div class="relative flex-1">
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="text" id="searchInput" placeholder="Search roles..."
-                class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                oninput="debounceSearch(renderTable, 250)">
-        </div>
+    <!-- Search -->
+    <div class="flex gap-2 mb-3">
+        <input type="text" id="searchInput" placeholder="Search roles..."
+            class="flex-1 px-3 py-1 border border-gray-200 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+            oninput="debounceSearch(renderTable, 250)">
         <select id="filterStatus" onchange="renderTable()"
-            class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-max">
+            class="px-2 py-1 border border-gray-200 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="pending">Pending</option>
@@ -143,41 +124,24 @@ $activeMenu = "roles";
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wide">
-                        <th class="px-6 py-3 text-left font-semibold">#</th>
-                        <th class="px-6 py-3 text-left font-semibold">Role Name</th>
-                        <th class="px-6 py-3 text-left font-semibold">Slug</th>
-                        <th class="px-6 py-3 text-left font-semibold">Description</th>
-                        <th class="px-6 py-3 text-center font-semibold">Permissions</th>
-                        <th class="px-6 py-3 text-center font-semibold">Users</th>
-                        <th class="px-6 py-3 text-center font-semibold">Status</th>
-                        <th class="px-6 py-3 text-center font-semibold">Actions</th>
+            <table class="w-full text-[10px]">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">#</th>
+                        <th class="px-3 py-2 text-left font-semibold">Name</th>
+                        <th class="px-3 py-2 text-left font-semibold">Slug</th>
+                        <th class="px-3 py-2 text-left font-semibold">Desc</th>
+                        <th class="px-3 py-2 text-center font-semibold">Perms</th>
+                        <th class="px-3 py-2 text-center font-semibold">Users</th>
+                        <th class="px-3 py-2 text-center font-semibold">Status</th>
+                        <th class="px-3 py-2 text-center font-semibold">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="rolesTableBody">
-                    <?php for ($i = 0; $i < 4; $i++): ?>
-                    <tr class="border-b border-gray-100">
-                        <?php for ($j = 0; $j < 8; $j++): ?>
-                        <td class="px-6 py-4"><div class="skeleton h-4 w-full"></div></td>
-                        <?php endfor; ?>
-                    </tr>
-                    <?php endfor; ?>
                 </tbody>
             </table>
-        </div>
-
-        <div id="noResults" class="hidden text-center py-16 text-gray-400">
-            <i class="fas fa-search text-4xl mb-3 opacity-30 block"></i>
-            <p class="font-medium">No roles found</p>
-            <p class="text-sm mt-1">Try adjusting your search or filter</p>
-        </div>
-
-        <div class="px-6 py-3 border-t border-gray-100 text-sm text-gray-500">
-            <span id="paginationInfo">Showing 0 roles</span>
         </div>
     </div>
 </div>
@@ -386,8 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // GET /api/roles  → expects permission_count in each role (no N+1 calls)
 async function loadRoles() {
     try {
-        const res  = await fetch(`${API_BASE}/roles`);
+        const res  = await fetch(`${API_BASE}/roles`, {credentials: 'include'});
         const json = await res.json();
+        console.log("DEBUG: API Response:", json);
         if (!res.ok) throw new Error(json.message || 'Failed to load roles');
 
         allRoles = Array.isArray(json.data?.data) ? json.data.data
@@ -397,6 +362,7 @@ async function loadRoles() {
         updateStats();
         renderTable();
     } catch (err) {
+        console.error("DEBUG: Load Roles Error:", err);
         showToast('Failed to load roles: ' + err.message, 'error');
         document.getElementById('rolesTableBody').innerHTML =
             `<tr><td colspan="8" class="px-6 py-10 text-center text-gray-400">Failed to load. Please refresh.</td></tr>`;
@@ -426,81 +392,81 @@ function updateStats() {
 
 // ─── RENDER TABLE ─────────────────────────────────────────
 function renderTable() {
+    console.log("DEBUG: renderTable called, allRoles count:", allRoles.length);
     const query  = document.getElementById('searchInput').value.toLowerCase();
     const status = document.getElementById('filterStatus').value;
 
     const filtered = allRoles.filter(role => {
         const matchSearch =
-            role.name.toLowerCase().includes(query) ||
-            role.slug.toLowerCase().includes(query) ||
+            (role.name || '').toLowerCase().includes(query) ||
+            (role.slug || '').toLowerCase().includes(query) ||
             (role.description || '').toLowerCase().includes(query);
         return matchSearch && (!status || role.status === status);
     });
 
     const tbody  = document.getElementById('rolesTableBody');
-    const noRes  = document.getElementById('noResults');
-    const info   = document.getElementById('paginationInfo');
-
+    
     if (!filtered.length) {
-        tbody.innerHTML = '';
-        noRes.classList.remove('hidden');
-        info.textContent = 'No roles found';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-10 text-center text-gray-400">No roles found</td></tr>';
         return;
     }
 
-    noRes.classList.add('hidden');
-    info.textContent = `Showing ${filtered.length} role${filtered.length > 1 ? 's' : ''}`;
+    try {
+        tbody.innerHTML = filtered.map((role, idx) => {
+            const badgeClass = role.status === 'active'  ? 'badge-active'
+                             : role.status === 'pending' ? 'badge-pending'
+                             : 'badge-inactive';
+            const statusText = role.status === 'active'  ? 'Active'
+                             : role.status === 'pending' ? 'Pending'
+                             : 'Inactive';
 
-    tbody.innerHTML = filtered.map((role, idx) => {
-        const badgeClass = role.status === 'active'  ? 'badge-active'
-                         : role.status === 'pending' ? 'badge-pending'
-                         : 'badge-inactive';
-        const statusText = role.status === 'active'  ? 'Active'
-                         : role.status === 'pending' ? 'Pending'
-                         : 'Inactive';
+            // permission_count should come from the API directly — no extra calls needed
+            const permCount = role.permission_count ?? (Array.isArray(role.permissions) ? role.permissions.length : 0);
 
-        // permission_count should come from the API directly — no extra calls needed
-        const permCount = role.permission_count ?? (Array.isArray(role.permissions) ? role.permissions.length : 0);
-
-        return `
-        <tr class="border-b border-gray-100">
-            <td class="px-6 py-4 text-gray-500 font-medium">${idx + 1}</td>
-            <td class="px-6 py-4 font-semibold text-gray-900">${escHtml(role.name)}</td>
-            <td class="px-6 py-4">
-                <code class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">${escHtml(role.slug)}</code>
-            </td>
-            <td class="px-6 py-4 text-gray-500 max-w-xs truncate">${escHtml(role.description || '—')}</td>
-            <td class="px-6 py-4 text-center">
-                <span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">${permCount}</span>
-            </td>
-            <td class="px-6 py-4 text-center text-gray-700 font-medium">${role.user_count ?? 0}</td>
-            <td class="px-6 py-4 text-center">
-                <span class="badge ${badgeClass}">${statusText}</span>
-            </td>
-            <td class="px-6 py-4 text-center">
-                <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                    ${role.status === 'pending' ? `
-                    <button onclick="openAcceptModal(${role.id}, '${escHtml(role.name)}')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-xs font-semibold transition-colors">
-                        <i class="fas fa-check"></i> Accept
-                    </button>` : ''}
-                    <button onclick="openEditRoleModal(${role.id})"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-700 text-xs font-semibold transition-colors">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button onclick="openPermissionsModal(${role.id}, '${escHtml(role.name)}')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 text-xs font-semibold transition-colors">
-                        <i class="fas fa-key"></i> Permissions
-                    </button>
-                    <button onclick="openDeleteModal(${role.id}, '${escHtml(role.name)}')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            </td>
-        </tr>`;
-    }).join('');
+            return `
+            <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
+                <td class="px-3 py-2 text-gray-500 font-medium">${idx + 1}</td>
+                <td class="px-3 py-2 font-semibold text-gray-900">${escHtml(role.name || 'Unnamed')}</td>
+                <td class="px-3 py-2">
+                    <code class="text-[9px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded font-mono">${escHtml(role.slug || 'no-slug')}</code>
+                </td>
+                <td class="px-3 py-2 text-gray-500 max-w-xs truncate text-[9px]">${escHtml(role.description || '—')}</td>
+                <td class="px-3 py-2 text-center">
+                    <span class="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-[9px] font-bold border border-blue-100">${permCount}</span>
+                </td>
+                <td class="px-3 py-2 text-center text-gray-700 font-bold">${role.user_count ?? 0}</td>
+                <td class="px-3 py-2 text-center">
+                    <span class="badge ${badgeClass} text-[9px] px-2 py-0.5">${statusText}</span>
+                </td>
+                <td class="px-3 py-2 text-center">
+                    <div class="flex items-center justify-center gap-1 flex-wrap">
+                        ${role.status === 'pending' ? `
+                        <button onclick="openAcceptModal(${role.id}, '${escHtml(role.name)}')"
+                            class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 text-[10px] font-bold transition-all shadow-sm">
+                            <i class="fas fa-check"></i> Accept
+                        </button>` : ''}
+                        <button onclick="openEditRoleModal(${role.id})"
+                            class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 rounded-md hover:bg-blue-600 hover:text-white text-[10px] font-bold transition-all border border-slate-200">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="openPermissionsModal(${role.id}, '${escHtml(role.name)}')"
+                            class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-600 hover:text-white text-[10px] font-bold transition-all border border-indigo-100">
+                            <i class="fas fa-key"></i> Perms
+                        </button>
+                        <button onclick="openDeleteModal(${role.id}, '${escHtml(role.name)}')"
+                            class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 rounded-md hover:bg-rose-600 hover:text-white text-[10px] font-bold transition-all border border-slate-200">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (e) {
+        console.error("DEBUG: renderTable Error:", e);
+        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-10 text-center text-red-500">Error rendering table: ' + e.message + '</td></tr>';
+    }
 }
+
 
 // ─── ADD ROLE ─────────────────────────────────────────────
 function openAddRoleModal() {

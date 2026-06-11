@@ -1,89 +1,88 @@
-<div class="w-full max-w-7xl mx-auto space-y-6">
+<div class="w-full max-w-7xl mx-auto space-y-3">
     <!-- Stats Grid -->
-    <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
         <!-- Loading placeholders -->
         <?php for($i=0; $i<4; $i++): ?>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-pulse">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-slate-100 rounded-xl"></div>
-                <div class="space-y-2">
-                    <div class="h-4 bg-slate-100 rounded w-20"></div>
-                    <div class="h-6 bg-slate-100 rounded w-12"></div>
+        <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-100 animate-pulse">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-slate-100 rounded-lg"></div>
+                <div class="space-y-1">
+                    <div class="h-3 bg-slate-100 rounded w-16"></div>
+                    <div class="h-4 bg-slate-100 rounded w-10"></div>
                 </div>
             </div>
         </div>
         <?php endfor; ?>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <!-- Calendar Section -->
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden">
+            <div class="px-3 py-2 border-b border-slate-100">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                             <span class="iconify text-indigo-500" data-icon="mdi:calendar-month"></span>
-                            Company Calendar
+                            Calendar
                         </h2>
-                        <p class="mt-1 text-xs text-slate-500">A quick look at company events, leave, holidays, and schedules.</p>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-1">
                         <a id="openFullCalendarLink" href="?page=calendar"
-                           class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-100 transition hover:bg-indigo-700">
+                           class="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-2 py-1 text-[10px] font-black text-white shadow-sm transition hover:bg-indigo-700">
                             <span class="iconify" data-icon="mdi:calendar-open"></span>
-                            Open Full Calendar
+                            Full
                         </a>
-                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Approved
+                        <span class="flex items-center gap-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Appr
                         </span>
-                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Pending
+                        <span class="flex items-center gap-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Pend
                         </span>
-                        <span class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            <span class="w-2 h-2 rounded-full bg-rose-400"></span> Rejected
+                        <span class="flex items-center gap-0.5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Rej
                         </span>
                     </div>
                 </div>
             </div>
-            <div id="calendarContainer" class="min-h-[500px]">
-                <div class="flex flex-col items-center justify-center py-24 text-slate-400">
-                    <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
-                    <p class="text-sm">Initializing calendar...</p>
+            <div id="calendarContainer" class="min-h-[400px]">
+                <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <span class="iconify text-2xl mb-1 animate-spin" data-icon="mdi:loading"></span>
+                    <p class="text-[10px]">Initializing calendar...</p>
                 </div>
             </div>
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-3">
             <!-- Departments -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                <div class="px-6 py-4 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="px-3 py-2 border-b border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                         <span class="iconify text-emerald-500" data-icon="mdi:office-building"></span>
-                        Departments
+                        Depts
                     </h2>
                 </div>
-                <div id="departments" class="p-6 space-y-4 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
-                    <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                        <span class="iconify text-4xl mb-2 animate-spin" data-icon="mdi:loading"></span>
-                        <p class="text-sm">Loading departments...</p>
+                <div id="departments" class="p-3 space-y-2 flex-grow min-h-0 max-h-[250px] overflow-y-auto no-scrollbar">
+                    <div class="flex flex-col items-center justify-center py-6 text-slate-400">
+                        <span class="iconify text-2xl mb-1 animate-spin" data-icon="mdi:loading"></span>
+                        <p class="text-[10px]">Loading...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Recent Leave Requests -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col">
-                <div class="px-6 py-4 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                <div class="px-3 py-2 border-b border-slate-100">
+                    <h2 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                         <span class="iconify text-indigo-500" data-icon="mdi:calendar-clock"></span>
-                        Recent Leave Requests
+                        Recent Leave
                     </h2>
                 </div>
-                <div id="miniLeaveRequests" class="p-6 space-y-3 flex-grow min-h-0 max-h-[420px] overflow-y-auto no-scrollbar">
-                    <p class="text-xs text-slate-400 text-center py-4">Loading...</p>
+                <div id="miniLeaveRequests" class="p-3 space-y-1.5 flex-grow min-h-0 max-h-[250px] overflow-y-auto no-scrollbar">
+                    <p class="text-[10px] text-slate-400 text-center py-2">Loading...</p>
                 </div>
-                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                    <a href="?page=leave" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 py-2 text-xs font-bold text-indigo-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
-                        View All Applications
+                <div class="px-3 py-2 border-t border-slate-100 bg-slate-50/50">
+                    <a href="?page=leave" class="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-100 bg-white px-3 py-1.5 text-[10px] font-bold text-indigo-600 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
+                        View All
                     </a>
                 </div>
             </div>

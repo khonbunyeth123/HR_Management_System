@@ -1,27 +1,26 @@
-<!-- <body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen"></body> -->
 <div class="w-full h-full"> 
     <div class="p-2">
         <!-- Header with Filters -->
-        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-            <div class="flex flex-col gap-3">
+        <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
+            <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <iconify-icon icon="mdi:calendar-check" style="font-size: 24px; color: #4f46e5;"></iconify-icon>
-                        <h1 class="text-lg font-bold text-gray-900">Leave Applications</h1>
+                        <iconify-icon icon="mdi:calendar-check" style="font-size: 18px; color: #4f46e5;"></iconify-icon>
+                        <h1 class="text-sm font-bold text-gray-900">Leave Applications</h1>
                     </div>
-                    <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Applications</span>
+                    <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full" id="totalCount">0 Applications</span>
                 </div>
 
                 <!-- Search & Filter Bar -->
-                <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex flex-col sm:flex-row gap-1">
                     <div class="flex-1 relative">
-                        <iconify-icon icon="mdi:magnify" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px;"></iconify-icon>
-                        <input type="text" id="searchInput" placeholder="Search by employee name..." class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <iconify-icon icon="mdi:magnify" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></iconify-icon>
+                        <input type="text" id="searchInput" placeholder="Search..." class="w-full pl-7 pr-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
                     </div>
-                    <select id="leaveTypeFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Leave Types</option>
+                    <select id="leaveTypeFilter" class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Types</option>
                     </select>
-                    <select id="statusFilter" class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
+                    <select id="statusFilter" class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
                         <option value="">All Status</option>
                         <option value="0">Pending</option>
                         <option value="1">Approved</option>
@@ -33,33 +32,33 @@
 
         <!-- Table -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="overflow-x-auto flex flex-col">
-                <table class="w-full text-sm flex-1">
-                    <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white sticky top-0">
+            <div class="sticky-table-wrapper overflow-x-auto flex flex-col">
+                <table class="w-full text-[11px] flex-1">
+                    <thead class="bg-slate-800 text-white sticky top-0">
                         <tr>
-                            <th class="px-4 py-3 text-left font-semibold">Employee</th>
-                            <th class="px-4 py-3 text-left font-semibold">Leave Type</th>
-                            <th class="px-4 py-3 text-left font-semibold">Start Date</th>
-                            <th class="px-4 py-3 text-left font-semibold">End Date</th>
-                            <th class="px-4 py-3 text-left font-semibold">Reason</th>
-                            <th class="px-4 py-3 text-left font-semibold">Status</th>
-                            <th class="px-4 py-3 text-left font-semibold">Created</th>
-                            <th class="px-4 py-3 text-left font-semibold">Action</th>
+                            <th class="px-3 py-2 text-left font-semibold">Employee</th>
+                            <th class="px-3 py-2 text-left font-semibold">Leave Type</th>
+                            <th class="px-3 py-2 text-left font-semibold">Start Date</th>
+                            <th class="px-3 py-2 text-left font-semibold">End Date</th>
+                            <th class="px-3 py-2 text-left font-semibold">Reason</th>
+                            <th class="px-3 py-2 text-left font-semibold">Status</th>
+                            <th class="px-3 py-2 text-left font-semibold">Created</th>
+                            <th class="px-3 py-2 text-center font-semibold">Action</th>
                         </tr>
                     </thead>
                     <tbody id="leaveTableBody" class="divide-y divide-gray-100">
                         <tr>
-                            <td colspan="8" class="px-4 py-6 text-center text-gray-400">
-                                <div class="flex items-center justify-center gap-2">
-                                    <iconify-icon icon="mdi:loading" style="font-size: 20px;" class="animate-spin"></iconify-icon>
-                                    Loading...
+                            <td colspan="8" class="px-3 py-6 text-center text-gray-400">
+                                <div class="flex items-center justify-center gap-1">
+                                    <iconify-icon icon="mdi:loading" style="font-size: 14px;" class="animate-spin"></iconify-icon>
+                                    <p class="text-[10px]">Loading...</p>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div id="paginationContainer" class="px-4 py-3 border-t border-gray-100 bg-gray-50"></div>
+            <div id="paginationContainer" class="px-3 py-2 border-t border-gray-100 bg-gray-50/50"></div>
         </div>
     </div>
 </div>
@@ -226,43 +225,41 @@
         function renderTable(records) {
             const tbody = document.getElementById("leaveTableBody");
             if (!records.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-gray-400">No leave applications found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400">No leave applications found</td></tr>';
                 return;
             }
 
             tbody.innerHTML = records.map(rec => `
                 <tr class="hover:bg-indigo-50 transition-colors">
-                    <td class="px-4 py-3 font-medium text-gray-900">${rec.employee_name}</td>
-                    <td class="px-4 py-3"><span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-semibold">${rec.leave_type}</span></td>
-                    <td class="px-4 py-3 text-gray-600 text-sm">${new Date(rec.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-                    <td class="px-4 py-3 text-gray-600 text-sm">${new Date(rec.end_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-                    <td class="px-4 py-3 text-gray-600 text-xs max-w-xs truncate">${rec.reason || '-'}</td>
-                    <td class="px-4 py-3">${getStatusBadge(rec.status_id)}</td>
-                    <td class="px-4 py-3 text-gray-500 text-xs">${new Date(rec.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2 text-[11px] font-medium text-gray-900">${rec.employee_name}</td>
+                    <td class="px-3 py-2"><span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[9px] font-semibold">${rec.leave_type}</span></td>
+                    <td class="px-3 py-2 text-gray-600 text-[11px]">${new Date(rec.start_date).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'2-digit'})}</td>
+                    <td class="px-3 py-2 text-gray-600 text-[11px]">${new Date(rec.end_date).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'2-digit'})}</td>
+                    <td class="px-3 py-2 text-gray-600 text-[10px] max-w-[100px] truncate">${rec.reason || '-'}</td>
+                    <td class="px-3 py-2">${getStatusBadge(rec.status_id)}</td>
+                    <td class="px-3 py-2 text-gray-500 text-[10px]">${new Date(rec.created_at).toLocaleDateString(undefined, {month:'short',day:'numeric'})}</td>
+                    <td class="px-3 py-2 text-center">
                     ${rec.status_id == 0 ? `
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center justify-center gap-1">
                                 <button
                                     onclick="approveLeave('${rec.uuid}')"
-                                    class="inline-flex items-center gap-1 rounded-md bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-200"
+                                    class="inline-flex items-center gap-0.5 rounded bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700 hover:bg-green-100"
                                     title="Approve"
                                 >
-                                    <span>Approve</span>
+                                    Approve
                                 </button>
-
                                 <button
                                     onclick="rejectLeave('${rec.uuid}')"
-                                    class="inline-flex items-center gap-1 rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200"
+                                    class="inline-flex items-center gap-0.5 rounded bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-700 hover:bg-red-100"
                                     title="Reject"
                                 >
-                                    <span>Reject</span>
+                                    Reject
                                 </button>
                             </div>
                         ` : `
                             <span class="text-gray-400">—</span>
                         `}
                     </td>
-
                 </tr>
             `).join('');
         }

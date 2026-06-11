@@ -130,6 +130,7 @@ class ReportService
                     case 'Present':
                     case 'Late':
                     case 'Missing Checkout':
+                    case 'Missing Punch':
                     case 'Overtime':
                         $present++;
                         if ($day['isLate']) {
@@ -213,9 +214,6 @@ class ReportService
         foreach ($rows as $row) {
             $employeeId = (int)$row['employee_id'];
             $date = (string)($row['date'] ?? '');
-            if ($date === '') {
-                continue;
-            }
 
             if (!isset($grouped[$employeeId])) {
                 $grouped[$employeeId] = [
@@ -224,6 +222,10 @@ class ReportService
                     'department' => (string)$row['department'],
                     'days' => [],
                 ];
+            }
+
+            if ($date === '') {
+                continue;
             }
 
             if (!isset($grouped[$employeeId]['days'][$date])) {
@@ -342,13 +344,20 @@ class ReportService
             return 'Day Off';
         }
 
-        $hasAnyPunch = ($day['c1'] !== '--:--') || ($day['o1'] !== '--:--') || ($day['c2'] !== '--:--') || ($day['o2'] !== '--:--');
-        if (!$hasAnyPunch) {
+        $punches = [$day['c1'], $day['o1'], $day['c2'], $day['o2']];
+        $punchCount = 0;
+        foreach ($punches as $p) {
+            if ($p !== '--:--') {
+                $punchCount++;
+            }
+        }
+
+        if ($punchCount === 0) {
             return 'Absent';
         }
 
-        if ($day['c1'] !== '--:--' && $day['o1'] === '--:--' && $day['c2'] === '--:--' && $day['o2'] === '--:--') {
-            return 'Missing Checkout';
+        if ($punchCount < 4) {
+            return 'Missing Punch';
         }
 
         if ($day['isLate']) {
@@ -375,6 +384,7 @@ class ReportService
                     case 'Present':
                     case 'Late':
                     case 'Missing Checkout':
+                    case 'Missing Punch':
                     case 'Overtime':
                         $present++;
                         if ($day['isLate']) {

@@ -246,11 +246,12 @@ class Report
 
     private function scanDatetimeExpr(string $alias = 'tbl_attendance_records'): string
     {
+            $fallback = "CONCAT({$alias}.date, ' ', {$alias}.check_time)";
         if ($this->hasScanDatetimeColumn()) {
-            return "{$alias}.scan_datetime";
+            return "COALESCE({$alias}.scan_datetime, {$fallback})";
         }
 
-        return "CONCAT({$alias}.date, ' ', {$alias}.check_time)";
+        return $fallback;
     }
 
     private function hasScanDatetimeColumn(): bool
@@ -273,13 +274,8 @@ class Report
 
     private function statusExpr(string $alias = 'tbl_attendance_records'): string
     {
-        if ($this->hasStatusColumn()) {
-            return "{$alias}.status";
-        }
-
         $scanExpr = $this->scanDatetimeExpr($alias);
-
-        return "CASE
+        $calculatedStatus = "CASE
                     WHEN {$alias}.check_type_id IN (1, 3)
                          AND {$scanExpr} > CASE WHEN {$alias}.check_type_id = 1
                              THEN CONCAT({$alias}.date, ' 08:00:00')
@@ -300,6 +296,12 @@ class Report
                         THEN 'Early Leave'
                     ELSE 'On Time'
                 END";
+
+        if ($this->hasStatusColumn()) {
+            return "COALESCE({$alias}.status, {$calculatedStatus})";
+        }
+
+        return $calculatedStatus;
     }
 
     private function hasStatusColumn(): bool

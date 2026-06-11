@@ -43,6 +43,7 @@ class ControllerRole
                 'filters' => $filters
             ]);
         } catch (Exception $e) {
+            error_log("ControllerRole Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
             return $this->response->error($e->getMessage(), $e->getCode() ?: 500);
         }
     }
@@ -75,13 +76,17 @@ class ControllerRole
 
             $input = $this->getJsonInput();
 
-            $result = $this->roleService->createRole([
+            $role = $this->roleService->createRole([
                 'name' => $input['name'] ?? '',
+                'slug' => $input['slug'] ?? '',
                 'description' => $input['description'] ?? '',
                 'permissions' => $input['permissions'] ?? []
             ]);
 
-            return $this->response->success($result, 201);
+            return $this->response->success([
+                'data' => $this->formatRoleForResponse($role),
+                'message' => 'Role created successfully and is pending approval'
+            ], 201);
         } catch (Exception $e) {
             return $this->response->error($e->getMessage(), $e->getCode() ?: 500);
         }

@@ -3,75 +3,71 @@
     <div class="p-2">
 
         <!-- ── Header ─────────────────────────────────────── -->
-        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
-            <div class="flex flex-col gap-3">
+        <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
+            <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <iconify-icon icon="mdi:users-group" style="font-size:24px;color:#4f46e5;"></iconify-icon>
-                        <h1 class="text-lg font-bold text-gray-900">Employee Directory</h1>
+                        <iconify-icon icon="mdi:users-group" style="font-size:18px;color:#4f46e5;"></iconify-icon>
+                        <h1 class="text-sm font-bold text-gray-900">Employee Directory</h1>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full" id="totalCount">0 Staff</span>
+                        <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full" id="totalCount">0 Staff</span>
                         <button onclick="openCreateModal()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors">
-                            <iconify-icon icon="mdi:plus-circle"></iconify-icon>
-                            Add Employee
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors">
+                            <iconify-icon icon="mdi:plus-circle" style="font-size:14px;"></iconify-icon>
+                            Add
                         </button>
                     </div>
                 </div>
 
                 <!-- Search & Filter Bar -->
-                <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex flex-col sm:flex-row gap-1">
                     <div class="flex-1 relative">
                         <iconify-icon icon="mdi:magnify"
-                            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:18px;">
+                            style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;">
                         </iconify-icon>
-                        <input type="text" id="searchInput" placeholder="Search by name, employee ID, or username..."
-                            class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <input type="text" id="searchInput" placeholder="Search..."
+                            class="w-full pl-7 pr-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
                     </div>
                     <select id="departmentFilter"
-                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Departments</option>
+                        class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Depts</option>
                     </select>
                     <select id="positionFilter"
-                        class="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Positions</option>
+                        class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
+                        <option value="">All Pos</option>
                     </select>
                 </div>
             </div>
         </div>
 
         <!-- ── Table ──────────────────────────────────────── -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold">Emp ID</th>
-                            <th class="px-4 py-3 text-left font-semibold">Name</th>
-                            <th class="px-4 py-3 text-left font-semibold">Username</th>
-                            <th class="px-4 py-3 text-left font-semibold">Phone</th>
-                            <th class="px-4 py-3 text-left font-semibold">Position</th>
-                            <th class="px-4 py-3 text-left font-semibold">Department</th>
-                            <th class="px-4 py-3 text-left font-semibold">Hired</th>
-                            <th class="px-4 py-3 text-left font-semibold">Status</th>
-                            <th class="px-4 py-3 text-center font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="employeeTableBody" class="divide-y divide-gray-100">
-                        <tr>
-                            <td colspan="10" class="px-4 py-6 text-center text-gray-400">
-                                <div class="flex items-center justify-center gap-2">
-                                    <iconify-icon icon="mdi:loading" style="font-size:20px;" class="animate-spin"></iconify-icon>
-                                    Loading...
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="paginationContainer" class="p-4 border-t border-gray-200"></div>
-        </div>
+        <?php
+        $tableHead = '
+            <tr>
+                <th class="px-3 py-2 font-semibold">Emp ID</th>
+                <th class="px-3 py-2 font-semibold">Name</th>
+                <th class="px-3 py-2 font-semibold">Username</th>
+                <th class="px-3 py-2 font-semibold">Phone</th>
+                <th class="px-3 py-2 font-semibold">Position</th>
+                <th class="px-3 py-2 font-semibold">Department</th>
+                <th class="px-3 py-2 font-semibold">Hired</th>
+                <th class="px-3 py-2 font-semibold">Status</th>
+                <th class="px-3 py-2 font-semibold text-center">Actions</th>
+            </tr>';
+        $tbodyId = 'employeeTableBody';
+        $paginationId = 'paginationContainer';
+        $tableBody = '
+            <tr>
+                <td colspan="9" class="px-3 py-4 text-center text-gray-400">
+                    <div class="flex items-center justify-center gap-2">
+                        <iconify-icon icon="mdi:loading" style="font-size:16px;" class="animate-spin"></iconify-icon>
+                        Loading...
+                    </div>
+                </td>
+            </tr>';
+        include 'component/table.php';
+        ?>
     </div>
 
     <!-- ── Create / Edit Modal ────────────────────────────── -->
@@ -406,6 +402,10 @@ function statusBadge(statusId) {
     return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${s.cls}">${s.label}</span>`;
 }
 
+function getCurrentDateString() {
+    return new Date().toISOString().split('T')[0];
+}
+
 function encodeDataAttr(value) {
     return encodeURIComponent(String(value ?? ''));
 }
@@ -552,21 +552,21 @@ function renderTable(data) {
 
         return `
         <tr class="hover:bg-indigo-50 transition-colors">
-            <td class="px-4 py-3 text-xs font-mono text-gray-600">${e.employee_code || '-'}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">${e.full_name}</td>
-            <td class="px-4 py-3 text-xs font-mono text-gray-500">@${e.username}</td>
-            <td class="px-4 py-3 text-xs text-gray-600">${e.phone || '-'}</td>
-            <td class="px-4 py-3 text-gray-700">${e.position}</td>
-            <td class="px-4 py-3 text-gray-700">${e.department}</td>
-            <td class="px-4 py-3 text-xs text-gray-500">${e.date_hired ?? '-'}</td>
-            <td class="px-4 py-3">${statusBadge(e.status_id)}</td>
-            <td class="px-4 py-3">
-                <div class="flex gap-2 justify-center">
-                    <button type="button" class="js-edit-employee inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 text-xs font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}">
-                        <iconify-icon icon="mdi:pencil" style="font-size:14px;"></iconify-icon> Edit
+            <td class="px-3 py-1 text-xs font-mono text-gray-600">${e.employee_code || '-'}</td>
+            <td class="px-3 py-1 font-medium text-gray-900">${e.full_name}</td>
+            <td class="px-3 py-1 text-xs font-mono text-gray-500">@${e.username}</td>
+            <td class="px-3 py-1 text-xs text-gray-600">${e.phone || '-'}</td>
+            <td class="px-3 py-1 text-gray-700">${e.position}</td>
+            <td class="px-3 py-1 text-gray-700">${e.department}</td>
+            <td class="px-3 py-1 text-xs text-gray-500">${e.date_hired ?? '-'}</td>
+            <td class="px-3 py-1">${statusBadge(e.status_id)}</td>
+            <td class="px-3 py-1">
+                <div class="flex gap-1 justify-center">
+                    <button type="button" class="js-edit-employee inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded hover:bg-indigo-100 hover:text-indigo-700 text-[10px] font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}">
+                        <iconify-icon icon="mdi:pencil" style="font-size:12px;"></iconify-icon> Edit
                     </button>
-                    <button type="button" class="js-delete-employee inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
-                        <iconify-icon icon="mdi:delete" style="font-size:14px;"></iconify-icon> Delete
+                    <button type="button" class="js-delete-employee inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded hover:bg-red-100 hover:text-red-700 text-[10px] font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
+                        <iconify-icon icon="mdi:delete" style="font-size:12px;"></iconify-icon> Delete
                     </button>
                 </div>
             </td>
@@ -580,7 +580,7 @@ function renderPagination(total) {
     let pages = '';
     for (let i = 1; i <= totalPages; i++) {
         pages += `<button onclick="goToPage(${i})"
-            class="px-3 py-1 rounded text-xs font-medium border transition-colors ${
+            class="px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
                 i === currentPage
                     ? 'bg-indigo-600 text-white border-indigo-600'
                     : 'border-gray-300 text-gray-600 hover:bg-gray-50'
@@ -588,18 +588,18 @@ function renderPagination(total) {
     }
 
     paginationContainer.innerHTML = `
-        <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">
+        <div class="flex justify-between items-center px-2 py-1 bg-gray-50 border-t border-gray-200">
+            <span class="text-xs text-gray-500">
                 Showing ${(currentPage-1)*perPage+1}–${Math.min(currentPage*perPage, total)} of ${total}
             </span>
             <div class="flex gap-1 flex-wrap">
                 <button onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''
-                    } class="px-3 py-1 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    } class="px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                     &lsaquo; Prev
                 </button>
                 ${pages}
                 <button onclick="goToPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''
-                    } class="px-3 py-1 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    } class="px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                     Next &rsaquo;
                 </button>
             </div>
@@ -733,6 +733,7 @@ function openCreateModal() {
 
     // 3. Reset UI components
     setPasswordMode(true);
+    document.getElementById('date_hired').value = getCurrentDateString();
     document.getElementById('modalTitle').textContent = 'Add New Employee';
     document.getElementById('submitButtonText').textContent = 'Save Employee';
     resetPhotoUI();

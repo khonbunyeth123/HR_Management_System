@@ -19,7 +19,7 @@ ini_set('log_errors',      '1');
 // FIX 2: secure session settings before session_start()
 // -----------------------------------------------------------------------
 ini_set('session.cookie_httponly', '1');
-ini_set('session.cookie_secure',   '1');   // requires HTTPS
+ini_set('session.cookie_secure',   $appDebug ? '0' : '1'); // only secure in production
 ini_set('session.cookie_samesite', 'Strict');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.gc_maxlifetime',  '86400'); // 24 h
@@ -45,6 +45,8 @@ if ($basePath !== '' && strpos($uri, $basePath) === 0) {
     $uri = substr($uri, strlen($basePath));
 }
 if ($uri === '') $uri = '/';
+
+error_log("DEBUG: Resolved URI: " . $uri);
 
 // -----------------------------------------------------------------------
 // API requests — hand off to api router (session started inside api.php)
@@ -205,9 +207,11 @@ $viewDir   = $baseDir . '/../resources/views';
 
             <main class="flex-1 min-w-0 flex flex-col overflow-hidden">
                 <!-- Breadcrumbs & Header -->
-                <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-8 py-5">
-                    <nav class="flex text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-2">
+
+
+                <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-3">
+                    <nav class="flex text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5" aria-label="Breadcrumb">
+                        <ol class="flex items-center space-x-1">
                             <li><a href="?page=dashboard" class="hover:text-indigo-600 transition-colors">Dashboard</a></li>
                             <?php if ($page !== 'dashboard'): ?>
                                 <li><span class="mx-1 text-slate-200">/</span></li>
@@ -215,12 +219,12 @@ $viewDir   = $baseDir . '/../resources/views';
                             <?php endif; ?>
                         </ol>
                     </nav>
-                    <h2 class="text-2xl font-black text-slate-900 tracking-tight capitalize">
+                    <h2 class="text-lg font-black text-slate-900 tracking-tight capitalize">
                         <?= str_replace(['/', '_'], [' ', ' '], $page) ?>
                     </h2>
                 </header>
 
-                <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
+                <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
                     <?php
                     // FIX 5: resolve view path and verify it stays inside $viewDir
                     //         prevents path traversal via crafted $page values

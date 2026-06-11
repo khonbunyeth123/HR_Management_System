@@ -1,79 +1,62 @@
-<!-- Add these CDN scripts in your <head> or before </body> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <div class="w-full h-full">
-    <div class="bg-white rounded-lg shadow-lg p-4">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-3xl font-bold text-slate-800">Summary Attendance Report</h1>
-            <div class="flex gap-2">
-                <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-                    <span>📊</span> Export Excel
-                </button>
-                <button onclick="exportToPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2">
-                    <span>📄</span> Export PDF
-                </button>
+    <div class="bg-white rounded-lg shadow-sm p-3 border border-slate-100">
+        <div class="flex justify-between items-center mb-3">
+            <h1 class="text-sm font-bold text-slate-800">Summary Report</h1>
+            <div class="flex gap-1">
+                <button onclick="exportToExcel()" class="bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold hover:bg-green-700 transition">Excel</button>
+                <button onclick="exportToPDF()" class="bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold hover:bg-red-700 transition">PDF</button>
             </div>
         </div>
 
         <!-- Date Range -->
-        <div class="bg-gray-50 rounded-lg p-4 mb-4">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">📅 Select Report Period</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">From Date:</label>
-                        <input type="date" id="fromDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">To Date:</label>
-                        <input type="date" id="toDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
+        <div class="bg-slate-50 rounded-lg p-2 mb-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase">From:</label>
+                    <input type="date" id="fromDate" class="p-1 border border-gray-200 rounded-lg text-[10px] focus:ring-1 focus:ring-blue-500">
                 </div>
-
-                <div class="flex gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Department:</label>
-                        <select id="departmentFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">All Departments</option>
-                            <option value="IT">IT Department</option>
-                            <option value="HR">HR Department</option>
-                            <option value="Sales">Sales Department</option>
-                            <option value="Finance">Finance Department</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button onclick="generateReport()" class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
-                            Generate Report
-                        </button>
-                    </div>
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase">To:</label>
+                    <input type="date" id="toDate" class="p-1 border border-gray-200 rounded-lg text-[10px] focus:ring-1 focus:ring-blue-500">
+                </div>
+                <div class="flex flex-col gap-0.5">
+                    <label class="text-[9px] font-bold text-slate-500 uppercase">Dept:</label>
+                    <select id="departmentFilter" class="p-1 border border-gray-200 rounded-lg text-[10px] focus:ring-1 focus:ring-blue-500">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="generateReport()" class="w-full bg-blue-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">Generate</button>
                 </div>
             </div>
         </div>
 
         <!-- Employee Summary Table -->
-        <h3 class="text-lg font-semibold text-gray-700 mb-4">👥 Employee Attendance Summary</h3>
-        <div class="overflow-x-auto shadow-md rounded-lg mb-6">
-            <table class="min-w-full bg-white border border-gray-200">
+        <h3 class="text-[11px] font-bold text-slate-800 mb-2">👥 Attendance Summary</h3>
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="min-w-full bg-white text-[10px]">
                 <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th class="p-3 text-left">Employee Name</th>
-                        <th class="p-3 text-center">ID</th>
-                        <th class="p-3 text-center">Department</th>
-                        <th class="p-3 text-center">Total Days</th>
-                        <th class="p-3 text-center">Present</th>
-                        <th class="p-3 text-center">Late</th>
-                        <th class="p-3 text-center">Leave</th>
-                        <th class="p-3 text-center">Day Off</th>
-                        <th class="p-3 text-center">Absent</th>
-                        <th class="p-3 text-center">Attendance %</th>
-                        <th class="p-3 text-center">Performance</th>
+                        <th class="p-2 text-left">Employee</th>
+                        <th class="p-2 text-center">ID</th>
+                        <th class="p-2 text-center">Dept</th>
+                        <th class="p-2 text-center">Total</th>
+                        <th class="p-2 text-center">Pres</th>
+                        <th class="p-2 text-center">Late</th>
+                        <th class="p-2 text-center">Leave</th>
+                        <th class="p-2 text-center">Off</th>
+                        <th class="p-2 text-center">Abs</th>
+                        <th class="p-2 text-center">%</th>
+                        <th class="p-2 text-center">Perf</th>
                     </tr>
                 </thead>
                 <tbody id="summaryTableBody">
                     <tr>
-                        <td colspan="12" class="p-4 text-center text-gray-500">⏳ Loading...</td>
+                        <td colspan="11" class="p-3 text-center text-gray-500">⏳ Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -85,15 +68,22 @@
     // Store report data globally for export
     let reportData = [];
 
+    function getCurrentDateString() {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const localDate = new Date(now.getTime() - offset * 60000);
+        return localDate.toISOString().split('T')[0];
+    }
+
     function setDefaultDates() {
         const today = new Date();
 
         // fromDate = 1st day of THIS month
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        // toDate = TODAY
+        // toDate = TODAY (using local timezone)
         document.getElementById('fromDate').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        document.getElementById('toDate').value = getCurrentDateString();
 
         // Auto load table on page load
         generateReport();
@@ -334,3 +324,4 @@
         doc.save(`attendance_summary_${from}_to_${to}.pdf`);
     }
 </script>
+

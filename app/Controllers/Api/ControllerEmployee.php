@@ -115,9 +115,17 @@ class ControllerEmployee
     public function calendarEvents(): void
     {
         $month = $_GET['month'] ?? date('Y-m');
-        $employeeId = (int) ($_GET['employee_id'] ?? $_SESSION['employee_id'] ?? 0);
+        $authType = $_SESSION['auth_type'] ?? '';
+        
+        if ($authType === 'employee') {
+            $employeeId = (int) $_SESSION['employee_id'];
+        } elseif ($authType === 'user') {
+            $employeeId = (int) ($_GET['employee_id'] ?? 0);
+        } else {
+            $this->jsonError('Unauthorized', 403);
+        }
 
-        if (!$employeeId) {
+        if (!$employeeId && $authType !== 'user') {
             $this->jsonError('Employee ID required', 400);
         }
 

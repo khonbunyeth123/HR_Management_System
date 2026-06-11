@@ -93,6 +93,7 @@ class RoleService
         try {
             $roleId = $this->roleModel->createRole([
                 'name' => trim($data['name']),
+                'slug' => trim($data['slug']),
                 'description' => trim($data['description'] ?? ''),
                 'status_id' => 2 // Default to pending
             ]);
@@ -102,10 +103,7 @@ class RoleService
                 $this->assignPermissionsToRole($roleId, $data['permissions']);
             }
 
-            return [
-                'id' => $roleId,
-                'message' => 'Role created successfully and is pending approval'
-            ];
+            return $this->getRoleWithPermissions($roleId);
         } catch (Exception $e) {
             throw new Exception('Failed to create role: ' . $e->getMessage(), 500);
         }

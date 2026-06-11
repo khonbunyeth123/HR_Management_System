@@ -23,6 +23,7 @@ class Role
                     r.id,
                     r.uuid,
                     r.name,
+                    r.slug,
                     r.description,
                     r.status_id,
                     r.created_at,
@@ -56,6 +57,7 @@ class Role
                     r.id,   
                     r.uuid,
                     r.name,
+                    r.slug,
                     r.description,
                     r.status_id,
                     r.created_at,
@@ -94,6 +96,7 @@ class Role
                     r.id,
                     r.uuid,
                     r.name,
+                    r.slug,
                     r.description,
                     r.status_id,
                     r.created_at,
@@ -142,13 +145,14 @@ class Role
         $now = date('Y-m-d H:i:s');
         $createdBy = $_SESSION['user_id'] ?? null;
 
-        $query = "INSERT INTO tbl_roles (uuid, name, description, status_id, created_at, created_by)
-                  VALUES (?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO tbl_roles (uuid, name, slug, description, status_id, created_at, created_by)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->pdo->prepare($query);
         $stmt->execute([
             $uuid,
             $data['name'] ?? '',
+            $data['slug'] ?? '',
             $data['description'] ?? null,
             $data['status_id'] ?? 2, // 2 = pending by default
             $now,

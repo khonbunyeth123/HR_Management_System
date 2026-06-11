@@ -1,59 +1,39 @@
 
-<body class="bg-gray-50 min-h-screen">
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="w-full h-full p-2">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-gray-200 mb-6">
-        <div class="flex items-center gap-3 mb-4 sm:mb-0">
-            <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-                <i class="fas fa-users"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
-                <p class="text-gray-500 text-sm">Manage users and assign roles</p>
-            </div>
+    <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+        <div>
+            <h1 class="text-sm font-bold text-gray-900">User Management</h1>
         </div>
         <button onclick="openCreateModal()"
-            class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors shadow-sm text-sm">
+            class="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 text-[10px]">
             <i class="fas fa-plus"></i> Add User
         </button>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Total Users</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statTotal">—</p>
-            </div>
-            <i class="fas fa-users text-indigo-300 text-3xl"></i>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Total</p>
+            <p class="text-lg font-bold text-gray-900" id="statTotal">—</p>
         </div>
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Active</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statActive">—</p>
-            </div>
-            <i class="fas fa-user-check text-green-300 text-3xl"></i>
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Active</p>
+            <p class="text-lg font-bold text-gray-900" id="statActive">—</p>
         </div>
-        <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-semibold uppercase tracking-wide">Inactive</p>
-                <p class="text-3xl font-bold text-gray-900 mt-1" id="statInactive">—</p>
-            </div>
-            <i class="fas fa-user-slash text-red-300 text-3xl"></i>
+        <div class="bg-white rounded-lg p-2 border border-gray-100 shadow-sm">
+            <p class="text-[9px] font-bold text-gray-400 uppercase">Inactive</p>
+            <p class="text-lg font-bold text-gray-900" id="statInactive">—</p>
         </div>
     </div>
 
     <!-- Search -->
-    <div class="flex flex-col sm:flex-row gap-3 mb-5">
-        <div class="relative flex-1">
-            <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="text" id="searchInput" placeholder="Search by name, username or email..."
-                class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                oninput="applyFilters()"
-                autocomplete="off">
-        </div>
+    <div class="flex gap-2 mb-3">
+        <input type="text" id="searchInput" placeholder="Search..."
+            class="flex-1 px-3 py-1 border border-gray-200 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            oninput="applyFilters()">
         <select id="filterStatus" onchange="applyFilters()"
-            class="px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-w-max">
+            class="px-2 py-1 border border-gray-200 rounded-lg text-[10px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white">
             <option value="">All Status</option>
             <option value="1">Active</option>
             <option value="0">Inactive</option>
@@ -61,41 +41,24 @@
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-lg text-white">
-                        <th class="px-6 py-3 text-left font-semibold">#</th>
-                        <th class="px-6 py-3 text-left font-semibold">Name</th>
-                        <th class="px-6 py-3 text-left font-semibold">Username</th>
-                        <th class="px-6 py-3 text-left font-semibold">Email</th>
-                        <th class="px-6 py-3 text-left font-semibold">Role</th>
-                        <th class="px-6 py-3 text-center font-semibold">Status</th>
-                        <th class="px-6 py-3 text-left font-semibold">Created</th>
-                        <th class="px-6 py-3 text-center font-semibold">Actions</th>
+            <table class="w-full text-[10px]">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold">#</th>
+                        <th class="px-3 py-2 text-left font-semibold">Name</th>
+                        <th class="px-3 py-2 text-left font-semibold">User</th>
+                        <th class="px-3 py-2 text-left font-semibold">Email</th>
+                        <th class="px-3 py-2 text-left font-semibold">Role</th>
+                        <th class="px-3 py-2 text-center font-semibold">Status</th>
+                        <th class="px-3 py-2 text-left font-semibold">Created</th>
+                        <th class="px-3 py-2 text-center font-semibold">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
-                    <?php for ($i = 0; $i < 5; $i++): ?>
-                    <tr class="border-b border-gray-100">
-                        <?php for ($j = 0; $j < 8; $j++): ?>
-                        <td class="px-6 py-4"><div class="skeleton h-4 w-full"></div></td>
-                        <?php endfor; ?>
-                    </tr>
-                    <?php endfor; ?>
                 </tbody>
             </table>
-        </div>
-
-        <div id="noResults" class="hidden text-center py-16 text-gray-400">
-            <i class="fas fa-search text-4xl mb-3 opacity-30 block"></i>
-            <p class="font-medium">No users found</p>
-            <p class="text-sm mt-1">Try adjusting your search or filter</p>
-        </div>
-
-        <div class="px-6 py-3 border-t border-gray-100 text-sm text-gray-500">
-            <span id="paginationInfo">Showing 0 users</span>
         </div>
     </div>
 </div>
@@ -377,44 +340,44 @@ function applyFilters() {
 
 function renderTable(users) {
     const tbody = document.getElementById('userTableBody');
-    const noRes = document.getElementById('noResults');
+    const noRes  = document.getElementById('noResults');
     const info  = document.getElementById('paginationInfo');
 
     if (!users.length) {
         tbody.innerHTML = '';
-        noRes.classList.remove('hidden');
-        info.textContent = 'No users found';
+        if (noRes) noRes.classList.remove('hidden');
+        if (info) info.textContent = 'No users found';
         return;
     }
 
-    noRes.classList.add('hidden');
-    info.textContent = `Showing ${users.length} user${users.length > 1 ? 's' : ''}`;
+    if (noRes) noRes.classList.add('hidden');
+    if (info) info.textContent = `Showing ${users.length} user${users.length > 1 ? 's' : ''}`;
 
     tbody.innerHTML = users.map((user, idx) => {
         const active = parseInt(user.status_id) === 1;
         return `
-        <tr class="border-b border-gray-100">
-            <td class="px-6 py-4 text-gray-500 font-medium">${idx + 1}</td>
-            <td class="px-6 py-4 font-semibold text-gray-900">${escHtml(user.full_name || '—')}</td>
-            <td class="px-6 py-4 font-mono text-xs text-gray-600">@${escHtml(user.username || '—')}</td>
-            <td class="px-6 py-4 text-gray-600">${escHtml(user.email || '—')}</td>
-            <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded">
+        <tr class="border-b border-gray-100 hover:bg-slate-50 transition-colors">
+            <td class="px-3 py-2 text-gray-500 font-medium">${idx + 1}</td>
+            <td class="px-3 py-2 font-semibold text-gray-900">${escHtml(user.full_name || '—')}</td>
+            <td class="px-3 py-2 font-mono text-[9px] text-gray-600">@${escHtml(user.username || '—')}</td>
+            <td class="px-3 py-2 text-gray-600">${escHtml(user.email || '—')}</td>
+            <td class="px-3 py-2">
+                <span class="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[9px] font-bold rounded">
                     ${escHtml(user.role_name || '—')}
                 </span>
             </td>
-            <td class="px-6 py-4 text-center">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">${active ? 'Active' : 'Inactive'}</span>
+            <td class="px-3 py-2 text-center">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${active ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-500'}">${active ? 'Active' : 'Inactive'}</span>
             </td>
-            <td class="px-6 py-4 text-gray-500 text-xs">${formatDate(user.created_at)}</td>
-            <td class="px-6 py-4 text-center">
-                <div class="flex items-center justify-center gap-1.5">
+            <td class="px-3 py-2 text-gray-400 text-[9px]">${formatDate(user.created_at)}</td>
+            <td class="px-3 py-2 text-center">
+                <div class="flex items-center justify-center gap-1">
                     <button onclick="openEditModal(${user.id})"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-indigo-100 hover:text-indigo-700 text-xs font-semibold transition-colors">
+                        class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 rounded-md hover:bg-indigo-600 hover:text-white text-[10px] font-bold transition-all">
                         <i class="fas fa-edit"></i> Edit
                     </button>
                     <button onclick="openDeleteModal(${user.id}, '${escHtml(user.full_name)}')"
-                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-700 text-xs font-semibold transition-colors">
+                        class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 rounded-md hover:bg-rose-600 hover:text-white text-[10px] font-bold transition-all">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
