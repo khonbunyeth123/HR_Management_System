@@ -76,18 +76,28 @@ class ControllerLeave extends BaseController
             ], 422);
         }
 
+        // Ensure employee_id is set
         if (empty($input['employee_id'])) {
-            $input['employee_id'] = (int) ($this->getUser()?->id ?? 0);
+            $user = $this->getUser();
+            if ($user && isset($user->id)) {
+                $input['employee_id'] = (int) $user->id;
+            } else {
+                return $this->json(['success' => false, 'message' => 'Employee ID is required and could not be determined.'], 400);
+            }
+        } else {
+            $input['employee_id'] = (int) $input['employee_id'];
         }
 
-        if (!isset($input['leave_type_id']) || $input['leave_type_id'] === '') {
+        // Ensure leave_type_id is set, resolve from name if needed
+        if (empty($input['leave_type_id'])) {
             $leaveTypeName = trim((string) ($input['leave_type'] ?? $input['leave_type_name'] ?? ''));
             if ($leaveTypeName !== '') {
-                $input['leave_type_id'] = $this->service->getLeaveTypeIdByName($leaveTypeName);
+                $id = $this->service->getLeaveTypeIdByName($leaveTypeName);
+                if ($id) {
+                    $input['leave_type_id'] = $id;
+                }
             }
-        }
-
-        if (isset($input['leave_type_id'])) {
+        } else {
             $input['leave_type_id'] = (int) $input['leave_type_id'];
         }
 

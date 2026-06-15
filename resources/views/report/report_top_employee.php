@@ -164,7 +164,7 @@ async function loadReport() {
         console.error(err);
         alert('Network error. Please try again.');
     } finally {
-        document.getElementById('loadingMsg').classList.remove('hidden');
+        document.getElementById('loadingMsg').classList.add('hidden');
     }
 }
 

@@ -174,18 +174,27 @@ class LeaveService
             $input['leave_type_id'] = (int) $input['leave_type_id'];
         }
 
-        $required = ['employee_id', 'leave_type_id', 'start_date', 'end_date', 'reason'];
-        foreach ($required as $field) {
+        $required = [
+            'employee_id' => 'Employee ID',
+            'leave_type_id' => 'Leave Type ID',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'reason' => 'Reason'
+        ];
+        foreach ($required as $field => $label) {
             if (empty($input[$field])) {
-                return ['success' => false, 'error' => "Missing required field: $field"];
+                return ['success' => false, 'error' => "Missing or empty required field: $label"];
             }
         }
 
         $startTimestamp = strtotime((string) $input['start_date']);
         $endTimestamp = strtotime((string) $input['end_date']);
 
-        if ($startTimestamp === false || $endTimestamp === false) {
-            return ['success' => false, 'error' => 'Invalid start_date or end_date'];
+        if ($startTimestamp === false) {
+            return ['success' => false, 'error' => 'Invalid start_date format: ' . $input['start_date']];
+        }
+        if ($endTimestamp === false) {
+            return ['success' => false, 'error' => 'Invalid end_date format: ' . $input['end_date']];
         }
 
         if ($endTimestamp < $startTimestamp) {

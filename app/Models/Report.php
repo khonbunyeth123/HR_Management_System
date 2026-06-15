@@ -321,8 +321,4 @@ class Report
         $this->hasStatus = ((int) $stmt->fetchColumn()) > 0;
         return $this->hasStatus;
     }
-
-    
-
-
 }

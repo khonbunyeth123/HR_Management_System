@@ -418,8 +418,11 @@ class ReportService
             ];
         }
 
-        // Sort by present_days DESC, late_days ASC
+        // Sort by attendance_percent DESC, present_days DESC, late_days ASC
         usort($top, function ($a, $b) {
+            if ($a['attendance_percent'] !== $b['attendance_percent']) {
+                return $b['attendance_percent'] <=> $a['attendance_percent'];
+            }
             if ($a['present_days'] !== $b['present_days']) {
                 return $b['present_days'] <=> $a['present_days'];
             }
