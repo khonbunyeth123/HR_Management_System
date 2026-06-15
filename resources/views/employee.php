@@ -1,348 +1,286 @@
-
 <div class="w-full h-full"> 
-    <div class="p-2">
-
-        <!-- ── Header ─────────────────────────────────────── -->
-        <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
-            <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <iconify-icon icon="mdi:users-group" style="font-size:18px;color:#4f46e5;"></iconify-icon>
-                        <h1 class="text-sm font-bold text-gray-900">Employee Directory</h1>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full" id="totalCount">0 Staff</span>
-                        <button onclick="openCreateModal()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors">
-                            <iconify-icon icon="mdi:plus-circle" style="font-size:14px;"></iconify-icon>
-                            Add
-                        </button>
-                    </div>
+    <div class="p-2 space-y-2">
+        <!-- Header & Filters -->
+        <?php 
+            $title = 'Employee Directory';
+            $icon = 'mdi:users-group text-indigo-500';
+            ob_start();
+        ?>
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black normal-case tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md" id="totalCount">0 Staff</span>
+                <?php 
+                    $label = 'Add Employee'; $type = 'primary'; $size = 'xs'; $icon = 'mdi:plus-circle'; $attr = 'onclick="openCreateModal()"'; $id = null;
+                    include 'component/button.php'; 
+                    $label = null; $attr = null; // Important: Reset
+                ?>
+            </div>
+        <?php 
+            $headerRight = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex-1">
+                    <?php 
+                        $id = 'searchInput'; $placeholder = 'Search employee...'; $icon = 'mdi:magnify'; $label = null;
+                        include 'component/input.php'; 
+                        $id = null; $icon = null; // Reset
+                    ?>
                 </div>
-
-                <!-- Search & Filter Bar -->
-                <div class="flex flex-col sm:flex-row gap-1">
-                    <div class="flex-1 relative">
-                        <iconify-icon icon="mdi:magnify"
-                            style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;">
-                        </iconify-icon>
-                        <input type="text" id="searchInput" placeholder="Search..."
-                            class="w-full pl-7 pr-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
+                <div class="flex gap-2">
+                    <div class="w-40">
+                        <?php 
+                            $id = 'departmentFilter'; $placeholder = 'All Departments'; $label = null;
+                            include 'component/select.php'; 
+                            $id = null; $placeholder = null; // Reset
+                        ?>
                     </div>
-                    <select id="departmentFilter"
-                        class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Depts</option>
-                    </select>
-                    <select id="positionFilter"
-                        class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Pos</option>
-                    </select>
+                    <div class="w-40">
+                        <?php 
+                            $id = 'positionFilter'; $placeholder = 'All Positions'; $label = null;
+                            include 'component/select.php'; 
+                            $id = null; $placeholder = null; // Reset
+                        ?>
+                    </div>
                 </div>
             </div>
-        </div>
+        <?php 
+            $content = ob_get_clean();
+            $title = 'Employee Directory'; $icon = 'mdi:users-group text-indigo-500'; // Set for card
+            include 'component/card.php'; 
+            $title = null; $icon = null; $headerRight = null; // Reset
+        ?>
 
-        <!-- ── Table ──────────────────────────────────────── -->
-        <?php
-        $tableHead = '
-            <tr>
-                <th class="px-3 py-2 font-semibold">Emp ID</th>
-                <th class="px-3 py-2 font-semibold">Name</th>
-                <th class="px-3 py-2 font-semibold">Username</th>
-                <th class="px-3 py-2 font-semibold">Phone</th>
-                <th class="px-3 py-2 font-semibold">Position</th>
-                <th class="px-3 py-2 font-semibold">Department</th>
-                <th class="px-3 py-2 font-semibold">Hired</th>
-                <th class="px-3 py-2 font-semibold">Status</th>
-                <th class="px-3 py-2 font-semibold text-center">Actions</th>
-            </tr>';
-        $tbodyId = 'employeeTableBody';
-        $paginationId = 'paginationContainer';
-        $tableBody = '
-            <tr>
-                <td colspan="9" class="px-3 py-4 text-center text-gray-400">
-                    <div class="flex items-center justify-center gap-2">
-                        <iconify-icon icon="mdi:loading" style="font-size:16px;" class="animate-spin"></iconify-icon>
-                        Loading...
-                    </div>
-                </td>
-            </tr>';
-        include 'component/table.php';
+        <!-- Table Card -->
+        <?php 
+            ob_start();
+        ?>
+            <div class="sticky-table-wrapper overflow-x-auto">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-900 text-white sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2 font-black  tracking-wider">Emp ID</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Name</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Username</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Phone</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Position</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Department</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Hired</th>
+                            <th class="px-3 py-2 font-black  tracking-wider">Status</th>
+                            <th class="px-3 py-2 font-black  tracking-wider text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeeTableBody" class="divide-y divide-slate-100 bg-white">
+                        <tr>
+                            <td colspan="9" class="px-3 py-12 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <span class="iconify text-2xl animate-spin opacity-50" data-icon="mdi:loading"></span>
+                                    <p class="text-[10px] font-black  tracking-widest">Loading...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div id="paginationContainer"></div>
+        <?php 
+            $footer = ob_get_clean();
+            $padding = false; $title = null; $icon = null; $headerRight = null; $id = null; $class = ''; $bodyClass = '';
+            include 'component/card.php'; 
+            $padding = true; $footer = null; // Reset
         ?>
     </div>
+</div>
 
-    <!-- ── Create / Edit Modal ────────────────────────────── -->
-    <div id="employeeModal"
-    class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl shadow-indigo-100 w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100">
- 
-        <!-- Header -->
-        <div class="sticky top-0 bg-gradient-to-r from-indigo-50 to-sky-50 border-b border-indigo-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-            <h2 class="text-sm font-semibold text-gray-900" id="modalTitle">Add New Employee</h2>
-            <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-red-500 text-white hover:bg-red-600 transition-colors">
-                <iconify-icon icon="mdi:close" style="font-size:18px;">x</iconify-icon>
-            </button>
-        </div>
- 
-        <form id="employeeForm" class="p-6 space-y-6">
-            <input type="hidden" id="employeeId">   
- 
-            <!-- Personal Information -->
-            <div>
-                <h3 class="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-widest text-indigo-500 mb-3 pb-2 border-b border-indigo-100">
-                    <iconify-icon icon="mdi:account" style="font-size:15px;"></iconify-icon>
-                    Personal Information
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
- 
+<!-- ── Create / Edit Modal ────────────────────────────── -->
+<div id="employeeModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/40 backdrop-blur-[2px] p-4">
+    <div class="w-full max-w-3xl max-h-[95vh] overflow-y-auto no-scrollbar">
+        <?php 
+            ob_start();
+        ?>
+            <div class="flex flex-col">
+                <h2 id="modalTitle" class="text-sm font-black text-slate-800">Add New Employee</h2>
+                <p class="text-[10px] text-slate-500 font-medium">Fill in the employee details below.</p>
+            </div>
+        <?php 
+            $title = ob_get_clean();
+            ob_start();
+        ?>
+            <button onclick="closeModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors text-xs">✕</button>
+        <?php 
+            $headerRight = ob_get_clean();
+            ob_start();
+        ?>
+            <form id="employeeForm" class="space-y-4">
+                <input type="hidden" id="employeeId">
+                
+                <!-- Personal Information -->
+                <div class="space-y-3">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-indigo-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+                        <span class="iconify" data-icon="mdi:account"></span>
+                        Personal Information
+                    </h3>
+                    
                     <!-- Photo Upload -->
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-medium text-gray-500 mb-2">Profile Photo</label>
-                        <div class="flex items-center gap-4 px-4 py-3 bg-gradient-to-r from-indigo-50 to-sky-50 rounded-xl border border-indigo-100">
-                            <div class="relative flex-shrink-0">
-                                <img id="photoPreview"
-                                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Ccircle cx='48' cy='48' r='48' fill='%23e0e7ff'/%3E%3Ccircle cx='48' cy='38' r='17' fill='%23a5b4fc'/%3E%3Cellipse cx='48' cy='84' rx='26' ry='22' fill='%23a5b4fc'/%3E%3C/svg%3E"
-                                    class="w-12 h-12 rounded-full object-cover border-2 border-indigo-200">
-                                <button type="button" id="removePhotoBtn" onclick="removePhoto()"
-                                    class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs items-center justify-center border-2 border-white hover:bg-red-600 transition-colors"
-                                    title="Remove photo">&#x2715;</button>
-                            </div>
-                            <div class="flex-1">
-                                <p id="photoFileName" class="hidden text-xs font-medium text-indigo-600 mb-0.5"></p>
-                                <p class="text-xs font-medium text-gray-600">Profile photo</p>
-                                <p id="photoHint" class="text-xs text-gray-400">JPG, PNG, WEBP — max 2 MB</p>
-                                <p id="photoError" class="hidden text-xs text-red-500 mt-1"></p>
-                            </div>
-                            <label for="photo"
-                                class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 hover:border-indigo-400 transition-colors">
-                                <iconify-icon icon="mdi:upload" style="font-size:14px;"></iconify-icon>
-                                Upload Photo
-                            </label>
-                            <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" class="hidden">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-4">
+                        <div class="relative shrink-0">
+                            <img id="photoPreview"
+                                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Ccircle cx='48' cy='48' r='48' fill='%23e0e7ff'/%3E%3Ccircle cx='48' cy='38' r='17' fill='%23a5b4fc'/%3E%3Cellipse cx='48' cy='84' rx='26' ry='22' fill='%23a5b4fc'/%3E%3C/svg%3E"
+                                class="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm">
+                            <button type="button" id="removePhotoBtn" onclick="removePhoto()"
+                                class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center border-2 border-white hover:bg-rose-600 transition-colors">✕</button>
                         </div>
-                    </div>
- 
-                    <!-- First Name -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">First Name <span class="text-red-400">*</span></label>
-                        <input type="text" id="first_name" required placeholder="John"
-                            class="w-full h-9 px-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                    </div>
- 
-                    <!-- Last Name -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Last Name <span class="text-red-400">*</span></label>
-                        <input type="text" id="last_name" required placeholder="Doe"
-                            class="w-full h-9 px-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                    </div>
- 
-                    <!-- Gender -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Gender <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:gender-male-female" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <select id="gender" required
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all appearance-none cursor-pointer">
-                                <option value="">Select Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </select>
+                        <div class="flex-1 min-w-0">
+                            <p id="photoFileName" class="hidden text-[10px] font-black text-indigo-600 truncate mb-0.5"></p>
+                            <p class="text-[11px] font-black text-slate-700">Profile Photo</p>
+                            <p id="photoHint" class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">JPG, PNG, WEBP — max 2 MB</p>
+                            <p id="photoError" class="hidden text-[9px] text-rose-500 font-bold mt-1"></p>
                         </div>
-                    </div>
- 
-                    <!-- Username -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Username <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-300 text-sm font-medium">@</span>
-                            <input type="text" id="username" required placeholder="johndoe"
-                                class="w-full h-9 pl-7 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
-                    </div>
- 
-                    <!-- Employee ID -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Employee ID</label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:badge-account-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#c7d2fe;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="text" id="employee_code" readonly placeholder="Auto-generated after save"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-indigo-400 bg-indigo-50 border border-indigo-100 rounded-lg cursor-default placeholder:text-indigo-300">
-                        </div>
-                    </div>
- 
-                    <!-- Email -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Email <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:email-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="email" id="email" required placeholder="john.doe@example.com"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
-                    </div>
- 
-                    <!-- Address -->
-                    <div class="md:col-span-2 flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Address <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:map-marker-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="text" id="address" required placeholder="123 Main St, City, State"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
-                    </div>
- 
-                    <!-- Date of Birth -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Date of Birth <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:calendar-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="date" id="dob" required
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all">
-                        </div>
+                        <label for="photo" class="cursor-pointer shrink-0">
+                            <?php 
+                                $label = 'Upload'; $type = 'secondary'; $size = 'xs'; $icon = 'mdi:upload'; $attr = 'style="pointer-events:none"';
+                                include 'component/button.php';
+                                $label = null; $attr = null; $icon = null; // Reset icon too!
+                            ?>
+                        </label>
+                        <input type="file" id="photo" accept="image/jpeg,image/png,image/webp" class="hidden">
                     </div>
 
-                     <!-- Phone -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Phone Number</label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:phone-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="text" id="phone" placeholder="012 345 678"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <?php 
+                            $label = 'First Name'; $id = 'first_name'; $placeholder = 'John'; $required = true; $icon = 'mdi:account-outline';
+                            include 'component/input.php';
+                            $placeholder = null; // Reset
+
+                            $label = 'Last Name'; $id = 'last_name'; $placeholder = 'Doe'; $required = true; $icon = 'mdi:account-outline';
+                            include 'component/input.php';
+                            $placeholder = null; // Reset
+
+                            $label = 'Gender'; $id = 'gender'; $required = true; $placeholder = 'Select Gender'; $icon = 'mdi:gender-male-female';
+                            $options = ['male' => 'Male', 'female' => 'Female'];
+                            include 'component/select.php';
+                            $options = []; $icon = null; $placeholder = null; // Reset
+                            
+                            $label = 'Username'; $id = 'username'; $placeholder = 'johndoe'; $required = true; $icon = 'mdi:at';
+                            include 'component/input.php';
+                            $icon = null; $placeholder = null; // Reset
+
+                            $label = 'Employee ID'; $id = 'employee_code'; $placeholder = 'Auto-generated'; $attr = 'readonly'; $icon = 'mdi:badge-account';
+                            include 'component/input.php';
+                            $icon = null; $attr = null; $placeholder = null; // Reset
+
+                            $label = 'Email'; $id = 'email'; $type = 'email'; $placeholder = 'john@example.com'; $required = true; $icon = 'mdi:email-outline';
+                            include 'component/input.php';
+                            $icon = null; $placeholder = null; // Reset
+
+                            $label = 'Address'; $id = 'address'; $type = 'text'; $placeholder = '123 Main St...'; $required = true; $containerClass = 'md:col-span-2'; $icon = 'mdi:map-marker-outline';
+                            include 'component/input.php';
+                            $icon = null; $containerClass = null; $placeholder = null; // Reset
+
+                            $label = 'Date of Birth'; $id = 'dob'; $type = 'date'; $required = true; $containerClass = ''; $icon = 'mdi:calendar-outline';
+                            include 'component/input.php';
+                            $icon = null; $placeholder = null; // Reset
+
+                            $label = 'Phone'; $id = 'phone'; $type = 'tel'; $placeholder = '012 345 678'; $icon = 'mdi:phone-outline';
+                            include 'component/input.php';
+                            $icon = null; $placeholder = null; // Reset
+
+                            $label = 'Password'; $id = 'password'; $type = 'password'; $placeholder = '••••••••'; $icon = 'mdi:lock-outline';
+                            include 'component/input.php';
+                            $label = null; $icon = null; $placeholder = null; // Reset
+                        ?>
+                        <div class="md:col-span-1 flex flex-col justify-end">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase leading-tight" id="passwordHelp">Mobile login password.</p>
                         </div>
                     </div>
- 
-                    <!-- Password -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Password</label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:lock-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="password" id="password" placeholder="Required for new employee login"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
-                        <p class="text-xs text-gray-400" id="passwordHelp">Set the mobile login password for this employee.</p>
-                    </div>
- 
                 </div>
-            </div>
- 
-            <!-- Divider -->
-            <div class="h-px bg-gray-100"></div>
- 
-            <!-- Job Information -->
-            <div>
-                <h3 class="flex items-center gap-2 text-[10.5px] font-semibold uppercase tracking-widest text-indigo-500 mb-3 pb-2 border-b border-indigo-100">
-                    <iconify-icon icon="mdi:briefcase-outline" style="font-size:15px;"></iconify-icon>
-                    Job Information
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
- 
-                    <!-- Position -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Position <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:tag-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="text" id="position" required placeholder="Software Engineer"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
+
+                <div class="h-px bg-slate-100 my-2"></div>
+
+                <!-- Job Information -->
+                <div class="space-y-3">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+                        <span class="iconify" data-icon="mdi:briefcase-outline"></span>
+                        Job Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <?php 
+                            $label = 'Position'; $id = 'position'; $type = 'text'; $placeholder = 'Software Engineer'; $required = true; $icon = 'mdi:tag-outline';
+                            include 'component/input.php';
+                            $label = 'Department'; $id = 'department'; $type = 'text'; $placeholder = 'Engineering'; $required = true; $icon = 'mdi:office-building-outline';
+                            include 'component/input.php';
+                            $label = 'Date Hired'; $id = 'date_hired'; $type = 'date'; $required = true;
+                            include 'component/input.php';
+                            $label = 'Status'; $id = 'status_id'; $required = true; $placeholder = 'Select Status';
+                            $options = ['1' => 'Active', '2' => 'Inactive', '3' => 'On Leave'];
+                            include 'component/select.php';
+                            $label = null; // Reset 
+                        ?>
                     </div>
- 
-                    <!-- Department -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Department <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:office-building-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="text" id="department" required placeholder="Engineering"
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-gray-300">
-                        </div>
-                    </div>
- 
-                    <!-- Date Hired -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Date Hired <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <iconify-icon icon="mdi:calendar-check-outline" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#a5b4fc;font-size:15px;pointer-events:none;"></iconify-icon>
-                            <input type="date" id="date_hired" required
-                                class="w-full h-9 pl-8 pr-3 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all">
-                        </div>
-                    </div>
- 
-                    <!-- Status -->
-                    <div class="flex flex-col gap-1">
-                        <label class="text-xs font-medium text-gray-500">Status <span class="text-red-400">*</span></label>
-                        <div class="relative">
-                            <span id="statusDot" class="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gray-300 pointer-events-none z-10"></span>
-                            <select id="status_id" required onchange="updateStatusStyle(this)"
-                                class="w-full h-9 pl-7 pr-3 text-sm font-medium bg-gray-50 border border-gray-200 rounded-lg hover:border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all appearance-none cursor-pointer text-gray-500">
-                                <option value="">Select Status</option>
-                                <option value="1">Active</option>
-                                <option value="2">Inactive</option>
-                                <option value="3">On Leave</option>
-                            </select>
-                        </div>
-                    </div>
- 
                 </div>
+            </form>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="flex justify-end gap-2">
+                <?php 
+                    $label = 'Cancel'; $type = 'secondary'; $size = 'sm'; $attr = 'onclick="closeModal()"';
+                    include 'component/button.php';
+                    $label = 'Save Employee'; $type = 'primary'; $size = 'sm'; $icon = 'mdi:content-save-outline'; $attr = 'form="employeeForm" type="submit"'; $id = 'submitButton';
+                    include 'component/button.php';
+                    $label = null; $attr = null; $id = null; // Reset
+                ?>
             </div>
- 
-            <!-- Footer -->
-            <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
-                <button type="button" onclick="closeModal()"
-                    class="h-9 px-5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    Cancel
-                </button>
-                <button type="submit"
-                    class="h-9 px-5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-sky-500 rounded-lg shadow shadow-indigo-200 hover:opacity-90 active:scale-95 transition-all flex items-center gap-2">
-                    <iconify-icon icon="mdi:content-save-outline" style="font-size:16px;"></iconify-icon>
-                    <span id="submitButtonText">Save Employee</span>
-                </button>
-            </div>
- 
-        </form>
+        <?php 
+            $footer = ob_get_clean();
+            include 'component/card.php'; 
+            $title = null; $footer = null; // Reset
+        ?>
     </div>
 </div>
  
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
-        <div class="p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-11 h-11 rounded-full bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
-                    <iconify-icon icon="mdi:alert-outline" style="font-size:22px;color:#ef4444;"></iconify-icon>
+<div id="deleteModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/40 backdrop-blur-[2px] p-4">
+    <div class="w-full max-w-xs">
+        <?php 
+            $title = 'Delete Employee';
+            ob_start();
+        ?>
+            <div class="text-center py-2">
+                <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-3 border border-rose-100">
+                    <span class="iconify text-2xl" data-icon="mdi:alert-outline"></span>
                 </div>
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-900">Delete Employee</h3>
-                    <p class="text-xs text-gray-400">This action cannot be undone</p>
-                </div>
+                <p class="text-[11px] text-slate-600 font-medium">Are you sure you want to delete <strong id="deleteEmployeeName" class="text-slate-900"></strong>? This action cannot be undone.</p>
             </div>
-            <p class="text-sm text-gray-600 mb-6">Are you sure you want to delete <strong id="deleteEmployeeName" class="text-gray-900"></strong>?</p>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeDeleteModal()"
-                    class="h-9 px-4 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    Cancel
-                </button>
-                <button onclick="confirmDelete()"
-                    class="h-9 px-4 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 active:scale-95 transition-all flex items-center gap-2">
-                    <iconify-icon icon="mdi:delete-outline" style="font-size:16px;"></iconify-icon>
-                    Delete
-                </button>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="grid grid-cols-2 gap-2">
+                <?php 
+                    $label = 'Cancel'; $type = 'secondary'; $size = 'sm'; $attr = 'onclick="closeDeleteModal()"';
+                    include 'component/button.php';
+                    $label = 'Delete'; $type = 'danger'; $size = 'sm'; $icon = 'mdi:delete-outline'; $attr = 'onclick="confirmDelete()"';
+                    include 'component/button.php';
+                    $label = null; $attr = null; // Reset
+                ?>
             </div>
-        </div>
+        <?php 
+            $footer = ob_get_clean();
+            include 'component/card.php'; 
+            $title = null; $footer = null; // Reset
+        ?>
     </div>
 </div>
 
-    <!-- ── Toast Notification ─────────────────────────────── -->
-    <div id="toast" class="hidden fixed top-4 right-4 z-50 max-w-sm">
-        <div class="bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-center gap-3">
-            <iconify-icon id="toastIcon" style="font-size:24px;"></iconify-icon>
-            <div>
-                <p class="font-semibold text-gray-900" id="toastTitle"></p>
-                <p class="text-sm text-gray-600" id="toastMessage"></p>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Toast placeholder -->
+<div id="toast" class="hidden fixed top-4 right-4 z-[9999]"></div>
 
-<!-- ══════════════════════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════════════════════ -->
+<script src="/assets/js/pagination.js"></script>
 <script>
 /* ── DOM References ─────────────────────────── */
 const employeeForm     = document.getElementById('employeeForm');
@@ -393,13 +331,16 @@ const DEFAULT_AVATAR = photoPreview.src;   // save original placeholder
 
 /* ── Helpers: Status Badge ───────────────────── */
 function statusBadge(statusId) {
-    const map = {
-        1: { label: 'Active',   cls: 'bg-green-100 text-green-700' },
-        2: { label: 'Inactive', cls: 'bg-gray-100 text-gray-600' },
-        3: { label: 'On Leave', cls: 'bg-yellow-100 text-yellow-700' },
+    const styles = {
+        1: 'bg-emerald-50 text-emerald-600 border-emerald-100', // Active
+        2: 'bg-slate-50 text-slate-400 border-slate-100',      // Inactive
+        3: 'bg-amber-50 text-amber-600 border-amber-100',      // On Leave
     };
-    const s = map[statusId] || { label: 'Unknown', cls: 'bg-gray-100 text-gray-500' };
-    return `<span class="px-2 py-0.5 rounded-full text-xs font-semibold ${s.cls}">${s.label}</span>`;
+    const labels = { 1: 'Active', 2: 'Inactive', 3: 'On Leave' };
+    const style = styles[statusId] || 'bg-slate-50 text-slate-400 border-slate-100';
+    const label = labels[statusId] || 'Unknown';
+
+    return `<span class="${style} px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">${label}</span>`;
 }
 
 function getCurrentDateString() {
@@ -421,21 +362,38 @@ function decodeDataAttr(value) {
 
 /* ── Toast ──────────────────────────────────── */
 function showToast(title, message, type = 'success') {
-    const toast     = document.getElementById('toast');
-    const icon      = document.getElementById('toastIcon');
-    const toastTitle   = document.getElementById('toastTitle');
-    const toastMessage = document.getElementById('toastMessage');
-    const box = toast.querySelector('div');
+    const container = document.getElementById('toast');
+    const toast = document.createElement('div');
+    toast.className = `flex items-center gap-3 p-3 rounded-xl border bg-white shadow-xl shadow-slate-950/10 transition-all duration-300 transform translate-x-full mb-2`;
+    
+    if (type === 'success') {
+        toast.classList.add('border-emerald-200');
+        iconHtml = '<div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0"><span class="iconify" data-icon="mdi:check-circle"></span></div>';
+    } else {
+        toast.classList.add('border-rose-200');
+        iconHtml = '<div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0"><span class="iconify" data-icon="mdi:alert-circle"></span></div>';
+    }
 
-    icon.setAttribute('icon', type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle');
-    icon.style.color = type === 'success' ? '#10b981' : '#ef4444';
-    box.className = `bg-white rounded-lg shadow-lg border-l-4 p-4 flex items-center gap-3 ${
-        type === 'success' ? 'border-green-500' : 'border-red-500'
-    }`;
-    toastTitle.textContent   = title;
-    toastMessage.textContent = message;
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
+    toast.innerHTML = `
+        ${iconHtml}
+        <div>
+            <p class="text-xs font-black text-slate-800">${title}</p>
+            <p class="text-[10px] text-slate-500 font-medium">${message}</p>
+        </div>
+    `;
+
+    container.appendChild(toast);
+    container.classList.remove('hidden');
+    
+    setTimeout(() => toast.classList.remove('translate-x-full'), 10);
+
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            toast.remove();
+            if (container.children.length === 0) container.classList.add('hidden');
+        }, 300);
+    }, 3500);
 }
 
 /* ── Photo Upload Logic ─────────────────────── */
@@ -484,20 +442,33 @@ function removePhoto() {
 
 /* ── Load Employees ─────────────────────────── */
 async function loadEmployees() {
+    console.log('loadEmployees: starting');
     try {
         const res  = await fetch('/api/employees');
+        console.log('loadEmployees: fetch completed');
         const json = await res.json();
-        if (!json.success) { showToast('Error', 'Failed to load employees', 'error'); return; }
+        console.log('loadEmployees: API Response parsed:', json);
 
+        // The API returns {success: true, message: 'Success', data: [...]}
+        if (!json.success) { 
+            console.error('loadEmployees: json.success is false');
+            showToast('Error', 'Failed to load employees: ' + (json.message || 'Unknown error'), 'error'); 
+            return; 
+        }
+
+        console.log('loadEmployees: processing data');
         const rows = Array.isArray(json.data) ? json.data : [];
         allEmployees = rows.map(normalizeEmployeeRecord);
+        console.log('loadEmployees: data processed, count:', allEmployees.length);
+
         totalCount.textContent = `${allEmployees.length} Staff`;
         populateFilters();
         currentPage = 1;
         applyFilters();
+        console.log('loadEmployees: completed');
     } catch (err) {
+        console.error('loadEmployees: catch block triggered', err);
         showToast('Error', 'Failed to connect to server', 'error');
-        console.error(err);
     }
 }
 
@@ -514,6 +485,7 @@ function populateFilters() {
 
 /* ── Filter & Pagination ────────────────────── */
 function applyFilters() {
+    console.log('applyFilters: starting');
     const search = searchInput.value.toLowerCase();
     const dept   = departmentFilter.value;
     const pos    = positionFilter.value;
@@ -527,22 +499,38 @@ function applyFilters() {
         const matchPos    = !pos  || e.position   === pos;
         return matchSearch && matchDept && matchPos;
     });
+    console.log('applyFilters: filtered count:', filtered.length);
 
     totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
     if (currentPage > totalPages) currentPage = totalPages;
 
     renderTable(filtered);
-    renderPagination(filtered.length);
+    
+    // Call Global Pagination
+    console.log('applyFilters: calling renderPagination');
+    renderPagination({
+        currentPage: currentPage,
+        totalPages: totalPages,
+        showingFrom: filtered.length > 0 ? ((currentPage - 1) * perPage) + 1 : 0,
+        showingTo: filtered.length > 0 ? Math.min(currentPage * perPage, filtered.length) : 0,
+        totalRecords: filtered.length,
+        onPrevious: () => goToPage(currentPage - 1),
+        onNext: () => goToPage(currentPage + 1),
+        onPageClick: (page) => goToPage(page)
+    });
+    console.log('applyFilters: completed');
 }
 
 function renderTable(data) {
+    console.log('renderTable: starting, data count:', data.length);
     const start = (currentPage - 1) * perPage;
     const rows  = data.slice(start, start + perPage);
+    console.log('renderTable: rows count:', rows.length);
 
     if (!rows.length) {
         employeeTableBody.innerHTML = `
-            <tr><td colspan="10" class="p-8 text-center text-gray-400">
-                <iconify-icon icon="mdi:account-search" style="font-size:32px;display:block;margin:0 auto 8px;"></iconify-icon>
+            <tr><td colspan="9" class="px-3 py-12 text-center text-slate-400 font-medium">
+                <span class="iconify text-3xl mx-auto mb-2 opacity-20" data-icon="mdi:account-search"></span>
                 No employees found
             </td></tr>`;
         return;
@@ -551,59 +539,32 @@ function renderTable(data) {
     employeeTableBody.innerHTML = rows.map(e => {
 
         return `
-        <tr class="hover:bg-indigo-50 transition-colors">
-            <td class="px-3 py-1 text-xs font-mono text-gray-600">${e.employee_code || '-'}</td>
-            <td class="px-3 py-1 font-medium text-gray-900">${e.full_name}</td>
-            <td class="px-3 py-1 text-xs font-mono text-gray-500">@${e.username}</td>
-            <td class="px-3 py-1 text-xs text-gray-600">${e.phone || '-'}</td>
-            <td class="px-3 py-1 text-gray-700">${e.position}</td>
-            <td class="px-3 py-1 text-gray-700">${e.department}</td>
-            <td class="px-3 py-1 text-xs text-gray-500">${e.date_hired ?? '-'}</td>
-            <td class="px-3 py-1">${statusBadge(e.status_id)}</td>
-            <td class="px-3 py-1">
+        <tr class="hover:bg-slate-50 transition-colors group">
+            <td class="px-3 py-1.5 text-[10px] font-black text-slate-500 normal-case tracking-tight">${e.employee_code || '-'}</td>
+            <td class="px-3 py-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="font-black text-slate-700  group-hover:text-indigo-600 transition-colors">${e.full_name}</span>
+                </div>
+            </td>
+            <td class="px-3 py-1.5 text-[10px] font-bold text-slate-600 normal-case tracking-tighter">@${e.username}</td>
+            <td class="px-3 py-1.5 text-[10px] font-black text-slate-600">${e.phone || '-'}</td>
+            <td class="px-3 py-1.5 text-[10px] font-black text-slate-600 normal-case tracking-tight">${e.position}</td>
+            <td class="px-3 py-1.5 text-[10px] font-black text-slate-400 normal-case tracking-tight">${e.department}</td>
+            <td class="px-3 py-1.5 text-[9px] font-black text-slate-400 normal-case tracking-tight">${e.date_hired ?? '-'}</td>
+            <td class="px-3 py-1.5">${statusBadge(e.status_id)}</td>
+            <td class="px-3 py-1.5">
                 <div class="flex gap-1 justify-center">
-                    <button type="button" class="js-edit-employee inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded hover:bg-indigo-100 hover:text-indigo-700 text-[10px] font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}">
-                        <iconify-icon icon="mdi:pencil" style="font-size:12px;"></iconify-icon> Edit
+                    <button type="button" class="js-edit-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 text-[9px] font-black normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}">
+                        <span class="iconify" data-icon="mdi:pencil"></span> Edit
                     </button>
-                    <button type="button" class="js-delete-employee inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 rounded hover:bg-red-100 hover:text-red-700 text-[10px] font-semibold transition-colors" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
-                        <iconify-icon icon="mdi:delete" style="font-size:12px;"></iconify-icon> Delete
+                    <button type="button" class="js-delete-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-[9px] font-black normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
+                        <span class="iconify" data-icon="mdi:trash-can-outline"></span> Del
                     </button>
                 </div>
             </td>
         </tr>`;
     }).join('');
-}
-
-function renderPagination(total) {
-    if (totalPages <= 1) { paginationContainer.innerHTML = ''; return; }
-
-    let pages = '';
-    for (let i = 1; i <= totalPages; i++) {
-        pages += `<button onclick="goToPage(${i})"
-            class="px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
-                i === currentPage
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-            }">${i}</button>`;
-    }
-
-    paginationContainer.innerHTML = `
-        <div class="flex justify-between items-center px-2 py-1 bg-gray-50 border-t border-gray-200">
-            <span class="text-xs text-gray-500">
-                Showing ${(currentPage-1)*perPage+1}–${Math.min(currentPage*perPage, total)} of ${total}
-            </span>
-            <div class="flex gap-1 flex-wrap">
-                <button onclick="goToPage(${currentPage-1})" ${currentPage===1?'disabled':''
-                    } class="px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    &lsaquo; Prev
-                </button>
-                ${pages}
-                <button onclick="goToPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''
-                    } class="px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    Next &rsaquo;
-                </button>
-            </div>
-        </div>`;
+    console.log('renderTable: completed');
 }
 
 function goToPage(p) {
@@ -702,11 +663,11 @@ function fillEmployeeForm(rawEmployee) {
 function setPasswordMode(isCreate) {
     passwordInput.required = isCreate;
     passwordInput.placeholder = isCreate
-        ? 'Required for new employee login'
-        : 'Leave blank to keep current password';
+        ? 'Required for new employee'
+        : 'Leave blank to keep current';
     passwordHelp.textContent = isCreate
-        ? 'Set the mobile login password for this employee.'
-        : 'Leave blank if you do not want to change the employee password.';
+        ? 'SET THE MOBILE LOGIN PASSWORD.'
+        : 'LEAVE BLANK IF NO CHANGE.';
 }
 
 function openCreateModal() {
@@ -723,11 +684,7 @@ function openCreateModal() {
     fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            if (el.tagName === 'SELECT') {
-                el.value = '';
-            } else {
-                el.value = '';
-            }
+            el.value = '';
         }
     });
 
@@ -735,9 +692,10 @@ function openCreateModal() {
     setPasswordMode(true);
     document.getElementById('date_hired').value = getCurrentDateString();
     document.getElementById('modalTitle').textContent = 'Add New Employee';
-    document.getElementById('submitButtonText').textContent = 'Save Employee';
+    document.getElementById('submitButton').innerHTML = '<span class="iconify" data-icon="mdi:content-save-outline"></span> Save Employee';
     resetPhotoUI();
     employeeModal.classList.remove('hidden');
+    employeeModal.classList.add('flex');
 }
 
 async function openEditModal(id) {
@@ -770,13 +728,15 @@ async function openEditModal(id) {
     }
 
     document.getElementById('modalTitle').textContent = 'Edit Employee';
-    document.getElementById('submitButtonText').textContent = 'Update Employee';
+    document.getElementById('submitButton').innerHTML = '<span class="iconify" data-icon="mdi:content-save-outline"></span> Update Employee';
     setPasswordMode(false);
     employeeModal.classList.remove('hidden');
+    employeeModal.classList.add('flex');
 }
 
 function closeModal() {
     employeeModal.classList.add('hidden');
+    employeeModal.classList.remove('flex');
     resetPhotoUI();
 }
 
@@ -784,11 +744,13 @@ function openDeleteModal(id, name) {
     deleteEmpId = id;
     deleteEmpName.textContent = name;
     deleteModal.classList.remove('hidden');
+    deleteModal.classList.add('flex');
 }
 
 function closeDeleteModal() {
     deleteEmpId = null;
     deleteModal.classList.add('hidden');
+    deleteModal.classList.remove('flex');
 }
 
 /* ── Create / Update ────────────────────────── */
@@ -816,15 +778,19 @@ employeeForm.addEventListener('submit', async e => {
     const url    = id ? `/api/employees/${id}` : '/api/employees';
     const method = 'POST'; // Always use POST to support multipart/form-data (required for file uploads in PHP)
 
-    const btn = employeeForm.querySelector('[type="submit"]');
+    const btn = document.getElementById('submitButton');
+    const originalContent = btn.innerHTML;
     btn.disabled = true;
+    btn.innerHTML = '<span class="iconify animate-spin" data-icon="mdi:loading"></span> Saving...';
 
     try {
         const fd = new FormData();
         Object.entries(payload).forEach(([key, val]) => {
             if (val !== null && val !== undefined) fd.append(key, val);
         });
-        if (photoBase64 && !photoBase64.startsWith('http')) {
+        
+        // Only upload photo if it's a new one (Base64 data URL)
+        if (photoBase64 && photoBase64.startsWith('data:')) {
             const photoRes = await fetch(photoBase64);
             const blob = await photoRes.blob();
             fd.append('photo', blob, 'photo.jpg');
@@ -848,6 +814,7 @@ employeeForm.addEventListener('submit', async e => {
         console.error(err);
     } finally {
         btn.disabled = false;
+        btn.innerHTML = originalContent;
     }
 });
 
@@ -904,6 +871,3 @@ if ((actionFromQuery || '').toLowerCase() === 'add') {
     openCreateModal();
 }
 </script>
-<!-- </body> -->
-<!-- </html> -->
-

@@ -20,9 +20,17 @@ class EmployeeService
     }
  
     // Show single employee
-    public function show(int $id): ?array
+    public function show($id): ?array
     {
-        return $this->employeeModel->getById($id);
+        if (is_numeric($id)) {
+            return $this->employeeModel->getById((int) $id);
+        }
+        
+        if (is_string($id) && strlen($id) >= 32) {
+            return $this->employeeModel->findActiveEmployeeByUuid($id);
+        }
+
+        return null;
     }
  
     // Create
@@ -44,7 +52,7 @@ class EmployeeService
     }
  
     // Update
-    public function update(int $id, array $data, array $files = []): bool
+    public function update(int $id, array $data, int $authUserId, array $files = []): bool
     {
         // Merge $_FILES (POST) with manually parsed $files (PUT)
         $fileSource = !empty($files) ? $files : $_FILES;
@@ -55,6 +63,8 @@ class EmployeeService
                 $data['photo'] = $photoPath;
             }
         }
+
+        $data['updated_by'] = $authUserId;
 
         return $this->employeeModel->update($id, $data);
     }

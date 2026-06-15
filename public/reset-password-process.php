@@ -5,9 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
-// Database connection
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../app/Core/Database.php';
+use App\Services\AuthService;
 
 function jsonResponse($success, $message, $code = 200) {
     header('Content-Type: application/json');
@@ -17,48 +15,18 @@ function jsonResponse($success, $message, $code = 200) {
 }
 
 try {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        jsonResponse(false, 'Method not allowed', 405);
+    }
+
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $token = isset($_POST['token']) ? trim($_POST['token']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
 
-    if (empty($email) || empty($token) || empty($password)) {
-        jsonResponse(false, 'All fields are required', 400);
-    }
+    $authService = new AuthService();
+    $result = $authService->resetPassword($email, $token, $password);
 
-    if (strlen($password) < 8) {
-        jsonResponse(false, 'Password must be at least 8 characters long', 400);
-    }
-
-    $db = \App\Core\Database::getInstance();
-
-    // Verify token
-    $resetQuery = "SELECT created_at FROM password_resets WHERE email = ? AND token = ? LIMIT 1";
-    $reset = $db->query($resetQuery, [$email, $token]);
-
-    if (empty($reset)) {
-        jsonResponse(false, 'Invalid or expired reset link.', 400);
-    }
-
-    // Check expiration (1 hour)
-    $createdAt = strtotime($reset[0]['created_at']);
-    if (time() - $createdAt > 3600) {
-        $db->query("DELETE FROM password_resets WHERE email = ?", [$email]);
-        jsonResponse(false, 'Reset link has expired.', 400);
-    }
-
-    // Update password
-    $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-    
-    // Update tbl_users
-    $db->query("UPDATE tbl_users SET password = ?, updated_at = NOW() WHERE email = ?", [$hashedPassword, $email]);
-    
-    // Update tbl_employees
-    $db->query("UPDATE tbl_employees SET password = ?, updated_at = NOW() WHERE email = ?", [$hashedPassword, $email]);
-
-    // Delete token
-    $db->query("DELETE FROM password_resets WHERE email = ?", [$email]);
-
-    jsonResponse(true, 'Password has been reset successfully.');
+    jsonResponse($result['success'], $result['message'], $result['code']);
 
 } catch (\Exception $e) {
     error_log("Reset password error: " . $e->getMessage());

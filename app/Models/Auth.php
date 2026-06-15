@@ -194,6 +194,71 @@ class Auth
     }
 
     // -----------------------------------------------------------------------
+    // Password resets
+    // -----------------------------------------------------------------------
+
+    /**
+     * Store a new password reset token.
+     * Only the SHA-256 hash of the token is persisted.
+     */
+    public function createPasswordReset(string $email, string $token): void
+    {
+        $tokenHash = hash('sha256', $token);
+        
+        // Remove any existing tokens for this email
+        $stmt = $this->db->prepare("DELETE FROM password_resets WHERE email = :email");
+        $stmt->execute([':email' => $email]);
+
+        // Insert the new token hash
+        $stmt = $this->db->prepare("INSERT INTO password_resets (email, token, created_at) VALUES (:email, :token, NOW())");
+        $stmt->execute([
+            ':email' => $email,
+            ':token' => $tokenHash
+        ]);
+    }
+
+    /**
+     * Look up a password reset record by email and token.
+     */
+    public function findPasswordReset(string $email, string $token): ?array
+    {
+        $tokenHash = hash('sha256', $token);
+        
+        $stmt = $this->db->prepare("SELECT created_at FROM password_resets WHERE email = :email AND token = :token LIMIT 1");
+        $stmt->execute([
+            ':email' => $email,
+            ':token' => $tokenHash
+        ]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    /**
+     * Delete all password reset tokens for a given email.
+     */
+    public function deletePasswordReset(string $email): void
+    {
+        $stmt = $this->db->prepare("DELETE FROM password_resets WHERE email = :email");
+        $stmt->execute([':email' => $email]);
+    }
+
+    /**
+     * Update the password for a user/employee by email.
+     * Updates both tables to ensure consistency.
+     */
+    public function updatePasswordByEmail(string $email, string $hashedPassword): void
+    {
+        // Update tbl_users
+        $stmt = $this->db->prepare("UPDATE tbl_users SET password = :password, updated_at = NOW() WHERE email = :email");
+        $stmt->execute([':password' => $hashedPassword, ':email' => $email]);
+
+        // Update tbl_employees
+        $stmt = $this->db->prepare("UPDATE tbl_employees SET password = :password, updated_at = NOW() WHERE email = :email");
+        $stmt->execute([':password' => $hashedPassword, ':email' => $email]);
+    }
+
+    // -----------------------------------------------------------------------
     // Identity lookup (used after token validation)
     // -----------------------------------------------------------------------
 

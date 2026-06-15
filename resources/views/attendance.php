@@ -1,107 +1,141 @@
-<div class="w-full max-w-7xl mx-auto space-y-3">
-    <!-- Header Card -->
-    <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-3">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+<div class="w-full h-full"> 
+    <div class="p-2 space-y-2">
+        <!-- Header & Filters -->
+        <?php 
+            $title = 'Attendance';
+            $icon = 'mdi:clock-check text-indigo-500';
+            ob_start();
+        ?>
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <span class="iconify text-base text-indigo-600" data-icon="mdi:clock-check"></span>
+                <span class="text-[10px] font-black normal-case tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md" id="totalCount">0 Records</span>
+                <?php 
+                    $label = 'QR'; $type = 'primary'; $size = 'xs'; $icon = 'mdi:qrcode'; $attr = 'onclick="openQRModal()"'; $id = null;
+                    include 'component/button.php'; 
+                    $label = null; $attr = null; // Important: Reset
+                ?>
+            </div>
+        <?php 
+            $headerRight = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <div class="sm:col-span-2">
+                    <?php 
+                        $id = 'searchInput'; $placeholder = 'Search employee...'; $icon = 'mdi:magnify'; $label = null;
+                        include 'component/input.php'; 
+                        $id = null; $icon = null; // Reset
+                    ?>
                 </div>
                 <div>
-                    <h1 class="text-sm font-bold text-slate-900">Attendance</h1>
-                    <p class="text-[10px] text-slate-500" id="totalCount">0 Records found</p>
+                    <?php 
+                        $id = 'checkTypeFilter'; $placeholder = 'All Types';
+                        $options = ['check-in' => 'Check In', 'check-out' => 'Check Out'];
+                        include 'component/select.php'; 
+                        $id = null; $options = []; // Reset
+                    ?>
+                </div>
+                <div class="flex gap-1.5">
+                    <div class="flex-1">
+                        <?php 
+                            $id = 'dateFilter'; $type = 'date';
+                            include 'component/input.php'; 
+                            $id = null; $type = null; // Reset
+                        ?>
+                    </div>
+                    <?php 
+                        $label = 'Today'; $type = 'secondary'; $size = 'xs'; $attr = 'onclick="setTodayFilter()"'; $id = null;
+                        include 'component/button.php';
+                        $attr = null; // Reset
+                    ?>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <button onclick="openQRModal()"
-                    class="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-2 py-1 text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all shadow-sm shadow-indigo-100">
-                    <span class="iconify text-sm" data-icon="mdi:qrcode"></span>
-                    Generate QR
-                </button>
-            </div>
-        </div>
+        <?php 
+            $content = ob_get_clean();
+            $id = null; $class = ''; $padding = true; $footer = null; $bodyClass = '';
+            include 'component/card.php'; 
+        ?>
 
-        <!-- Filters -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 mt-3">
-            <div class="relative sm:col-span-5">
-                <span class="iconify absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" data-icon="mdi:magnify"></span>
-                <input type="text" id="searchInput" placeholder="Search..."
-                    class="w-full pl-8 pr-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-[10px]">
-        </div>
-            <div class="sm:col-span-3">
-                <select id="checkTypeFilter"
-                    class="w-full px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-[10px] transition-all cursor-pointer">
-                    <option value="">All Types</option>
-                    <option value="check-in">Check In</option>
-                    <option value="check-out">Check Out</option>
-                </select>
+        <!-- Table Card -->
+        <?php 
+            ob_start();
+        ?>
+            <div class="sticky-table-wrapper overflow-x-auto">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-900 text-white sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Employee</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Date</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Time</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Type</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Status</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Log</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody" class="divide-y divide-slate-100 bg-white">
+                        <tr>
+                            <td colspan="6" class="px-3 py-12 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <span class="iconify text-2xl animate-spin opacity-50" data-icon="mdi:loading"></span>
+                                    <p class="text-[10px] font-black normal-case tracking-widest">Loading...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="sm:col-span-2">
-                <input type="date" id="dateFilter"
-                    class="w-full px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none text-[10px] transition-all">
-            </div>
-            <div class="sm:col-span-2">
-                <button onclick="setTodayFilter()"
-                    class="w-full h-full flex items-center justify-center gap-1.5 px-2 py-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-lg transition-all">
-                    <span class="iconify text-sm" data-icon="mdi:calendar-today"></span>
-                    Today
-                </button>
-            </div>
-        </div>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div id="paginationContainer"></div>
+        <?php 
+            $footer = ob_get_clean();
+            $padding = false; $title = null; $icon = null; $headerRight = null; $id = null; $class = ''; $bodyClass = '';
+            include 'component/card.php'; 
+        ?>
     </div>
+</div>
 
-    <!-- Table Card -->
-    <div class="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-[10px]">
-                <thead class="bg-slate-800 text-white">
-                    <tr>
-                        <th class="px-3 py-2 text-left font-semibold">Employee</th>
-                        <th class="px-3 py-2 text-left font-semibold">Date</th>
-                        <th class="px-3 py-2 font-semibold">Time</th>
-                        <th class="px-3 py-2 font-semibold">Type</th>
-                        <th class="px-3 py-2 font-semibold">Status</th>
-                        <th class="px-3 py-2 font-semibold">Log</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceTableBody" class="divide-y divide-slate-100">
-                    <tr>
-                        <td colspan="6" class="px-3 py-6 text-center text-slate-400">
-                            <div class="flex flex-col items-center justify-center gap-1">
-                                <span class="iconify text-base animate-spin" data-icon="mdi:loading"></span>
-                                <p class="text-[10px] font-medium">Loading...</p>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="paginationContainer" class="px-3 py-2 bg-slate-50/50 border-t border-slate-100 flex justify-center gap-1"></div>
-    </div>
-
-    <!-- QR Modal Overlay -->
-    <div id="qrModal" class="fixed inset-0 z-[9999] hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm px-4 py-6 md:items-center">
-        <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl scale-90 transition-transform duration-300 transform max-h-[calc(100vh-3rem)] overflow-y-auto" id="qrModalContent">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-sm font-bold text-slate-900">Attendance QR</h3>
-                <button onclick="closeQRModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors text-xs">✕</button>
+<!-- QR Modal Overlay -->
+<div id="qrModal" class="fixed inset-0 z-[9999] hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm px-4 py-6 md:items-center">
+    <div class="w-full max-w-sm">
+        <?php 
+            $title = 'Attendance QR';
+            $icon = null;
+            ob_start();
+        ?>
+            <button onclick="closeQRModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors text-xs">✕</button>
+        <?php 
+            $headerRight = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="text-center space-y-4">
+                <div class="bg-indigo-50 p-4 rounded-2xl inline-block border border-indigo-100">
+                    <div id="qrcode" class="rounded-lg overflow-hidden border-4 border-white shadow-sm"></div>
+                </div>
+                <p class="text-[10px] text-slate-500" id="qrUrlLabel">Scan to record your attendance</p>
             </div>
-
-            <div class="bg-indigo-50 p-4 rounded-2xl inline-block mb-4 border border-indigo-100">
-                <div id="qrcode" class="rounded-lg overflow-hidden border-4 border-white shadow-sm"></div>
-            </div>
-
-            <p class="text-[10px] text-slate-500 mb-6" id="qrUrlLabel">Scan to record your attendance</p>
-
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="downloadQR()" class="flex items-center justify-center gap-2 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">
-                    <span class="iconify" data-icon="mdi:download"></span> Download
-                </button>
-                <button onclick="printQR()" class="flex items-center justify-center gap-2 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all">
-                    <span class="iconify" data-icon="mdi:printer"></span> Print
-                </button>
+                <?php 
+                    $label = 'Download'; $type = 'primary'; $size = 'sm'; $icon = 'mdi:download'; $attr = 'onclick="downloadQR()"'; $id = null;
+                    include 'component/button.php';
+                    $label = 'Print'; $type = 'secondary'; $size = 'sm'; $icon = 'mdi:printer'; $attr = 'onclick="printQR()"'; $id = null;
+                    include 'component/button.php';
+                    $attr = null; // Reset
+                ?>
             </div>
-        </div>
+        <?php 
+            $footer = ob_get_clean();
+            $id = 'qrModalContent';
+            $class = 'scale-90 transition-transform duration-300 transform';
+            $padding = true;
+            include 'component/card.php'; 
+            $id = null; $class = ''; // Reset
+        ?>
     </div>
 </div>
 
@@ -248,7 +282,7 @@
     function renderTable(records) {
         const tbody = document.getElementById("attendanceTableBody");
         if (!records.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-slate-400">No records matching your filters</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-12 text-center text-slate-400 font-medium">No records matching your filters</td></tr>';
             return;
         }
 
@@ -257,53 +291,61 @@
             const isLeave = checkTypeName === 'leave' || rec.check_time === 'Leave';
             const isCheckIn = !isLeave && checkTypeName.includes('in');
             
-            let typeClass = '';
+            let typeStyle = '';
             let typeLabel = '';
             
             if (isLeave) {
-                typeClass = 'bg-indigo-50 text-indigo-700 border border-indigo-100';
+                typeStyle = 'bg-indigo-50 text-indigo-600 border-indigo-100';
                 typeLabel = 'Leave';
             } else if (isCheckIn) {
-                typeClass = 'bg-emerald-50 text-emerald-600';
+                typeStyle = 'bg-emerald-50 text-emerald-600 border-emerald-100';
                 typeLabel = 'In';
             } else {
-                typeClass = 'bg-amber-50 text-amber-600';
+                typeStyle = 'bg-amber-50 text-amber-600 border-amber-100';
                 typeLabel = 'Out';
             }
             
-            const timeDisplay = isLeave ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full</span>' : rec.check_time;
+            const timeDisplay = isLeave 
+                ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full</span>' 
+                : `<span class="font-black text-slate-700">${rec.check_time}</span>`;
             
+            const statusBadge = rec.status_id == 1 
+                ? '<span class="bg-emerald-50 text-emerald-600 border-emerald-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Active</span>'
+                : '<span class="bg-slate-50 text-slate-400 border-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Archived</span>';
+
             return `
-            <tr class="${isLeave ? 'bg-indigo-50/30' : ''} hover:bg-slate-50 transition-colors group">
+            <tr class="${isLeave ? 'bg-indigo-50/20' : ''} hover:bg-slate-50 transition-colors group">
                 <td class="px-3 py-2">
                     <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-md ${isLeave ? 'bg-indigo-100 text-indigo-600' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center text-[10px] font-bold">
+                        <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-black normal-case shadow-sm">
                             ${(rec.full_name || rec.emp_code || '#').charAt(0)}
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-[11px] font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            <span class="text-[11px] font-black text-slate-800 group-hover:text-indigo-600 transition-colors">
                                 ${rec.full_name || 'N/A'}
                             </span>
-                            <span class="text-[9px] text-slate-400 font-medium">
+                            <span class="text-[9px] text-slate-400 font-bold normal-case tracking-tight">
                                 ${rec.emp_code ? '#' + rec.emp_code : ''}
                             </span>
                         </div>
                     </div>
                 </td>
-                <td class="px-3 py-2 text-[11px] text-slate-500">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'2-digit'})}</td>
-                <td class="px-3 py-2 text-[11px] font-mono font-bold text-slate-700">${timeDisplay}</td>
                 <td class="px-3 py-2">
-                    <span class="${typeClass} px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
+                    <span class="text-[10px] font-black text-slate-600">${new Date(rec.date).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</span>
+                    <span class="text-[9px] font-bold text-slate-400 block normal-case tracking-tight">${new Date(rec.date).toLocaleDateString(undefined, {year:'2-digit'})}</span>
+                </td>
+                <td class="px-3 py-2 text-[10px]">${timeDisplay}</td>
+                <td class="px-3 py-2">
+                    <span class="${typeStyle} px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">
                         ${typeLabel}
                     </span>
                 </td>
+                <td class="px-3 py-2">${statusBadge}</td>
                 <td class="px-3 py-2">
-                    <div class="flex items-center gap-1 text-[10px] ${rec.status_id == 1 ? 'text-emerald-600' : 'text-slate-400'}">
-                        <span class="w-1 h-1 rounded-full ${rec.status_id == 1 ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
-                        ${rec.status_id == 1 ? 'Active' : 'Archived'}
-                    </div>
+                    <span class="text-[9px] font-black text-slate-400 normal-case tracking-tight">
+                        ${new Date(rec.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
+                    </span>
                 </td>
-                <td class="px-3 py-2 text-[9px] text-slate-400 uppercase">${new Date(rec.created_at).toLocaleDateString()}</td>
             </tr>
         `;}).join('');
     }
@@ -420,6 +462,11 @@
     document.getElementById("searchInput").addEventListener("input", () => loadAttendance(1));
     document.getElementById("checkTypeFilter").addEventListener("change", () => loadAttendance(1));
     document.getElementById("dateFilter").addEventListener("change", () => loadAttendance(1));
+
+    // Backdrop click to close
+    document.getElementById('qrModal').addEventListener('click', (e) => {
+        if (e.target.id === 'qrModal') closeQRModal();
+    });
     
     // Set default filter to today
     document.getElementById('dateFilter').value = getCurrentDateString();

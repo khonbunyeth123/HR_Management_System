@@ -138,10 +138,38 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-1">
-                    <button data-view-switch="month" class="view-switch rounded-lg bg-white px-2 py-1 text-[10px] font-bold text-slate-900 shadow-sm" aria-pressed="true">Month</button>
-                    <button data-view-switch="week"  class="view-switch rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-bold text-white transition hover:bg-white/15" aria-pressed="false">Week</button>
-                    <button data-view-switch="day"   class="view-switch rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-bold text-white transition hover:bg-white/15" aria-pressed="false">Day</button>
-                    <button id="openCreateEvent" class="rounded-lg bg-indigo-500 px-2 py-1 text-[10px] font-black text-white shadow-sm transition hover:bg-indigo-400">+ New</button>
+                    <?php
+                        $label = 'Month';
+                        $class = 'view-switch';
+                        $attr = 'data-view-switch="month" aria-pressed="false"';
+                        $size = 'xs';
+                        $type = 'ghost';
+                        include 'component/button.php';
+                    ?>
+                    <?php
+                        $label = 'Week';
+                        $class = 'view-switch';
+                        $attr = 'data-view-switch="week" aria-pressed="false"';
+                        $size = 'xs';
+                        $type = 'ghost';
+                        include 'component/button.php';
+                    ?>
+                    <?php
+                        $label = 'Day';
+                        $class = 'view-switch';
+                        $attr = 'data-view-switch="day" aria-pressed="false"';
+                        $size = 'xs';
+                        $type = 'ghost';
+                        include 'component/button.php';
+                    ?>
+                    <?php
+                        $label = '+ New';
+                        $id = 'openCreateEvent';
+                        $size = 'xs';
+                        $type = 'primary';
+                        $class = '';
+                        include 'component/button.php';
+                    ?>
                 </div>
             </div>
         </div>
@@ -150,37 +178,45 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         <div class="space-y-2">
             <div class="rounded-lg border border-slate-200 bg-white p-2 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
-                    <button id="clearFilters" class="text-[9px] font-bold text-indigo-600 hover:text-indigo-700">Reset</button>
+                <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Filters</h2>
+                <?php
+                    $label = 'Reset';
+                    $id = 'clearFilters';
+                    $type = 'link';
+                    $size = 'xs';
+                    $class = 'text-[9px] font-bold text-indigo-600 hover:text-indigo-700';
+                    include 'component/button.php';
+                ?>
                 </div>
+
                 <div id="filterPanel" class="mt-2 grid grid-cols-2 gap-2 md:grid-cols-5">
                     <div>
                         <label for="employeeFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Employee</label>
-                        <select id="employeeFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
+                        <select id="employeeFilter" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-[9px] font-semibold">
                             <option value="">All employees</option>
                         </select>
                     </div>
                     <div>
                         <label for="departmentFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Department</label>
-                        <select id="departmentFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
+                        <select id="departmentFilter" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-[9px] font-semibold">
                             <option value="">All departments</option>
                         </select>
                     </div>
                     <div>
                         <label for="branchFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Branch</label>
-                        <select id="branchFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
+                        <select id="branchFilter" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-[9px] font-semibold">
                             <option value="">All branches</option>
                         </select>
                     </div>
                     <div>
                         <label for="eventTypeFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Event Type</label>
-                        <select id="eventTypeFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
+                        <select id="eventTypeFilter" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-[9px] font-semibold">
                             <option value="">All types</option>
                         </select>
                     </div>
                     <div>
                         <label for="statusFilter" class="mb-0.5 block text-[9px] font-bold text-slate-500">Status</label>
-                        <select id="statusFilter" class="w-full rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-semibold">
+                        <select id="statusFilter" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-[9px] font-semibold">
                             <option value="">All status</option>
                         </select>
                     </div>
@@ -195,13 +231,31 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                             <h2 id="calendarHeading" class="mt-1 text-xl font-black text-slate-900">Month view</h2>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <button id="prevPeriod" aria-label="Previous period" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                                <span class="iconify" data-icon="mdi:chevron-left" aria-hidden="true"></span>
-                            </button>
-                            <button id="todayPeriod" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">Today</button>
-                            <button id="nextPeriod" aria-label="Next period" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50">
-                                <span class="iconify" data-icon="mdi:chevron-right" aria-hidden="true"></span>
-                            </button>
+                            <?php
+                                $label = '';
+                                $id = 'prevPeriod';
+                                $icon = 'mdi:chevron-left';
+                                $size = 'sm';
+                                $type = 'secondary';
+                                $attr = 'aria-label="Previous period"';
+                                include 'component/button.php';
+                            ?>
+                            <?php
+                                $label = 'Today';
+                                $id = 'todayPeriod';
+                                $size = 'sm';
+                                $type = 'secondary';
+                                include 'component/button.php';
+                            ?>
+                            <?php
+                                $label = '';
+                                $id = 'nextPeriod';
+                                $icon = 'mdi:chevron-right';
+                                $size = 'sm';
+                                $type = 'secondary';
+                                $attr = 'aria-label="Next period"';
+                                include 'component/button.php';
+                            ?>
                             <label for="dateJump" class="sr-only">Jump to date</label>
                             <input id="dateJump" type="date" value="<?= htmlspecialchars($today) ?>" class="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">
                         </div>
@@ -226,24 +280,24 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             <div class="space-y-4">
                 <div class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Live Summary</h2>
+                        <h2 class="text-sm font-black normal-case tracking-[0.15em] text-slate-500">Live Summary</h2>
                         <span id="eventCountBadge" class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black text-indigo-700" aria-live="polite">0 events</span>
                     </div>
                     <div id="summaryGrid" class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
                         <div class="rounded-2xl bg-slate-50 p-3">
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pending</p>
+                            <p class="text-[10px] font-black normal-case tracking-[0.15em] text-slate-400">Pending</p>
                             <p id="summaryPending" class="mt-2 text-2xl font-black text-slate-900">0</p>
                         </div>
                         <div class="rounded-2xl bg-emerald-50 p-3">
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Approved</p>
+                            <p class="text-[10px] font-black normal-case tracking-[0.15em] text-emerald-500">Approved</p>
                             <p id="summaryApproved" class="mt-2 text-2xl font-black text-emerald-700">0</p>
                         </div>
                         <div class="rounded-2xl bg-rose-50 p-3">
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Rejected</p>
+                            <p class="text-[10px] font-black normal-case tracking-[0.15em] text-rose-400">Rejected</p>
                             <p id="summaryRejected" class="mt-2 text-2xl font-black text-rose-700">0</p>
                         </div>
                         <div class="rounded-2xl bg-slate-50 p-3">
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Cancelled</p>
+                            <p class="text-[10px] font-black normal-case tracking-[0.15em] text-slate-400">Cancelled</p>
                             <p id="summaryCancelled" class="mt-2 text-2xl font-black text-slate-900">0</p>
                         </div>
                     </div>
@@ -251,25 +305,22 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
 
                 <div class="rounded-3xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-100 px-4 py-4 flex items-center justify-between">
-                        <h2 class="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Event List</h2>
+                        <h2 class="text-sm font-black normal-case tracking-[0.15em] text-slate-500">Event List</h2>
                         <span id="eventListCount" class="text-xs font-bold text-slate-400"></span>
                     </div>
-                    <div class="events-table-wrap max-h-[420px] overflow-y-auto overscroll-contain">
-                        <table class="min-w-[920px] w-full text-left text-sm" role="table">
-                            <thead class="sticky top-0 z-40 hidden bg-slate-900 text-white md:table-header-group">
-                                <tr>
-                                    <th scope="col" class="w-[22%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Date</th>
-                                    <th scope="col" class="w-[18%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap">Time</th>
-                                    <th scope="col" class="w-[34%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Event</th>
-                                    <th scope="col" class="w-[14%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em]">Status</th>
-                                    <th scope="col" class="sticky right-0 z-50 w-[12%] px-4 py-3 text-xs font-black uppercase tracking-[0.15em] shadow-[-12px_0_24px_rgba(15,23,42,0.12)]">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="eventTableBody" class="divide-y divide-slate-100 bg-white">
-                                <tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <?php
+                        $tableHead = '<tr>
+                            <th scope="col" class="w-[22%] px-4 py-3 text-xs font-black normal-case tracking-[0.15em]">Date</th>
+                            <th scope="col" class="w-[18%] px-4 py-3 text-xs font-black normal-case tracking-[0.15em] whitespace-nowrap">Time</th>
+                            <th scope="col" class="w-[34%] px-4 py-3 text-xs font-black normal-case tracking-[0.15em]">Event</th>
+                            <th scope="col" class="w-[14%] px-4 py-3 text-xs font-black normal-case tracking-[0.15em]">Status</th>
+                            <th scope="col" class="sticky right-0 z-50 w-[12%] px-4 py-3 text-xs font-black normal-case tracking-[0.15em] shadow-[-12px_0_24px_rgba(15,23,42,0.12)]">Actions</th>
+                        </tr>';
+                        $tbodyId = 'eventTableBody';
+                        $tableBody = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>';
+                        $paginationId = 'eventPagination'; // Not used yet, placeholder
+                        include 'component/table.php';
+                    ?>
                 </div>
             </div>
         </div>
@@ -281,12 +332,18 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     <div id="eventModalBox">
         <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div>
-                <p class="text-xs font-black uppercase tracking-[0.25em] text-slate-400">Calendar Form</p>
+                <p class="text-xs font-black normal-case tracking-[0.15em] text-slate-400">Calendar Form</p>
                 <h3 id="modalTitle" class="mt-1 text-xl font-black text-slate-900">New Event</h3>
             </div>
-            <button id="closeEventModal" aria-label="Close modal" class="rounded-2xl border border-slate-200 px-3 py-2 text-slate-500 transition hover:bg-slate-50">
-                <span class="iconify" data-icon="mdi:close" aria-hidden="true"></span>
-            </button>
+            <?php
+                $label = '';
+                $id = 'closeEventModal';
+                $icon = 'mdi:close';
+                $type = 'secondary';
+                $size = 'sm';
+                $attr = 'aria-label="Close modal"';
+                include 'component/button.php';
+            ?>
         </div>
 
         <form id="eventForm" class="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]" novalidate>
@@ -294,45 +351,80 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             <div class="space-y-4 p-5">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
-                        <label for="evTitle" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Title <span class="text-rose-500">*</span></label>
-                        <input id="evTitle" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none" placeholder="Quarterly planning meeting">
+                        <?php
+                            $label = 'Title';
+                            $name = 'evTitle';
+                            $id = 'evTitle';
+                            $placeholder = 'Quarterly planning meeting';
+                            $required = true;
+                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            include 'component/input.php';
+                        ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Title is required.</p>
                     </div>
                     <div>
-                        <label for="evEventType" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Event Type <span class="text-rose-500">*</span></label>
-                        <select id="evEventType" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
-                            <option value="">Choose type</option>
-                            <option value="holiday">Holiday</option>
-                            <option value="shift">Shift</option>
-                            <option value="leave">Leave</option>
-                            <option value="meeting">Meeting</option>
-                            <option value="reminder">Reminder</option>
-                            <option value="task">Task</option>
-                        </select>
+                        <?php
+                            $label = 'Event Type';
+                            $name = 'evEventType';
+                            $id = 'evEventType';
+                            $required = true;
+                            $options = [
+                                'holiday' => 'Holiday',
+                                'shift' => 'Shift',
+                                'leave' => 'Leave',
+                                'meeting' => 'Meeting',
+                                'reminder' => 'Reminder',
+                                'task' => 'Task',
+                            ];
+                            $placeholder = 'Choose type';
+                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            include 'component/select.php';
+                        ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Event type is required.</p>
                     </div>
                     <div>
-                        <label for="evStatus" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Status</label>
-                        <select id="evStatus" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
-                            <option value="pending">Pending</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                        <?php
+                            $label = 'Status';
+                            $name = 'evStatus';
+                            $id = 'evStatus';
+                            $options = [
+                                'pending' => 'Pending',
+                                'approved' => 'Approved',
+                                'rejected' => 'Rejected',
+                                'cancelled' => 'Cancelled',
+                            ];
+                            $value = 'pending';
+                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            include 'component/select.php';
+                        ?>
                     </div>
                     <div>
-                        <label for="evStartAt" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Start <span class="text-rose-500">*</span></label>
-                        <input id="evStartAt" type="datetime-local" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
+                        <?php
+                            $label = 'Start';
+                            $name = 'evStartAt';
+                            $id = 'evStartAt';
+                            $type = 'datetime-local';
+                            $required = true;
+                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            include 'component/input.php';
+                        ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Start date is required.</p>
                     </div>
                     <div>
-                        <label for="evEndAt" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">End <span class="text-rose-500">*</span></label>
-                        <input id="evEndAt" type="datetime-local" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
+                        <?php
+                            $label = 'End';
+                            $name = 'evEndAt';
+                            $id = 'evEndAt';
+                            $type = 'datetime-local';
+                            $required = true;
+                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            include 'component/input.php';
+                        ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">End date is required.</p>
                     </div>
                     <div class="md:col-span-2">
-                        <label for="evDescription" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Description</label>
-                        <textarea id="evDescription" rows="3" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none" placeholder="Notes for the team..."></textarea>
+                        <label for="evDescription" class="mb-1 block text-xs font-bold normal-case tracking-[0.15em] text-slate-400">Description</label>
+                        <textarea id="evDescription" rows="3" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none" placeholder="Notes for the team..."></textarea>
                     </div>
                 </div>
 
@@ -342,19 +434,25 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                             <p class="text-sm font-black text-slate-900">Assignments</p>
                             <p class="text-xs text-slate-500">Company-wide, employees, departments, branches, or teams.</p>
                         </div>
-                        <button type="button" id="addTargetBtn" class="rounded-2xl bg-white px-3 py-2 text-xs font-black text-indigo-600 shadow-sm hover:bg-indigo-50 transition">Add target</button>
+                        <?php
+                            $label = 'Add target';
+                            $id = 'addTargetBtn';
+                            $type = 'secondary';
+                            $size = 'xs';
+                            include 'component/button.php';
+                        ?>
                     </div>
                     <div id="targetsWrap" class="mt-4 space-y-3"></div>
                 </div>
             </div>
 
             <div class="space-y-4 border-t border-slate-100 bg-slate-50/60 p-5 lg:border-l lg:border-t-0">
-                <div class="rounded-3xl bg-white p-4 shadow-sm">
+                <div class="rounded-2xl bg-white p-3 shadow-sm">
                     <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Recurrence</p>
                     <div class="mt-3 space-y-3">
                         <div>
                             <label for="recurrenceFrequency" class="mb-1 block text-xs font-bold text-slate-500">Frequency</label>
-                            <select id="recurrenceFrequency" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
+                            <select id="recurrenceFrequency" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
                                 <option value="none">No recurrence</option>
                                 <option value="daily">Daily</option>
                                 <option value="weekly">Weekly</option>
@@ -365,32 +463,48 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label for="recurrenceInterval" class="mb-1 block text-xs font-bold text-slate-500">Interval</label>
-                                <input id="recurrenceInterval" type="number" min="1" value="1" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
+                                <input id="recurrenceInterval" type="number" min="1" value="1" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
                             </div>
                             <div>
                                 <label for="recurrenceUntil" class="mb-1 block text-xs font-bold text-slate-500">Until</label>
-                                <input id="recurrenceUntil" type="date" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold focus:border-indigo-400 focus:outline-none">
+                                <input id="recurrenceUntil" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
                             </div>
                         </div>
                         <div>
                             <p class="mb-1 text-xs font-bold text-slate-500">Weekly days</p>
-                            <div class="grid grid-cols-7 gap-1 text-[10px] font-black uppercase tracking-[0.12em]">
-                                <?php foreach(['mon','tue','wed','thu','fri','sat','sun'] as $d): ?>
-                                <button type="button" data-weekday="<?= $d ?>" class="weekday-btn rounded-xl border border-slate-200 bg-white px-1 py-2 text-slate-500 transition hover:bg-slate-100" aria-pressed="false"><?= ucfirst($d) ?></button>
-                                <?php endforeach; ?>
+                            <div class="grid grid-cols-7 gap-0.5">
+                            <?php foreach(['mon','tue','wed','thu','fri','sat','sun'] as $d): ?>
+                            <?php
+                                $label = ucfirst($d);
+                                $attr = 'type="button" data-weekday="'.$d.'" aria-pressed="false"';
+                                $class = 'weekday-btn !px-1 !py-1 !text-[9px] !rounded-md w-full';
+                                $size = 'xs';
+                                $type = 'secondary';
+                                include 'component/button.php';
+                            ?>
+                            <?php endforeach; ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-3xl bg-white p-4 shadow-sm">
-                    <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Event Actions</p>
+                <div class="rounded-2xl bg-white p-3 shadow-sm">
+                    <!-- <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Event Actions</p> -->
                     <div class="mt-3 space-y-2">
-                        <button type="submit" id="saveEventBtn" class="relative w-full rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:opacity-60">
-                            <span id="saveEventLabel">Save Event</span>
-                            <span id="saveEventSpinner" class="hidden absolute right-4 top-1/2 -translate-y-1/2"><span class="spinner" style="width:18px;height:18px;border-width:2px;border-top-color:#fff;border-color:rgba(255,255,255,.3)"></span></span>
-                        </button>
-                        <button type="button" id="deleteEventBtn" class="hidden w-full rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-100">Delete Event</button>
+                        <?php
+                            $label = 'Save Event';
+                            $id = 'saveEventBtn';
+                            $type = 'primary';
+                            $attr = 'type="submit"';
+                            include 'component/button.php';
+                        ?>
+                        <?php
+                            $label = 'Delete Event';
+                            $id = 'deleteEventBtn';
+                            $type = 'danger';
+                            $class = 'hidden w-full';
+                            include 'component/button.php';
+                        ?>
                     </div>
                 </div>
             </div>
@@ -399,16 +513,22 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
 </div>
 
 <template id="targetRowTemplate">
-    <div class="target-row grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[160px_minmax(0,1fr)_auto]">
-        <select class="target-type rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold" aria-label="Target type">
+    <div class="target-row grid gap-2 rounded-xl border border-slate-200 bg-white p-2 md:grid-cols-[140px_minmax(0,1fr)_auto]">
+        <select class="target-type rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold" aria-label="Target type">
             <option value="company">Company-wide</option>
             <option value="employee">Employee</option>
             <option value="department">Department</option>
             <option value="branch">Branch</option>
             <option value="team">Team</option>
         </select>
-        <input class="target-value rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold" placeholder="Target value" aria-label="Target value">
-        <button type="button" class="remove-target rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 transition" aria-label="Remove target">Remove</button>
+        <input class="target-value rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold" placeholder="Target value" aria-label="Target value">
+        <?php
+            $label = 'Remove';
+            $class = 'remove-target';
+            $type = 'secondary';
+            $size = 'xs';
+            include 'component/button.php';
+        ?>
     </div>
 </template>
 
@@ -757,7 +877,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             const key = localDateKey(cellDate);
             const items = groups[key] || [];
             const isToday = key === todayKey;
-            html += `<div class="min-h-[110px] bg-white p-2 transition hover:bg-slate-50 ${inMonth?'':'opacity-40'}">
+            html += `<div class="min-h-[80px] bg-white p-2 transition hover:bg-slate-50 ${inMonth?'':'opacity-40'}" onclick="${inMonth ? `openEventModal(null, '${key}')` : ''}">
                 <div class="mb-1 flex items-center justify-between">
                     <span class="inline-flex h-7 w-7 items-center justify-center rounded-xl text-sm font-black ${isToday?'bg-slate-950 text-white':'text-slate-700'}">${inMonth?dayNum:''}</span>
                     ${items.length>0&&inMonth?`<span class="text-[10px] font-bold text-slate-400">${items.length}</span>`:''}
@@ -833,7 +953,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                     <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Agenda</p>
                     <h3 class="mt-1 text-2xl font-black text-slate-900">${dayLabel(state.current)}</h3>
                 </div>
-                <button class="rounded-2xl bg-indigo-500 px-4 py-2 text-sm font-black text-white shadow-sm hover:bg-indigo-400 transition" onclick="openEventModal()">+ New Event</button>
             </div>
             <div class="space-y-3">
                 ${items.length?items.map(ev=>`
@@ -855,7 +974,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
 
     /* ── Chips & blocks ── */
     function renderChip(ev) {
-        return `<button type="button" class="w-full rounded-xl border border-slate-200 px-2 py-1 text-left text-[11px] font-bold ${colorClass(ev)} hover:opacity-80 transition" onclick="openEventFromView('${ev.uuid}','${ev.source_type}')" aria-label="View ${escapeHtml(ev.title)}">
+        return `<button type="button" class="w-full rounded-lg border border-slate-200 px-1.5 py-0.5 text-left text-[10px] font-bold ${colorClass(ev)} hover:opacity-80 transition" onclick="openEventFromView('${ev.uuid}','${ev.source_type}')" aria-label="View ${escapeHtml(ev.title)}">
             <span class="block truncate">${escapeHtml(ev.title)}</span>
         </button>`;
     }
@@ -868,8 +987,38 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         </div>`;
     }
 
-    /* ── Action buttons ── */
-    function actionButtons(ev) {
+    /* ── Event table ── */
+    function renderTable() {
+        const count = state.events.length;
+        els.eventListCount.textContent = count ? `${count} event${count!==1?'s':''}` : '';
+        if (!count) {
+            els.eventTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">No events found</td></tr>';
+            return;
+        }
+        els.eventTableBody.innerHTML = state.events.map(ev=>`
+            <tr class="block border-b border-slate-100 md:table-row hover:bg-slate-50 transition">
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
+                    <div class="text-xs font-bold text-slate-900 md:whitespace-nowrap">${escapeHtml(formatDateRange(ev))}</div>
+                    <div class="mt-1 flex md:hidden items-center gap-2">
+                        ${timeBadge(ev)}
+                    </div>
+                </td>
+                <td class="hidden px-4 py-3 align-top text-xs font-bold text-slate-500 whitespace-nowrap md:table-cell md:align-top">${timeCell(ev)}</td>
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
+                    <div class="font-black text-slate-600 text-sm">${escapeHtml(ev.title)}</div>
+                    <div class="mt-1 flex flex-wrap items-center gap-2">
+                        ${typeBadge(ev.event_type)}
+                        <span class="text-xs text-slate-500">${escapeHtml(ev.scope?.label||'Company-wide')}</span>
+                    </div>
+                </td>
+                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">${badge(ev.status)}</td>
+                <td class="sticky right-0 z-10 block border-l border-slate-100 bg-white px-4 py-2 align-top overflow-visible md:table-cell md:px-4 md:py-3 md:sticky md:right-0 md:bg-white md:shadow-[-12px_0_24px_rgba(15,23,42,0.06)]">
+                    <div class="flex flex-wrap gap-2 md:justify-start">${actionButtons(ev)}</div>
+                </td>
+            </tr>`).join('');
+    }
+
+    function actionButtons(ev, compact = false) {
         const role = currentUserRole();
         const isLeave = ev.source_type === 'leave';
         const completed = !isLeave && isCompletedEvent(ev);
@@ -895,57 +1044,37 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             }
         }
 
-        const desktopPrimary = primary[0] ? `
-            <button type="button"
-                class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-                data-action="${escapeHtml(primary[0].action)}"
-                data-uuid="${escapeHtml(ev.uuid)}">
-                ${escapeHtml(primary[0].label)}
-            </button>` : '';
+        const renderButtonHtml = (item, type = 'secondary') => {
+            const label = item.label;
+            const action = item.action;
+            const uuid = item.uuid;
+            const icon = item.icon;
+            const class_ = item.className || '';
+            const btnType = type === 'primary' ? 'primary' : 'secondary';
+            
+            // Replicating component/button.php styles
+            const baseClasses = "inline-flex items-center justify-center gap-1.5 font-black rounded-lg transition-all duration-200 shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap px-2 py-1 text-[11px]";
+            const typeClasses = btnType === 'primary' ? "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-100" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300";
+            
+            return '<button type="button" class="' + baseClasses + ' ' + typeClasses + ' ' + class_ + '" ' +
+                   'data-action="' + escapeHtml(action) + '" data-uuid="' + escapeHtml(uuid) + '">' +
+                   (icon ? '<span class="iconify text-[12px] shrink-0" data-icon="' + icon + '"></span>' : '') +
+                   escapeHtml(label) + '</button>';
+        };
+
+        const primaryBtn = primary[0] ? renderButtonHtml(primary[0], 'secondary') : '';
         const desktopSecondary = (primary.length > 1 || secondary.length > 0) ? buildActionMenu([...primary.slice(1), ...secondary], false) : '';
         const mobileMenu = buildActionMenu([...primary, ...secondary], true);
 
-        return `
-            <div class="flex items-center gap-2">
-                <div class="hidden md:flex items-center gap-2">
-                    ${desktopPrimary}
-                    ${desktopSecondary}
-                </div>
-                <div class="md:hidden">
-                    ${mobileMenu}
-                </div>
-            </div>`;
-    }
-
-    /* ── Event table ── */
-    function renderTable() {
-        const count = state.events.length;
-        els.eventListCount.textContent = count ? `${count} event${count!==1?'s':''}` : '';
-        if (!count) {
-            els.eventTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">No events found</td></tr>';
-            return;
-        }
-        els.eventTableBody.innerHTML = state.events.map(ev=>`
-            <tr class="block border-b border-slate-100 md:table-row hover:bg-slate-50 transition">
-                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
-                    <div class="text-xs font-bold text-slate-900 md:whitespace-nowrap">${escapeHtml(formatDateRange(ev))}</div>
-                    <div class="mt-1 flex md:hidden items-center gap-2">
-                        ${timeBadge(ev)}
-                    </div>
-                </td>
-                <td class="hidden px-4 py-3 align-top text-xs font-bold text-slate-500 whitespace-nowrap md:table-cell md:align-top">${timeCell(ev)}</td>
-                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">
-                    <div class="font-black text-slate-900 text-sm">${escapeHtml(ev.title)}</div>
-                    <div class="mt-1 flex flex-wrap items-center gap-2">
-                        ${typeBadge(ev.event_type)}
-                        <span class="text-xs text-slate-500">${escapeHtml(ev.scope?.label||'Company-wide')}</span>
-                    </div>
-                </td>
-                <td class="block px-4 py-2 align-top md:table-cell md:px-4 md:py-3">${badge(ev.status)}</td>
-                <td class="sticky right-0 z-10 block border-l border-slate-100 bg-white px-4 py-2 align-top overflow-visible md:table-cell md:px-4 md:py-3 md:sticky md:right-0 md:bg-white md:shadow-[-12px_0_24px_rgba(15,23,42,0.06)]">
-                    <div class="flex flex-wrap gap-2 md:justify-start">${actionButtons(ev)}</div>
-                </td>
-            </tr>`).join('');
+        return '<div class="flex items-center gap-2">' +
+                '<div class="hidden md:flex items-center gap-2">' +
+                    primaryBtn +
+                    desktopSecondary +
+                '</div>' +
+                '<div class="md:hidden">' +
+                    mobileMenu +
+                '</div>' +
+            '</div>';
     }
 
     /* ── Modal helpers ── */
@@ -972,7 +1101,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         return valid;
     }
 
-    function openEventModal(event = null) {
+    function openEventModal(event = null, startDate = null) {
         state.editing = event;
         els.form.reset();
         els.targetsWrap.innerHTML = '';
@@ -1005,8 +1134,9 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         } else {
             els.modalTitle.textContent = 'New Event';
             els.eventUuid.value = '';
-            els.evStartAt.value = toLocalInputValue(state.current.toISOString());
-            els.evEndAt.value = toLocalInputValue(new Date(state.current.getTime()+60*60*1000).toISOString());
+            const start = startDate ? new Date(`${startDate}T09:00:00`) : state.current;
+            els.evStartAt.value = toLocalInputValue(start.toISOString());
+            els.evEndAt.value = toLocalInputValue(new Date(start.getTime()+60*60*1000).toISOString());
         }
         // clear field errors
         els.form.querySelectorAll('.field-error').forEach(e => e.classList.add('hidden'));
@@ -1197,13 +1327,14 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         state.view = 'day';
         state.current = new Date(`${date}T12:00:00`);
         els.dateJump.value = date;
-        document.querySelectorAll('.view-switch').forEach(btn => {
-            const active = btn.dataset.viewSwitch === 'day';
-            btn.className = active
-                ? 'view-switch rounded-2xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-lg shadow-slate-950/20'
-                : 'view-switch rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15';
-            btn.setAttribute('aria-pressed', String(active));
+        
+        // Update buttons visual state
+        document.querySelectorAll('.view-switch').forEach(item => {
+            const isActive = (item.dataset.viewSwitch === 'day');
+            item.classList.toggle('active', isActive);
+            item.setAttribute('aria-pressed', String(isActive));
         });
+        
         loadEvents().catch(console.error);
     };
     window.openEventFromView = openEventFromView;
@@ -1253,13 +1384,14 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     /* ── Event listeners ── */
     document.querySelectorAll('.view-switch').forEach(btn => {
         btn.addEventListener('click', () => {
-            state.view = btn.dataset.viewSwitch;
+            const view = btn.dataset.viewSwitch;
+            state.view = view;
+
+            // Update buttons visual state
             document.querySelectorAll('.view-switch').forEach(item => {
-                const active = item === btn;
-                item.className = active
-                    ? 'view-switch rounded-2xl bg-white px-4 py-2 text-sm font-bold text-slate-900 shadow-lg shadow-slate-950/20'
-                    : 'view-switch rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15';
-                item.setAttribute('aria-pressed', String(active));
+                const isActive = (item.dataset.viewSwitch === view);
+                item.classList.toggle('active', isActive);
+                item.setAttribute('aria-pressed', String(isActive));
             });
             loadEvents().catch(console.error);
         });
@@ -1322,7 +1454,18 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     els.modal.addEventListener('click', (e) => { if (e.target === els.modal) closeModal(); });
     els.confirmOverlay.addEventListener('click', (e) => { if (e.target === els.confirmOverlay) els.confirmCancelBtn.click(); });
 
+    function updateViewButtons() {
+        document.querySelectorAll('.view-switch').forEach(btn => {
+            const active = btn.dataset.viewSwitch === state.view;
+            btn.classList.toggle('active', active);
+            btn.setAttribute('aria-pressed', String(active));
+        });
+    }
+
     /* ── Init ── */
+    // Initial state setup: Set active view based on state
+    updateViewButtons();
+    
     loadOptions()
         .then(() => loadEvents())
         .catch(err => {

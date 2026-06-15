@@ -48,56 +48,86 @@ class ControllerEmployee
         $this->jsonSuccess($depts);
     }
 
-    // Show single employee by ID
-    public function show(int $id): void
+    // Show single employee by ID or UUID
+    public function show($id): void
     {
         $employee = $this->service->show($id);
+        
         if (!$employee) {
             $this->jsonError("Employee not found", 404);
         }
-        $this->jsonSuccess($employee);
+
+        // Clean up data for the mobile app (ensure no nulls for core fields)
+        $data = [
+            'id'            => (int)    ($employee['id'] ?? 0),
+            'uuid'          => (string) ($employee['uuid'] ?? ''),
+            'username'      => (string) ($employee['username'] ?? ''),
+            'first_name'    => (string) ($employee['first_name'] ?? ''),
+            'last_name'     => (string) ($employee['last_name'] ?? ''),
+            'full_name'     => (string) ($employee['full_name'] ?? ''),
+            'gender'        => (string) ($employee['gender'] ?? ''),
+            'email'         => (string) ($employee['email'] ?? ''),
+            'phone'         => (string) ($employee['phone'] ?? ''),
+            'address'       => (string) ($employee['address'] ?? ''),
+            'dob'           => (string) ($employee['dob'] ?? ''),
+            'role'          => (string) ($employee['role'] ?? $employee['position'] ?? ''),
+            'position'      => (string) ($employee['position'] ?? ''),
+            'department'    => (string) ($employee['department'] ?? ''),
+            'date_hired'    => (string) ($employee['date_hired'] ?? ''),
+            'status_id'     => (int)    ($employee['status_id'] ?? 1),
+            'photo'         => (string) ($employee['photo'] ?? ''),
+        ];
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => true,
+            'data'    => $data
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
     }
 
     // Create employee
     public function store(): void
     {
-        $data = $_POST;
-        $authUserId = (int) ($_SESSION['user_id'] ?? 0);
+        try {
+            error_log("DEBUG: ControllerEmployee::store POST=" . json_encode($_POST));
+            error_log("DEBUG: ControllerEmployee::store FILES=" . json_encode($_FILES));
+            
+            $data = $_POST;
+            $authUserId = (int) ($_SESSION['user_id'] ?? 0);
 
-        if ($this->service->create($data, $authUserId)) {
-            $this->jsonSuccess(null, "Employee created successfully");
-        } else {
-            $this->jsonError("Failed to create employee");
+            if ($this->service->create($data, $authUserId)) {
+                $this->jsonSuccess(null, "Employee created successfully");
+            } else {
+                $this->jsonError("Failed to create employee");
+            }
+        } catch (\Exception $e) {
+            error_log("ERROR: ControllerEmployee::store Exception=" . $e->getMessage());
+            $this->jsonError("Error: " . $e->getMessage());
         }
     }
 
     // Update employee
     public function update(int $id): void
     {
-        // For PUT requests, we need to parse the input manually
-        // because PHP doesn't populate $_POST for PUT.
-        $data = [];
-        if ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-            // Read raw input
-            $rawInput = file_get_contents('php://input');
+        try {
+            error_log("DEBUG: ControllerEmployee::update id=$id POST=" . json_encode($_POST));
+            error_log("DEBUG: ControllerEmployee::update id=$id FILES=" . json_encode($_FILES));
             
-            // If it's multipart/form-data (required for files)
-            // we'd need a more complex parser. 
-            // For simple JSON or x-www-form-urlencoded:
-            parse_str($rawInput, $data);
-            
-            // If it's JSON:
-            if (empty($data)) {
-                $data = json_decode($rawInput, true) ?? [];
-            }
-        } else {
+            // PHP automatically populates $_POST and $_FILES for multipart/form-data
+            // regardless of whether the method is POST or PUT, provided the
+            // content-type is set correctly.
             $data = $_POST;
-        }
+            $authUserId = (int) ($_SESSION['user_id'] ?? 0);
 
-        if ($this->service->update($id, $data)) {
-            $this->jsonSuccess(null, "Employee updated successfully");
-        } else {
-            $this->jsonError("Failed to update employee");
+            if ($this->service->update($id, $data, $authUserId)) {
+                $this->jsonSuccess(null, "Employee updated successfully");
+            } else {
+                $this->jsonError("Failed to update employee");
+            }
+        } catch (\Exception $e) {
+            error_log("ERROR: ControllerEmployee::update id=$id Exception=" . $e->getMessage());
+            $this->jsonError("Error: " . $e->getMessage());
         }
     }
 

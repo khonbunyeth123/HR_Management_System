@@ -9,6 +9,7 @@ use App\Models\Auth;
 class AuthService
 {
     private Auth $authModel;
+    private EmailService $emailService;
 
     private const TOKEN_TTL_SECONDS  = 2592000; // 30 days
     private const MAX_LOGIN_ATTEMPTS = 10;       // per window
@@ -18,6 +19,7 @@ class AuthService
     public function __construct()
     {
         $this->authModel = new Auth();
+        $this->emailService = new EmailService();
     }
 
     // -----------------------------------------------------------------------
@@ -185,6 +187,97 @@ class AuthService
                 'email'     => $_SESSION['email'] ?? null,
                 'login_as'  => 'employee',
             ],
+        ];
+    }
+
+    // -----------------------------------------------------------------------
+    // Password Resets
+    // -----------------------------------------------------------------------
+
+    /**
+     * Initiate a password reset request.
+     * Generates a token, stores its hash, and sends an email.
+     */
+    public function requestPasswordReset(string $email): array
+    {
+        $email = trim($email);
+        if (empty($email)) {
+            return ['success' => false, 'message' => 'Email is required.', 'code' => 400];
+        }
+
+        // Check if user or employee exists
+        $user = $this->authModel->findAdminByIdentifier($email);
+        $employee = $this->authModel->findEmployeeByIdentifier($email);
+
+        if ($user || $employee) {
+            // Generate a secure random token
+            $token = bin2hex(random_bytes(32));
+            
+            // Store the token hash in DB
+            $this->authModel->createPasswordReset($email, $token);
+
+            // Generate reset link
+            $resetLink = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/reset-password.php?token=$token&email=" . urlencode($email);
+            
+            // Send the actual email
+            $this->emailService->sendResetLink($email, $resetLink);
+            
+            // Log for debugging
+            error_log("Password reset link sent to $email: $resetLink");
+        }
+
+        // Always return success for security (prevents user enumeration)
+        return [
+            'success' => true,
+            'message' => 'If your email is in our system, you will receive instructions shortly.',
+            'code'    => 200
+        ];
+    }
+
+    /**
+     * Complete a password reset request.
+     * Verifies the token and updates the password.
+     */
+    public function resetPassword(string $email, string $token, string $password): array
+    {
+        $email = trim($email);
+        $token = trim($token);
+        $password = trim($password);
+
+        if (empty($email) || empty($token) || empty($password)) {
+            return ['success' => false, 'message' => 'All fields are required.', 'code' => 400];
+        }
+
+        if (strlen($password) < 8) {
+            return ['success' => false, 'message' => 'Password must be at least 8 characters long.', 'code' => 400];
+        }
+
+        // Verify token existence
+        $reset = $this->authModel->findPasswordReset($email, $token);
+        if (!$reset) {
+            return ['success' => false, 'message' => 'Invalid or expired reset link.', 'code' => 400];
+        }
+
+        // Check expiration (1 hour = 3600 seconds)
+        $createdAt = strtotime((string) $reset['created_at']);
+        if (time() - $createdAt > 3600) {
+            $this->authModel->deletePasswordReset($email);
+            return ['success' => false, 'message' => 'Reset link has expired.', 'code' => 400];
+        }
+
+        // Hash new password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        // Update password in DB (both tables)
+        $this->authModel->updatePasswordByEmail($email, $hashedPassword);
+
+        // Cleanup: remove the reset token
+        $this->authModel->deletePasswordReset($email);
+
+        return [
+            'success' => true,
+            'message' => 'Password has been reset successfully.',
+            'code'    => 200
         ];
     }
 

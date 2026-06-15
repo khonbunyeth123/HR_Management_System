@@ -23,6 +23,8 @@ $router->get('/api/auth/me',                'ControllerAuth@me');
 $router->get('/api/auth/admin/me',          'ControllerAuth@adminMe');
 $router->get('/api/auth/employee/me',       'ControllerAuth@employeeMe');
 $router->post('/api/auth/fcm-token', 'ControllerAuth@saveFcmToken');
+$router->post('/api/auth/forgot-password',  'ControllerAuth@forgotPassword');
+$router->post('/api/auth/reset-password',   'ControllerAuth@resetPassword');
 
 
 /* ================= DASHBOARD ROUTES ================= */
@@ -155,6 +157,13 @@ $router->post('/permissions/assign-multiple-to-role',     'ControllerPermission@
 $router->get('/permissions/{id}',                         'ControllerPermission@getById');
 $router->put('/permissions/{id}',                         'ControllerPermission@update');
 $router->delete('/permissions/{id}',                      'ControllerPermission@delete');
+
+/* ================= PAYROLL ROUTES ================= */
+$router->get('/api/payroll/summary',      'ControllerPayroll@summary');
+$router->post('/api/payroll/generate',    'ControllerPayroll@generate');
+$router->post('/api/payroll/approve',     'ControllerPayroll@approve');
+$router->get('/api/payroll/config/{id}',  'ControllerPayroll@getConfig');
+$router->post('/api/payroll/config/{id}', 'ControllerPayroll@updateConfig');
 
 /* ================= DISPATCH REQUEST ================= */
 $router->dispatch();

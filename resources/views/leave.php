@@ -1,103 +1,157 @@
 <div class="w-full h-full"> 
-    <div class="p-2">
-        <!-- Header with Filters -->
-        <div class="bg-white rounded-lg shadow-sm p-3 mb-3">
-            <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <iconify-icon icon="mdi:calendar-check" style="font-size: 18px; color: #4f46e5;"></iconify-icon>
-                        <h1 class="text-sm font-bold text-gray-900">Leave Applications</h1>
-                    </div>
-                    <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full" id="totalCount">0 Applications</span>
+    <div class="p-2 space-y-2">
+        <!-- Header & Filters -->
+        <?php 
+            $title = 'Leave Applications';
+            $icon = 'mdi:calendar-check text-indigo-500';
+            ob_start();
+        ?>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md" id="totalCount">0 Applications</span>
+        <?php 
+            $headerRight = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex-1">
+                    <?php 
+                        $id = 'searchInput'; $placeholder = 'Search employee...'; $icon = 'mdi:magnify';
+                        include 'component/input.php'; 
+                        $id = null; $icon = null; // Reset
+                    ?>
                 </div>
-
-                <!-- Search & Filter Bar -->
-                <div class="flex flex-col sm:flex-row gap-1">
-                    <div class="flex-1 relative">
-                        <iconify-icon icon="mdi:magnify" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></iconify-icon>
-                        <input type="text" id="searchInput" placeholder="Search..." class="w-full pl-7 pr-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent">
+                <div class="flex gap-2">
+                    <div class="w-40">
+                        <?php 
+                            $id = 'leaveTypeFilter'; $placeholder = 'All Types';
+                            include 'component/select.php'; 
+                            $id = null; // Reset
+                        ?>
                     </div>
-                    <select id="leaveTypeFilter" class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Types</option>
-                    </select>
-                    <select id="statusFilter" class="px-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white cursor-pointer">
-                        <option value="">All Status</option>
-                        <option value="0">Pending</option>
-                        <option value="1">Approved</option>
-                        <option value="2">Rejected</option>
-                    </select>
+                    <div class="w-32">
+                        <?php 
+                            $id = 'statusFilter'; $placeholder = 'All Status';
+                            $options = ['0' => 'Pending', '1' => 'Approved', '2' => 'Rejected'];
+                            include 'component/select.php'; 
+                            $id = null; $options = []; // Reset
+                        ?>
+                    </div>
                 </div>
             </div>
-        </div>
+        <?php 
+            $content = ob_get_clean();
+            $title = 'Leave Applications'; $icon = 'mdi:calendar-check text-indigo-500'; // Set again as card uses them
+            include 'component/card.php'; 
+            $title = null; $icon = null; $headerRight = null; // Reset
+        ?>
 
-        <!-- Table -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="sticky-table-wrapper overflow-x-auto flex flex-col">
-                <table class="w-full text-[11px] flex-1">
-                    <thead class="bg-slate-800 text-white sticky top-0">
+        <!-- Table Card -->
+        <?php 
+            ob_start();
+        ?>
+            <div class="sticky-table-wrapper overflow-x-auto">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-slate-900 text-white sticky top-0 z-10">
                         <tr>
-                            <th class="px-3 py-2 text-left font-semibold">Employee</th>
-                            <th class="px-3 py-2 text-left font-semibold">Leave Type</th>
-                            <th class="px-3 py-2 text-left font-semibold">Start Date</th>
-                            <th class="px-3 py-2 text-left font-semibold">End Date</th>
-                            <th class="px-3 py-2 text-left font-semibold">Reason</th>
-                            <th class="px-3 py-2 text-left font-semibold">Status</th>
-                            <th class="px-3 py-2 text-left font-semibold">Created</th>
-                            <th class="px-3 py-2 text-center font-semibold">Action</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Employee</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Type</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Dates</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Reason</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Status</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider">Created</th>
+                            <th class="px-3 py-2 font-black uppercase tracking-wider text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="leaveTableBody" class="divide-y divide-gray-100">
+                    <tbody id="leaveTableBody" class="divide-y divide-slate-100 bg-white">
                         <tr>
-                            <td colspan="8" class="px-3 py-6 text-center text-gray-400">
-                                <div class="flex items-center justify-center gap-1">
-                                    <iconify-icon icon="mdi:loading" style="font-size: 14px;" class="animate-spin"></iconify-icon>
-                                    <p class="text-[10px]">Loading...</p>
+                            <td colspan="7" class="px-3 py-12 text-center text-slate-400">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <span class="iconify text-2xl animate-spin opacity-50" data-icon="mdi:loading"></span>
+                                    <p class="text-[10px] font-black uppercase tracking-widest">Loading...</p>
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <div id="paginationContainer" class="px-3 py-2 border-t border-gray-100 bg-gray-50/50"></div>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div id="paginationContainer"></div>
+        <?php 
+            $footer = ob_get_clean();
+            $padding = false; $title = null; $icon = null; $headerRight = null; $id = null; $class = '';
+            include 'component/card.php'; 
+            $padding = true; $footer = null; // Reset
+        ?>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="leaveDecisionModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/40 backdrop-blur-[2px]">
+    <div class="w-full max-w-sm">
+        <?php 
+            ob_start();
+        ?>
+            <div class="flex flex-col">
+                <h2 id="leaveDecisionTitle" class="text-sm font-black text-slate-800">Review Leave</h2>
+                <p id="leaveDecisionText" class="text-[10px] text-slate-500 font-medium">Confirm this action.</p>
+            </div>
+        <?php 
+            $title = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="space-y-4">
+                <div id="rejectReasonWrap" class="hidden">
+                    <?php 
+                        $label = 'Reject reason'; $required = true;
+                    ?>
+                    <div class="flex flex-col gap-1">
+                        <label for="rejectReason" class="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                            <?= $label ?> <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea id="rejectReason" rows="3"
+                            class="w-full border border-slate-200 rounded-lg py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400 bg-white"
+                            placeholder="Explain why this request is rejected"></textarea>
+                        <p id="rejectReasonError" class="mt-1 hidden text-[10px] font-bold text-rose-500">Please enter a reject reason.</p>
+                    </div>
+                </div>
+                <p id="leaveDecisionError" class="hidden rounded-lg bg-rose-50 px-3 py-2 text-[11px] font-bold text-rose-600 border border-rose-100"></p>
+            </div>
+        <?php 
+            $content = ob_get_clean();
+            ob_start();
+        ?>
+            <div class="flex justify-end gap-2">
+                <?php 
+                    $label = 'Cancel'; $type = 'secondary'; $size = 'sm'; $attr = 'onclick="closeLeaveDecisionModal()"';
+                    include 'component/button.php'; 
+                    
+                    $label = 'Confirm'; $type = 'primary'; $size = 'sm'; $id = 'confirmLeaveDecision'; $attr = 'onclick="submitLeaveDecision()"';
+                    $icon = 'mdi:check';
+                    include 'component/button.php';
+                    $label = null; $attr = null; $icon = null; $id = null; // Reset
+                ?>
+            </div>
+        <?php 
+            $footer = ob_get_clean();
+            include 'component/card.php'; 
+            $title = null; $footer = null; // Reset
+        ?>
+    </div>
+</div>
+
+<div id="leaveFeedback" class="hidden fixed right-4 top-20 z-50 max-w-sm rounded-xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-950/10 transition-all duration-300 transform translate-x-full">
+    <div class="flex items-start gap-3">
+        <div id="feedbackIcon" class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"></div>
+        <div>
+            <p id="leaveFeedbackTitle" class="text-xs font-black text-slate-800"></p>
+            <p id="leaveFeedbackMessage" class="text-[10px] text-slate-500 font-medium"></p>
         </div>
     </div>
 </div>
-    <div id="leaveDecisionModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4">
-        <div class="w-full max-w-md rounded-lg bg-white shadow-xl">
-            <div class="border-b border-gray-100 px-5 py-4">
-                <h2 id="leaveDecisionTitle" class="text-lg font-bold text-gray-900">Review Leave</h2>
-                <p id="leaveDecisionText" class="mt-1 text-sm text-gray-600">Confirm this action.</p>
-            </div>
-            <div class="space-y-4 px-5 py-4">
-                <div id="rejectReasonWrap" class="hidden">
-                    <label for="rejectReason" class="mb-2 block text-sm font-semibold text-gray-700">Reject reason *</label>
-                    <textarea id="rejectReason" rows="4"
-                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Explain why this request is rejected"></textarea>
-                    <p id="rejectReasonError" class="mt-2 hidden text-xs font-semibold text-red-600">Please enter a reject reason.</p>
-                </div>
-                <p id="leaveDecisionError" class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"></p>
-            </div>
-            <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
-                <button type="button" onclick="closeLeaveDecisionModal()"
-                    class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-                    Cancel
-                </button>
-                <button type="button" id="confirmLeaveDecision" onclick="submitLeaveDecision()"
-                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
-                    <iconify-icon icon="mdi:check"></iconify-icon>
-                    <span id="confirmLeaveDecisionText">Confirm</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
-    <div id="leaveFeedback" class="hidden fixed right-4 top-20 z-50 max-w-sm rounded-lg border-l-4 bg-white p-4 shadow-lg">
-        <p id="leaveFeedbackTitle" class="font-semibold text-gray-900"></p>
-        <p id="leaveFeedbackMessage" class="mt-1 text-sm text-gray-600"></p>
-    </div>
-
-    <script src="/assets/js/pagination.js"></script>
+<script src="/assets/js/pagination.js"></script>
     <script>
         const perPage = 10;
         let currentPage = 1;
@@ -106,21 +160,46 @@
 
         // Helper: Status badge
         function getStatusBadge(statusId) {
-            if (statusId == 0) return '<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-semibold">Pending</span>';
-            if (statusId == 1) return '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">Approved</span>';
-            if (statusId == 2) return '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">Rejected</span>';
-            return '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">Unknown</span>';
+            const styles = {
+                0: 'bg-amber-50 text-amber-600 border-amber-100', // Pending
+                1: 'bg-emerald-50 text-emerald-600 border-emerald-100', // Approved
+                2: 'bg-rose-50 text-rose-600 border-rose-100', // Rejected
+            };
+            const labels = { 0: 'Pending', 1: 'Approved', 2: 'Rejected' };
+            const style = styles[statusId] || 'bg-slate-50 text-slate-600 border-slate-100';
+            const label = labels[statusId] || 'Unknown';
+
+            return `<span class="${style} px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border">${label}</span>`;
         }
 
         function showFeedback(title, message, type = 'success') {
             const box = document.getElementById('leaveFeedback');
-            document.getElementById('leaveFeedbackTitle').textContent = title;
-            document.getElementById('leaveFeedbackMessage').textContent = message;
-            box.className = `fixed right-4 top-20 z-50 max-w-sm rounded-lg border-l-4 bg-white p-4 shadow-lg ${
-                type === 'success' ? 'border-green-500' : 'border-red-500'
-            }`;
+            const iconBox = document.getElementById('feedbackIcon');
+            const titleEl = document.getElementById('leaveFeedbackTitle');
+            const msgEl = document.getElementById('leaveFeedbackMessage');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+
+            if (type === 'success') {
+                iconBox.className = 'w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0';
+                iconBox.innerHTML = '<span class="iconify" data-icon="mdi:check-circle"></span>';
+                box.classList.add('border-emerald-200');
+                box.classList.remove('border-rose-200');
+            } else {
+                iconBox.className = 'w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0';
+                iconBox.innerHTML = '<span class="iconify" data-icon="mdi:alert-circle"></span>';
+                box.classList.add('border-rose-200');
+                box.classList.remove('border-emerald-200');
+            }
+
             box.classList.remove('hidden');
-            setTimeout(() => box.classList.add('hidden'), 3000);
+            setTimeout(() => box.classList.remove('translate-x-full'), 10);
+
+            setTimeout(() => {
+                box.classList.add('translate-x-full');
+                setTimeout(() => box.classList.add('hidden'), 3000);
+            }, 3000);
         }
 
         function setDecisionLoading(isLoading) {
@@ -128,25 +207,34 @@
             const label = document.getElementById('confirmLeaveDecisionText');
             const isReject = pendingLeaveDecision?.action === 'reject';
             btn.disabled = isLoading;
-            label.textContent = isLoading ? 'Processing...' : (isReject ? 'Reject Leave' : 'Approve Leave');
+            if (isLoading) {
+                btn.classList.add('opacity-50', 'pointer-events-none');
+                btn.innerHTML = '<span class="iconify animate-spin" data-icon="mdi:loading"></span> Processing...';
+            } else {
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                btn.innerHTML = `<span class="iconify" data-icon="mdi:check"></span> ${isReject ? 'Reject' : 'Approve'}`;
+            }
         }
 
         function openLeaveDecisionModal(action, uuid) {
             pendingLeaveDecision = { action, uuid };
             const isReject = action === 'reject';
 
-            document.getElementById('leaveDecisionTitle').textContent = isReject ? 'Reject Leave Request' : 'Approve Leave Request';
+            document.getElementById('leaveDecisionTitle').textContent = isReject ? 'Reject Request' : 'Approve Request';
             document.getElementById('leaveDecisionText').textContent = isReject
-                ? 'Add a clear reason so the employee understands the decision.'
-                : 'Confirm that this employee can take the requested leave.';
+                ? 'Please provide a reason for rejection.'
+                : 'Confirm this leave application?';
             document.getElementById('rejectReasonWrap').classList.toggle('hidden', !isReject);
             document.getElementById('rejectReason').value = '';
             document.getElementById('rejectReasonError').classList.add('hidden');
             document.getElementById('leaveDecisionError').classList.add('hidden');
-            document.getElementById('confirmLeaveDecision').className = `inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                isReject ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'
+            
+            const confirmBtn = document.getElementById('confirmLeaveDecision');
+            confirmBtn.className = `inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-black text-white transition shadow-sm active:scale-95 ${
+                isReject ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
             }`;
-            document.getElementById('confirmLeaveDecisionText').textContent = isReject ? 'Reject Leave' : 'Approve Leave';
+            confirmBtn.innerHTML = `<span class="iconify" data-icon="mdi:check"></span> ${isReject ? 'Reject' : 'Approve'}`;
+            
             document.getElementById('leaveDecisionModal').classList.remove('hidden');
             document.getElementById('leaveDecisionModal').classList.add('flex');
 
@@ -184,21 +272,22 @@
 
                         currentPage = result.pagination.page;
                         totalPages = result.pagination.total_pages;
-                        document.getElementById("totalCount").textContent = result.pagination.total + " Applications";
+                        document.getElementById("totalCount").textContent = `${result.pagination.total} Applications`;
 
                         // Populate leave type filter once
                         const typeSelect = document.getElementById("leaveTypeFilter");
-                        typeSelect.innerHTML = '<option value="">All Leave Types</option>';
-                        result.data.leave_types?.forEach(type => {
-                            const opt = document.createElement("option");
-                            opt.value = type;
-                            opt.textContent = type;
-                            typeSelect.appendChild(opt);
-                        });
+                        if (typeSelect.options.length <= 1) {
+                            result.data.leave_types?.forEach(type => {
+                                const opt = document.createElement("option");
+                                opt.value = type;
+                                opt.textContent = type;
+                                typeSelect.appendChild(opt);
+                            });
+                        }
 
                         renderPagination({
-                            currentPage,
-                            totalPages,
+                            currentPage: currentPage,
+                            totalPages: totalPages,
                             showingFrom: result.data.leave_applications.length
                                 ? ((currentPage - 1) * perPage) + 1
                                 : 0,
@@ -206,18 +295,17 @@
                                 ? ((currentPage - 1) * perPage) + result.data.leave_applications.length
                                 : 0,
                             totalRecords: result.pagination.total,
-                            showPageNumbers: true,
-                            onPrevious: () => currentPage > 1 && loadLeaveApplications(currentPage -1),
-                            onNext: () => currentPage < totalPages && loadLeaveApplications(currentPage +1),
+                            onPrevious: () => currentPage > 1 && loadLeaveApplications(currentPage - 1),
+                            onNext: () => currentPage < totalPages && loadLeaveApplications(currentPage + 1),
                             onPageClick: (p) => loadLeaveApplications(p)
                         });
                     } else {
-                        document.getElementById("leaveTableBody").innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-gray-400">No leave applications found</td></tr>';
+                        document.getElementById("leaveTableBody").innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-slate-400">No applications found</td></tr>';
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById("leaveTableBody").innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-red-500">Error loading data</td></tr>';
+                    document.getElementById("leaveTableBody").innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-rose-500">Error loading data</td></tr>';
                 });
         }
 
@@ -225,39 +313,49 @@
         function renderTable(records) {
             const tbody = document.getElementById("leaveTableBody");
             if (!records.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400">No leave applications found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-12 text-center text-slate-400">No leave applications found</td></tr>';
                 return;
             }
 
             tbody.innerHTML = records.map(rec => `
-                <tr class="hover:bg-indigo-50 transition-colors">
-                    <td class="px-3 py-2 text-[11px] font-medium text-gray-900">${rec.employee_name}</td>
-                    <td class="px-3 py-2"><span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[9px] font-semibold">${rec.leave_type}</span></td>
-                    <td class="px-3 py-2 text-gray-600 text-[11px]">${new Date(rec.start_date).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'2-digit'})}</td>
-                    <td class="px-3 py-2 text-gray-600 text-[11px]">${new Date(rec.end_date).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'2-digit'})}</td>
-                    <td class="px-3 py-2 text-gray-600 text-[10px] max-w-[100px] truncate">${rec.reason || '-'}</td>
+                <tr class="hover:bg-slate-50 transition-colors group">
+                    <td class="px-3 py-2">
+                        <div class="flex items-center gap-2">
+                            <div class="flex flex-col">
+                                <span class="text-[11px] font-black text-slate-800 group-hover:text-indigo-600 transition-colors">${rec.employee_name}</span>
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">${rec.employee_id ? '#' + rec.employee_id : ''}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2"><span class="bg-indigo-50 no-wrap text-indigo-600 px-1.5 py-0.5 rounded text-[9px] font-black normal-case border border-indigo-100">${rec.leave_type}</span></td>
+                    <td class="px-3 py-2">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${new Date(rec.end_date).toLocaleDateString(undefined, {month:'short',day:'numeric',year:'2-digit'})}</span>
+                        </div>
+                    </td>
+                    <td class="px-3 py-2"><p class="text-[10px] font-medium text-slate-500 max-w-[120px] truncate" title="${rec.reason || ''}">${rec.reason || '-'}</p></td>
                     <td class="px-3 py-2">${getStatusBadge(rec.status_id)}</td>
-                    <td class="px-3 py-2 text-gray-500 text-[10px]">${new Date(rec.created_at).toLocaleDateString(undefined, {month:'short',day:'numeric'})}</td>
-                    <td class="px-3 py-2 text-center">
+                    <td class="px-3 py-2"><span class="text-[9px] font-black text-slate-400 normal-case tracking-tight">${new Date(rec.created_at).toLocaleDateString(undefined, {month:'short',day:'numeric'})}</span></td>
+                    <td class="px-3 py-2 text-right">
                     ${rec.status_id == 0 ? `
-                            <div class="flex items-center justify-center gap-1">
+                            <div class="flex items-center justify-end gap-1">
                                 <button
                                     onclick="approveLeave('${rec.uuid}')"
-                                    class="inline-flex items-center gap-0.5 rounded bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700 hover:bg-green-100"
+                                    class="inline-flex items-center gap-0.5 rounded-lg bg-white border border-emerald-200 px-2 py-1 text-[9px] font-black text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm active:scale-95"
                                     title="Approve"
                                 >
                                     Approve
                                 </button>
                                 <button
                                     onclick="rejectLeave('${rec.uuid}')"
-                                    class="inline-flex items-center gap-0.5 rounded bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-700 hover:bg-red-100"
+                                    class="inline-flex items-center gap-0.5 rounded-lg bg-white border border-rose-200 px-2 py-1 text-[9px] font-black text-rose-600 hover:bg-rose-50 transition-all shadow-sm active:scale-95"
                                     title="Reject"
                                 >
                                     Reject
                                 </button>
                             </div>
                         ` : `
-                            <span class="text-gray-400">—</span>
+                            <span class="text-[10px] font-bold text-slate-300">—</span>
                         `}
                     </td>
                 </tr>
@@ -343,4 +441,3 @@
         // Initial load
         loadLeaveApplications(1);
     </script>
-

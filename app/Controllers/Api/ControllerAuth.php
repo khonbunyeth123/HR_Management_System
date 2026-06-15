@@ -88,6 +88,36 @@ class ControllerAuth
     }
 
     // -----------------------------------------------------------------------
+    // Password Resets
+    // -----------------------------------------------------------------------
+
+    /**
+     * Request a password reset link (API).
+     */
+    public function forgotPassword(): void
+    {
+        $data = $this->readJsonBody();
+        $email = (string) ($data['email'] ?? '');
+        
+        $result = $this->authService->requestPasswordReset($email);
+        Response::json($result, $result['code']);
+    }
+
+    /**
+     * Submit a password reset (API).
+     */
+    public function resetPassword(): void
+    {
+        $data = $this->readJsonBody();
+        $email = (string) ($data['email'] ?? '');
+        $token = (string) ($data['token'] ?? '');
+        $password = (string) ($data['password'] ?? '');
+        
+        $result = $this->authService->resetPassword($email, $token, $password);
+        Response::json($result, $result['code']);
+    }
+
+    // -----------------------------------------------------------------------
     // Save FCM token (standalone endpoint)
     // -----------------------------------------------------------------------
 

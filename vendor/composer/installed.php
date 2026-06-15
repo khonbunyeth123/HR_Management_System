@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '2a1d191d543558cc068a7f4cccffae7b0333cb0b',
+        'reference' => 'db1f80010ac91336dc7fca3dbe1ae5a35cc64d4f',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '2a1d191d543558cc068a7f4cccffae7b0333cb0b',
+            'reference' => 'db1f80010ac91336dc7fca3dbe1ae5a35cc64d4f',
             'dev_requirement' => false,
         ),
         'brick/math' => array(
@@ -96,6 +96,15 @@
             'replaced' => array(
                 0 => '~2.0',
             ),
+        ),
+        'phpmailer/phpmailer' => array(
+            'pretty_version' => 'v7.1.1',
+            'version' => '7.1.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../phpmailer/phpmailer',
+            'aliases' => array(),
+            'reference' => '1bc1716a507a65e039d4ac9d9adebbbd0d346e15',
+            'dev_requirement' => false,
         ),
         'phpoption/phpoption' => array(
             'pretty_version' => '1.9.4',

@@ -184,11 +184,11 @@ class AttendanceService
         ];
     }
 
-    public function getHistory(int $employeeId, int $page, int $perPage): array
+    public function getHistory(int $employeeId, int $page, int $perPage, ?int $month = null, ?int $year = null): array
     {
         $offset  = ($page - 1) * $perPage;
-        $records = $this->model->getByEmployeeId($employeeId, $perPage, $offset);
-        $total   = $this->model->countByEmployeeId($employeeId);
+        $records = $this->model->getByEmployeeIdFiltered($employeeId, $perPage, $offset, $month, $year);
+        $total   = $this->model->countByEmployeeIdFiltered($employeeId, $month, $year);
 
         return [
             'records'     => $records,
@@ -196,4 +196,4 @@ class AttendanceService
             'total_pages' => (int)ceil($total / $perPage),
         ];
     }
-} 
+}

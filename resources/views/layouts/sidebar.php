@@ -19,6 +19,7 @@
           ['page'=>'employee','label'=>'Employees','icon'=>'mdi:account-group-outline'],
           ['page'=>'leave','label'=>'Leave','icon'=>'mdi:calendar-month-outline'],
           ['page'=>'calendar','label'=>'Calendar','icon'=>'mdi:calendar-range-outline'],
+          // ['page'=>'payroll','label'=>'Payroll','icon'=>'mdi:cash-register'],
         ];
 
         foreach ($menu_items as $item):

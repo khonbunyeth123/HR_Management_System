@@ -1,4 +1,20 @@
-/* Custom styles for 10/10 UI/UX */
+/* View Switch Buttons */
+.view-switch {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    transition: all 0.2s;
+}
+
+.view-switch:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.view-switch.active {
+    background-color: white !important;
+    color: #0f172a !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+}
 
 :root {
     --toast-success: #10b981;

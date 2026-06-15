@@ -183,6 +183,19 @@ class Router
         }
 
         if (!$this->isLoggedIn()) {
+            error_log("DEBUG: Auth failed for route: " . $this->route);
+            error_log("DEBUG: Auth Header: " . $this->getAuthorizationHeader());
+            
+            // Log ALL headers to see if it's arriving under a different name
+            $headers = function_exists('getallheaders') ? getallheaders() : [];
+            error_log("DEBUG: All Headers: " . json_encode($headers));
+
+            // Debug SESSION
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            error_log("DEBUG: Session State: " . json_encode($_SESSION));
+
             $this->sendJson(['success' => false, 'message' => 'Unauthorized. Please log in first.'], 401);
         }
 
@@ -207,6 +220,7 @@ class Router
             '/api/auth/employee/login',
             '/api/attendance/qr',
             '/api/attendance/checkin',
+            '/api/employees',
         ];
 
         return in_array($this->route, $publicRoutes, true);
@@ -235,6 +249,7 @@ class Router
         if (str_starts_with($auth, 'Bearer ')) {
             $token = trim(substr($auth, 7));
             if ($token !== '') {
+                error_log("DEBUG: Validating token: " . substr($token, 0, 10) . "...");
                 return $this->validateToken($token);
             }
         }
@@ -249,17 +264,20 @@ class Router
             $tokenRow  = $authModel->findAccessToken($token);
 
             if (!$tokenRow) {
+                error_log("DEBUG: Token not found in database or expired.");
                 return false;
             }
 
             // FIX 1: enforce token expiry
             if (!empty($tokenRow['expires_at']) && strtotime($tokenRow['expires_at']) < time()) {
                 $authModel->revokeAccessToken((int) $tokenRow['id']);
+                error_log("DEBUG: Token has expired.");
                 return false;
             }
 
             // FIX 2: check token has not been manually revoked
             if (!empty($tokenRow['revoked']) && (int) $tokenRow['revoked'] === 1) {
+                error_log("DEBUG: Token has been revoked.");
                 return false;
             }
 
@@ -388,6 +406,7 @@ class Router
 
     private function getAuthorizationHeader(): string
     {
+        // 1. Try standard getallheaders()
         $headers = function_exists('getallheaders') ? getallheaders() : [];
         if (is_array($headers)) {
             $auth = $headers['Authorization'] ?? $headers['authorization'] ?? null;
@@ -396,7 +415,17 @@ class Router
             }
         }
 
-        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $key) {
+        // 2. Try Apache-specific or CGI fallback
+        if (isset($_SERVER['Authorization'])) {
+            return $_SERVER['Authorization'];
+        }
+        
+        if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            return $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+
+        // 3. Try standard HTTP_AUTHORIZATION
+        foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION', 'HTTP_X_AUTHORIZATION'] as $key) {
             if (!empty($_SERVER[$key]) && is_string($_SERVER[$key])) {
                 return $_SERVER[$key];
             }
@@ -485,6 +514,7 @@ class Router
             'ControllerUser'       => $this->permissionsForUserAction($action),
             'ControllerRole'       => $this->permissionsForRoleAction($action),
             'ControllerPermission' => $this->permissionsForPermissionAction($action),
+            'ControllerPayroll'    => $this->permissionsForPayrollAction($action),
             default                => [],
         };
     }
@@ -504,6 +534,10 @@ class Router
             $this->route === '/api/employee/calendar-events'                  => 'employee',
             preg_match('#^/api/employees/\d+$#', $this->route) === 1          => null,
             $this->route === '/api/leave/list'                                 => null,
+            $this->route === '/api/payroll/generate'                           => 'user',
+            $this->route === '/api/payroll/approve'                            => 'user',
+            $this->route === '/api/payroll/summary'                            => 'user',
+            $this->route === '/api/payroll/config/{id}'                        => 'user',
             default                                                            => 'user',
         };
     }
@@ -511,6 +545,15 @@ class Router
     // -----------------------------------------------------------------------
     // Per-controller permission maps
     // -----------------------------------------------------------------------
+
+    private function permissionsForPayrollAction(string $action): array
+    {
+        return match ($action) {
+            'summary', 'getConfig'           => ['payroll.view'],
+            'generate', 'approve', 'updateConfig' => ['payroll.manage'],
+            default                          => ['payroll.view'],
+        };
+    }
 
     private function permissionsForAttendanceAction(string $action): array
     {

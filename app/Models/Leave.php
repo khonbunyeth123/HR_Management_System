@@ -216,6 +216,56 @@ class Leave {
         return ['total' => $total, 'rows' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
+    public function getMonthlyUnpaidDays(int $employeeId, int $month, int $year): float
+    {
+        // Unpaid leave is usually 'Other' or we should have a specific type.
+        // For now, let's assume leave_type_id = 4 (Other) is unpaid if we don't have a specific 'Unpaid' type.
+        // Better: We'll look for name LIKE '%Unpaid%'
+        $stmt = $this->db->prepare("
+            SELECT start_date, end_date 
+            FROM tbl_leave_applications l
+            JOIN tbl_leave_types t ON l.leave_type_id = t.id
+            WHERE l.employee_id = :employee_id 
+              AND l.status_id = :status_id
+              AND (MONTH(l.start_date) = :month1 OR MONTH(l.end_date) = :month2)
+              AND (YEAR(l.start_date) = :year1 OR YEAR(l.end_date) = :year2)
+              AND (t.name LIKE '%Unpaid%' OR t.name = 'Other')
+              AND l.deleted_at IS NULL
+        ");
+        
+        $stmt->execute([
+            'employee_id' => $employeeId, 
+            'status_id' => LeaveStatus::APPROVED->value,
+            'month1' => $month, 
+            'month2' => $month, 
+            'year1' => $year,
+            'year2' => $year
+        ]);
+        
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $totalDays = 0.0;
+
+        foreach ($rows as $row) {
+            $start = new \DateTime($row['start_date']);
+            $end = new \DateTime($row['end_date']);
+            
+            // We only count days within the target month
+            $currentMonthStart = new \DateTime("$year-$month-01");
+            $currentMonthEnd = clone $currentMonthStart;
+            $currentMonthEnd->modify('last day of this month');
+
+            $actualStart = max($start, $currentMonthStart);
+            $actualEnd = min($end, $currentMonthEnd);
+
+            if ($actualStart <= $actualEnd) {
+                $diff = $actualStart->diff($actualEnd);
+                $totalDays += ($diff->days + 1);
+            }
+        }
+
+        return $totalDays;
+    }
+
     /**
      * Get all leave types.
      */

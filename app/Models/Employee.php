@@ -83,7 +83,7 @@ class Employee
             'date_hired' => (string) $data['date_hired'],
             'status_id'  => (int)    $data['status_id'],
             'created_at' => (string) $data['created_at'],
-            'created_by' => (array_key_exists('created_by', $data) && $data['created_by'] !== '' && $data['created_by'] !== null)
+            'created_by' => (array_key_exists('created_by', $data) && (int)$data['created_by'] !== 0 && $data['created_by'] !== null)
                                 ? (int) $data['created_by'] : null,
         ];
 
@@ -155,9 +155,13 @@ class Employee
             if (!array_key_exists($column, $data)) {
                 continue;
             }
-            if (in_array($column, ['status_id', 'updated_by'], true)) {
+
+            if ($column === 'status_id') {
                 $set[] = "{$column} = :{$column}";
-                $params[$column] = ($data[$column] === '' || $data[$column] === null)
+                $params[$column] = (int) $data[$column];
+            } elseif ($column === 'updated_by') {
+                $set[] = "{$column} = :{$column}";
+                $params[$column] = ((int)$data[$column] === 0 || $data[$column] === null)
                     ? null : (int) $data[$column];
             } elseif ($column === 'password') {
                 $password = trim((string) $data[$column]);
@@ -168,7 +172,7 @@ class Employee
                 $params[$column] = password_hash($password, PASSWORD_BCRYPT);
             } else {
                 $set[] = "{$column} = :{$column}";
-                $params[$column] = ($data[$column] === '') ? null : $data[$column];
+                $params[$column] = ($data[$column] === '' || $data[$column] === null) ? null : $data[$column];
             }
         }
 

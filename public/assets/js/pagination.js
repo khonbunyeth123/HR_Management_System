@@ -74,7 +74,7 @@ function renderPagination(options) {
         if (pageNumbers.length > 0 && pageNumbers[0] > 1) {
             pageNumbersHTML += `
                 <button 
-stil                     class="pagination-page-btn w-8 h-8 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
+                    class="pagination-page-btn w-8 h-8 bg-white border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all" 
                     data-page="1"
                 >
                     1

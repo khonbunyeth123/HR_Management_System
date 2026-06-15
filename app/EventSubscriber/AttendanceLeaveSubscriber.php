@@ -42,13 +42,14 @@ class AttendanceLeaveSubscriber implements EventSubscriberInterface
             
             // Insert a special attendance record for each day of the leave
             $sql = "INSERT IGNORE INTO tbl_attendance_records (uuid, employee_id, date, scan_datetime, check_time, check_type_id, status, status_id, created_at)
-                    VALUES (:uuid, :employee_id, :date, CONCAT(:date, ' 08:00:00'), '08:00:00', :check_type_id, 'On Time', 1, NOW())";
+                    VALUES (:uuid, :employee_id, :date, CONCAT(:date_scan, ' 08:00:00'), '08:00:00', :check_type_id, 'On Time', 1, NOW())";
             
             $stmt = $db->prepare($sql);
             $stmt->execute([
                 ':uuid' => Uuid::v4(),
                 ':employee_id' => $leave['employee_id'],
                 ':date' => $formattedDate,
+                ':date_scan' => $formattedDate,
                 ':check_type_id' => $leaveCheckTypeId,
             ]);
         }

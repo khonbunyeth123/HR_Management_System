@@ -222,29 +222,84 @@ class Attendance
         return ['slot' => 0, 'label' => 'Out of Office Hours'];
     }
 
-    public function getByEmployeeId(int $employeeId, int $limit, int $offset): array
+        public function getByEmployeeIdFiltered(int $employeeId, int $limit, int $offset, ?int $month = null, ?int $year = null): array
     {
+        $params = [$employeeId];
+        $where = "a.employee_id = ? AND a.deleted_at IS NULL";
+
+        if ($month !== null) {
+            $where .= " AND MONTH(a.date) = ?";
+            $params[] = $month;
+        }
+        if ($year !== null) {
+            $where .= " AND YEAR(a.date) = ?";
+            $params[] = $year;
+        }
+
         $scanDatetimeExpr = $this->scanDatetimeExpr('a');
         $statusExpr = $this->statusExpr('a');
+        
         $sql = "SELECT a.uuid, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, {$statusExpr} AS status, ct.name AS check_type_name
                 FROM tbl_attendance_records a
                 LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
-                WHERE a.employee_id = ? AND a.deleted_at IS NULL
+                WHERE $where
                 ORDER BY {$scanDatetimeExpr} DESC, a.created_at DESC
                 LIMIT ? OFFSET ?";
+        
+        $params[] = $limit;
+        $params[] = $offset;
+        
         $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(1, $employeeId, PDO::PARAM_INT);
-        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function countByEmployeeId(int $employeeId): int
+    public function countByEmployeeIdFiltered(int $employeeId, ?int $month = null, ?int $year = null): int
     {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM tbl_attendance_records WHERE employee_id = ? AND deleted_at IS NULL");
-        $stmt->execute([$employeeId]);
+        $params = [$employeeId];
+        $where = "employee_id = ? AND deleted_at IS NULL";
+
+        if ($month !== null) {
+            $where .= " AND MONTH(date) = ?";
+            $params[] = $month;
+        }
+        if ($year !== null) {
+            $where .= " AND YEAR(date) = ?";
+            $params[] = $year;
+        }
+
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM tbl_attendance_records WHERE $where");
+        $stmt->execute($params);
         return (int)$stmt->fetchColumn();
+    }
+
+    public function getMonthlyOvertimeHours(int $employeeId, int $month, int $year): float
+    {
+        // We look for 'Overtime' status and calculate hours past 17:00:00
+        $stmt = $this->db->prepare("
+            SELECT scan_datetime 
+            FROM tbl_attendance_records 
+            WHERE employee_id = :employee_id 
+              AND MONTH(date) = :month 
+              AND YEAR(date) = :year 
+              AND status = 'Overtime' 
+              AND deleted_at IS NULL
+        ");
+        $stmt->execute(['employee_id' => $employeeId, 'month' => $month, 'year' => $year]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $totalHours = 0.0;
+        foreach ($rows as $row) {
+            $scan = new \DateTime($row['scan_datetime']);
+            $standard = new \DateTime($scan->format('Y-m-d') . ' 17:00:00');
+            
+            $diff = $scan->getTimestamp() - $standard->getTimestamp();
+            if ($diff > 0) {
+                $totalHours += ($diff / 3600);
+            }
+        }
+
+        return round($totalHours, 2);
     }
 
     private function scanDatetimeExpr(string $alias = 'tbl_attendance_records'): string
