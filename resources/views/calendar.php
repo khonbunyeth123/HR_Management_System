@@ -386,7 +386,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                         <?php
                             $label = 'Status';
                             $name = 'evStatus';
-                            $id = 'evStatus';
+                            $id = 'evStatusSelect';
                             $options = [
                                 'pending' => 'Pending',
                                 'approved' => 'Approved',
@@ -492,7 +492,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                     <!-- <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Event Actions</p> -->
                     <div class="mt-3 space-y-2">
                         <?php
-                            $label = 'Save Event';
+                            $label = '<span id="saveEventLabel">Save Event</span><span id="saveEventSpinner" class="hidden"></span>';
                             $id = 'saveEventBtn';
                             $type = 'primary';
                             $attr = 'type="submit"';
@@ -573,7 +573,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         eventUuid: el('eventUuid'),
         evTitle: el('evTitle'),
         evEventType: el('evEventType'),
-        evStatus: el('evStatus'),
+        evStatus: el('evStatusSelect'),
         evStartAt: el('evStartAt'),
         evEndAt: el('evEndAt'),
         evDescription: el('evDescription'),
@@ -584,7 +584,8 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         targetRowTemplate: el('targetRowTemplate'),
         saveEventBtn: el('saveEventBtn'),
         saveEventLabel: el('saveEventLabel'),
-        saveEventSpinner: el('saveEventSpinner'),
+        get saveEventSpinner() { return el('saveEventSpinner'); },
+        deleteEventBtn: el('deleteEventBtn'),
         confirmOverlay: el('confirmOverlay'),
         confirmTitle: el('confirmTitle'),
         confirmMessage: el('confirmMessage'),
@@ -647,16 +648,22 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         els.calendarLoadMask.classList.toggle('show', on);
     }
 
-    /* ── Helpers ── */
+    // ✅ FIXED
     function escapeHtml(v) {
         return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }  // ← this closing brace was missing
+
+    /* ── Helpers ── */
+    function toDatetimeLocal(date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
     }
+
     function toLocalInputValue(value) {
         if (!value) return '';
         const dt = parseApiDate(value);
         if (Number.isNaN(dt.getTime())) return '';
-        const pad = (n) => String(n).padStart(2,'0');
-        return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+        return toDatetimeLocal(dt);
     }
     function parseApiDate(v) { return new Date(String(v || '').replace(' ','T')); }
     function localDateKey(date) {
@@ -788,7 +795,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         if (state.fetchAbort) state.fetchAbort.abort();
         state.fetchAbort = new AbortController();
         setLoading(true);
-        els.eventTableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>';
+        els.eventTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-slate-400">Loading events...</td></tr>';
         const range = getRange();
         const params = new URLSearchParams({
             start: range.start, end: range.end,
@@ -810,7 +817,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             if (err.name === 'AbortError') return;
             state.events = [];
             renderSummary({});
-            els.eventTableBody.innerHTML = '<tr><td colspan="4" class="px-4 py-10 text-center text-rose-500">Failed to load events</td></tr>';
+            els.eventTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-10 text-center text-rose-500">Failed to load events</td></tr>';
             els.calendarPanel.innerHTML = `<div class="rounded-3xl border border-dashed border-rose-200 bg-rose-50 px-4 py-16 text-center text-rose-600 font-semibold">${escapeHtml(err.message)}</div>`;
             showToast(err.message || 'Failed to load events', 'error');
         } finally {
@@ -1109,7 +1116,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         updateWeekdayButtons();
         addTargetRow();
         els.evStatus.value = 'pending';
-        el('deleteEventBtn').classList.add('hidden');
+        els.deleteEventBtn?.classList.add('hidden');
 
         if (event) {
             els.modalTitle.textContent = 'Edit Event';
@@ -1130,13 +1137,13 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             els.targetsWrap.innerHTML = '';
             (event.targets||[]).forEach(t => addTargetRow(t));
             if (!(event.targets||[]).length) addTargetRow();
-            el('deleteEventBtn').classList.remove('hidden');
+            els.deleteEventBtn?.classList.remove('hidden');
         } else {
             els.modalTitle.textContent = 'New Event';
             els.eventUuid.value = '';
-            const start = startDate ? new Date(`${startDate}T09:00:00`) : state.current;
-            els.evStartAt.value = toLocalInputValue(start.toISOString());
-            els.evEndAt.value = toLocalInputValue(new Date(start.getTime()+60*60*1000).toISOString());
+            const start = startDate ? new Date(`${startDate}T09:00:00`) : new Date(state.current);
+            els.evStartAt.value = toDatetimeLocal(start);
+            els.evEndAt.value   = toDatetimeLocal(new Date(start.getTime() + 60 * 60 * 1000));
         }
         // clear field errors
         els.form.querySelectorAll('.field-error').forEach(e => e.classList.add('hidden'));

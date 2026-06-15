@@ -1036,6 +1036,7 @@ class CalendarEvent
             return;
         }
 
+        error_log('Calendar table check failed in CalendarEvent model.');
         throw new \RuntimeException('Calendar tables are missing. Run the calendar migration before using this module.');
     }
 
