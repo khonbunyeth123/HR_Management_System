@@ -23,12 +23,12 @@ class CalendarEvent
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function list(array $filters, string $start, string $end): array
+    public function list(array $filters, string $start, string $end, array $auth = []): array
     {
         $this->assertSchemaReady();
         $events = array_merge(
             $this->fetchCalendarEvents($start, $end),
-            $this->fetchLeaveEvents($filters, $start, $end)
+            $this->fetchLeaveEvents($filters, $start, $end, $auth)
         );
 
         $events = array_values(array_filter($events, function (array $event) use ($filters): bool {
@@ -190,13 +190,15 @@ class CalendarEvent
         $this->assertSchemaReady();
         $stmt = $this->db->prepare(
             'UPDATE tbl_calendar_events
-             SET deleted_at = NOW(), deleted_by = :deleted_by
+             SET deleted_at = :deleted_at, deleted_by = :deleted_by
              WHERE uuid = :uuid AND deleted_at IS NULL'
         );
-        return $stmt->execute([
+        $stmt->execute([
+            ':deleted_at' => date('Y-m-d H:i:s'),
             ':deleted_by' => $deletedBy,
             ':uuid' => $uuid,
         ]);
+        return $stmt->rowCount() > 0;
     }
 
     public function updateStatus(string $uuid, string $status, ?int $actorId = null): bool
@@ -281,12 +283,22 @@ class CalendarEvent
         return $results;
     }
 
-    private function fetchLeaveEvents(array $filters, string $start, string $end): array
+    private function fetchLeaveEvents(array $filters, string $start, string $end, array $auth = []): array
     {
+        $userId = (int) ($auth['user_id'] ?? 0);
+        $isAdmin = (bool) ($auth['is_admin'] ?? false);
+
         $where = [
             'la.deleted_at IS NULL',
             'la.start_date <= :end_date',
             'la.end_date >= :start_date',
+            // Enterprise privacy:
+            // 1. Approved (1) is visible to everyone
+            // 2. Pending (0) is visible only to requester or HR/Admin
+            // 3. Rejected (2) and Cancelled (3) are hidden from calendar
+            '(la.status_id = 1' . 
+            ($isAdmin ? ' OR la.status_id = 0' : ($userId > 0 ? " OR (la.status_id = 0 AND e.user_id = $userId)" : '')) . 
+            ')'
         ];
         $params = [
             ':start_date' => $start,

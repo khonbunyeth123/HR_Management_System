@@ -346,9 +346,12 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             ?>
         </div>
 
-        <form id="eventForm" class="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]" novalidate>
+        <form id="eventForm" class="p-5 space-y-4" novalidate>
             <input type="hidden" id="eventUuid">
-            <div class="space-y-4 p-5">
+
+            <!-- Event Details Card -->
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <h3 class="text-sm font-black text-slate-900 mb-4">Event Details</h3>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="md:col-span-2">
                         <?php
@@ -357,7 +360,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                             $id = 'evTitle';
                             $placeholder = 'Quarterly planning meeting';
                             $required = true;
-                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            $class = 'rounded-xl px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none';
                             include 'component/input.php';
                         ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Title is required.</p>
@@ -377,7 +380,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                                 'task' => 'Task',
                             ];
                             $placeholder = 'Choose type';
-                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            $class = 'rounded-xl px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none';
                             include 'component/select.php';
                         ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Event type is required.</p>
@@ -394,10 +397,21 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                                 'cancelled' => 'Cancelled',
                             ];
                             $value = 'pending';
-                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            $class = 'rounded-xl px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none';
                             include 'component/select.php';
                         ?>
                     </div>
+                    <div class="md:col-span-2">
+                        <label for="evDescription" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Description</label>
+                        <textarea id="evDescription" rows="2" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none" placeholder="Notes for the team..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Card -->
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <h3 class="text-sm font-black text-slate-900 mb-4">Schedule</h3>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <?php
                             $label = 'Start';
@@ -405,7 +419,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                             $id = 'evStartAt';
                             $type = 'datetime-local';
                             $required = true;
-                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            $class = 'rounded-xl px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none';
                             include 'component/input.php';
                         ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">Start date is required.</p>
@@ -417,96 +431,49 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                             $id = 'evEndAt';
                             $type = 'datetime-local';
                             $required = true;
-                            $class = 'rounded-xl px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none';
+                            $class = 'rounded-xl px-3 py-2 text-sm font-semibold focus:border-indigo-400 focus:outline-none';
                             include 'component/input.php';
                         ?>
                         <p class="field-error hidden mt-1 text-xs text-rose-500">End date is required.</p>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="evDescription" class="mb-1 block text-xs font-bold normal-case tracking-[0.15em] text-slate-400">Description</label>
-                        <textarea id="evDescription" rows="3" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none" placeholder="Notes for the team..."></textarea>
-                    </div>
-                </div>
-
-                <div class="rounded-3xl border border-slate-100 bg-slate-50 p-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-black text-slate-900">Assignments</p>
-                            <p class="text-xs text-slate-500">Company-wide, employees, departments, branches, or teams.</p>
-                        </div>
-                        <?php
-                            $label = 'Add target';
-                            $id = 'addTargetBtn';
-                            $type = 'secondary';
-                            $size = 'xs';
-                            include 'component/button.php';
-                        ?>
-                    </div>
-                    <div id="targetsWrap" class="mt-4 space-y-3"></div>
                 </div>
             </div>
 
-            <div class="space-y-4 border-t border-slate-100 bg-slate-50/60 p-5 lg:border-l lg:border-t-0">
-                <div class="rounded-2xl bg-white p-3 shadow-sm">
-                    <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Recurrence</p>
-                    <div class="mt-3 space-y-3">
-                        <div>
-                            <label for="recurrenceFrequency" class="mb-1 block text-xs font-bold text-slate-500">Frequency</label>
-                            <select id="recurrenceFrequency" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
-                                <option value="none">No recurrence</option>
-                                <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="yearly">Yearly</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label for="recurrenceInterval" class="mb-1 block text-xs font-bold text-slate-500">Interval</label>
-                                <input id="recurrenceInterval" type="number" min="1" value="1" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
-                            </div>
-                            <div>
-                                <label for="recurrenceUntil" class="mb-1 block text-xs font-bold text-slate-500">Until</label>
-                                <input id="recurrenceUntil" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold focus:border-indigo-400 focus:outline-none">
-                            </div>
-                        </div>
-                        <div>
-                            <p class="mb-1 text-xs font-bold text-slate-500">Weekly days</p>
-                            <div class="grid grid-cols-7 gap-0.5">
-                            <?php foreach(['mon','tue','wed','thu','fri','sat','sun'] as $d): ?>
-                            <?php
-                                $label = ucfirst($d);
-                                $attr = 'type="button" data-weekday="'.$d.'" aria-pressed="false"';
-                                $class = 'weekday-btn !px-1 !py-1 !text-[9px] !rounded-md w-full';
-                                $size = 'xs';
-                                $type = 'secondary';
-                                include 'component/button.php';
-                            ?>
-                            <?php endforeach; ?>
-                            </div>
-                        </div>
+            <!-- Assignments Card -->
+            <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900">Assignments</h3>
+                        <p class="text-xs text-slate-500">Company-wide, employees, departments, branches, or teams.</p>
                     </div>
+                    <?php
+                        $label = 'Add target';
+                        $id = 'addTargetBtn';
+                        $type = 'secondary';
+                        $size = 'xs';
+                        include 'component/button.php';
+                    ?>
                 </div>
+                <div id="targetsWrap" class="space-y-3"></div>
+            </div>
 
-                <div class="rounded-2xl bg-white p-3 shadow-sm">
-                    <!-- <p class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Event Actions</p> -->
-                    <div class="mt-3 space-y-2">
-                        <?php
-                            $label = '<span id="saveEventLabel">Save Event</span><span id="saveEventSpinner" class="hidden"></span>';
-                            $id = 'saveEventBtn';
-                            $type = 'primary';
-                            $attr = 'type="submit"';
-                            include 'component/button.php';
-                        ?>
-                        <?php
-                            $label = 'Delete Event';
-                            $id = 'deleteEventBtn';
-                            $type = 'danger';
-                            $class = 'hidden w-full';
-                            include 'component/button.php';
-                        ?>
-                    </div>
-                </div>
+            <!-- Actions -->
+            <div class="flex flex-col gap-2 pt-2">
+                <?php
+                    $label = '<span id="saveEventLabel">Save Event</span><span id="saveEventSpinner" class="hidden"></span>';
+                    $id = 'saveEventBtn';
+                    $type = 'primary';
+                    $attr = 'type="submit"';
+                    $class = 'w-full text-base py-3';
+                    include 'component/button.php';
+                ?>
+                <?php
+                    $label = 'Delete Event';
+                    $id = 'deleteEventBtn';
+                    $type = 'danger';
+                    $class = 'hidden w-full text-sm py-2';
+                    include 'component/button.php';
+                ?>
             </div>
         </form>
     </div>
@@ -541,7 +508,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         filters: { employee_id:'', department:'', branch:'', event_type:'', status:'' },
         events: [],
         options: { employees:[], departments:[], branches:[], event_types:[], statuses:[] },
-        selectedWeekdays: new Set(),
         editing: null,
         filterDebounce: null,
         fetchAbort: null,
@@ -577,9 +543,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         evStartAt: el('evStartAt'),
         evEndAt: el('evEndAt'),
         evDescription: el('evDescription'),
-        recurrenceFrequency: el('recurrenceFrequency'),
-        recurrenceInterval: el('recurrenceInterval'),
-        recurrenceUntil: el('recurrenceUntil'),
         targetsWrap: el('targetsWrap'),
         targetRowTemplate: el('targetRowTemplate'),
         saveEventBtn: el('saveEventBtn'),
@@ -1127,17 +1090,15 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             els.evStartAt.value = toLocalInputValue(event.start);
             els.evEndAt.value = toLocalInputValue(event.end);
             els.evDescription.value = event.description || '';
-            if (event.recurrence_rule) {
-                els.recurrenceFrequency.value = event.recurrence_rule.frequency || 'none';
-                els.recurrenceInterval.value = event.recurrence_rule.interval || 1;
-                els.recurrenceUntil.value = event.recurrence_rule.until || '';
-                state.selectedWeekdays = new Set((event.recurrence_rule.days||[]).map(d=>String(d).slice(0,3)));
-                updateWeekdayButtons();
-            }
+            
             els.targetsWrap.innerHTML = '';
             (event.targets||[]).forEach(t => addTargetRow(t));
             if (!(event.targets||[]).length) addTargetRow();
-            els.deleteEventBtn?.classList.remove('hidden');
+            
+            // Only show delete button for non-leave events
+            if (event.source_type !== 'leave' && canManageEvents()) {
+                els.deleteEventBtn?.classList.remove('hidden');
+            }
         } else {
             els.modalTitle.textContent = 'New Event';
             els.eventUuid.value = '';
@@ -1152,16 +1113,22 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         els.evTitle.focus();
     }
 
-    function openEventFromView(uuid, sourceType) {
+    function openEventFromView(uuid, sourceType, isView = false) {
         const ev = state.events.find(e => e.uuid === uuid && e.source_type === sourceType);
         if (!ev) return;
-        if (sourceType === 'leave') { openEventModal(ev); return; }
-        openEventModal(ev);
+        
+        // If it's a view action, open the modal regardless of source type.
+        // The modal content itself should handle what to display/hide based on event type.
+        openEventModal(ev); 
+        
+        // If it was meant to be an edit and is a leave, we stop it from proceeding (already handled by other logic).
+        // But for 'view', we should allow the modal to open.
     }
 
     function editEvent(uuid) {
         const ev = state.events.find(e => e.uuid === uuid);
-        if (ev) openEventModal(ev);
+        // Do not open edit modal for leave applications
+        if (ev && ev.source_type !== 'leave') openEventModal(ev);
     }
 
     function closeModal() {
@@ -1203,9 +1170,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     }
 
     function gatherRecurrence() {
-        const freq = els.recurrenceFrequency.value;
-        if (freq === 'none') return null;
-        return { frequency: freq, interval: Math.max(1, parseInt(els.recurrenceInterval.value||'1',10)), until: els.recurrenceUntil.value || null, days: [...state.selectedWeekdays] };
+        return null;
     }
 
     /* ── Save event ── */
@@ -1248,24 +1213,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         }
     }
 
-    /* ── Delete event ── */
-    async function deleteEvent() {
-        const uuid = els.eventUuid.value;
-        if (!uuid) return;
-        const { confirmed } = await openConfirm({ title:'Delete event', message:'This will permanently delete the event. This action cannot be undone.', okLabel:'Delete', okClass:'danger' });
-        if (!confirmed) return;
-        try {
-            const res = await fetch(`/api/calendar/events/${uuid}`, { method:'DELETE' });
-            const result = await res.json();
-            if (!result.success) throw new Error(result.message || 'Unable to delete event');
-            closeModal();
-            showToast('Event deleted.', 'info');
-            await loadEvents();
-        } catch (err) {
-            showToast(err.message || 'Delete failed', 'error');
-        }
-    }
-
     async function requestActionConfirmation(action, uuid) {
         const labels = {
             approve: { title: 'Approve leave request', message: 'Are you sure you want to approve this leave request?', okLabel: 'Approve', okClass: 'success-btn' },
@@ -1293,6 +1240,10 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             }
             const json = await res.json();
             if (!json.success) throw new Error(json.message || 'Action failed');
+            
+            // If the deleted/modified event was open in the modal, close it
+            if (els.eventUuid.value === uuid) closeModal();
+            
             showToast(json.message || 'Action completed.', 'success');
             await loadEvents();
         } catch (err) {

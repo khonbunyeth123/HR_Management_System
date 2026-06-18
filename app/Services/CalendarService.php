@@ -13,9 +13,9 @@ class CalendarService
         private readonly LeaveService $leaveService
     ) {}
 
-    public function list(array $filters, string $start, string $end): array
+    public function list(array $filters, string $start, string $end, array $auth = []): array
     {
-        return $this->model->list($filters, $start, $end);
+        return $this->model->list($filters, $start, $end, $auth);
     }
 
     public function filters(): array

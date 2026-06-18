@@ -196,15 +196,21 @@ class Leave {
     public function getByEmployeeId(array $filters, int $limit, int $offset): array
     {
         $employeeId = (int)$filters['employee_id'];
-        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM tbl_leave_applications WHERE employee_id = :employee_id");
+        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM tbl_leave_applications WHERE employee_id = :employee_id AND deleted_at IS NULL");
         $countStmt->execute([':employee_id' => $employeeId]);
         $total = (int) $countStmt->fetchColumn();
 
         $stmt = $this->db->prepare("
-            SELECT l.id, l.uuid, t.name AS leave_type, l.start_date, l.end_date, l.reason, l.status_id, l.created_at
+            SELECT l.id, l.uuid, t.name AS leave_type, l.start_date, l.end_date, l.reason, l.status_id, l.created_at,
+                   CASE 
+                       WHEN l.status_id = 0 THEN 'pending'
+                       WHEN l.status_id = 1 THEN 'approved'
+                       WHEN l.status_id = 2 THEN 'rejected'
+                       ELSE 'pending'
+                   END AS status
             FROM tbl_leave_applications l
             INNER JOIN tbl_leave_types t ON l.leave_type_id = t.id
-            WHERE l.employee_id = :employee_id
+            WHERE l.employee_id = :employee_id AND l.deleted_at IS NULL
             ORDER BY l.created_at DESC
             LIMIT :limit OFFSET :offset
         ");

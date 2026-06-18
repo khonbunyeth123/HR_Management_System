@@ -26,10 +26,15 @@ class ControllerCalendar
                 'status' => (string) ($_GET['status'] ?? ''),
             ];
 
+            $auth = [
+                'user_id' => (int) ($_SESSION['user_id'] ?? 0),
+                'is_admin' => in_array(strtolower((string) ($_SESSION['role'] ?? $_SESSION['role_name'] ?? '')), ['admin', 'hr'], true) || (int) ($_SESSION['role_id'] ?? 0) === 1
+            ];
+
             Response::json([
                 'success' => true,
                 'message' => 'Calendar events retrieved',
-                'data' => $this->service->list($filters, substr($start, 0, 10), substr($end, 0, 10)),
+                'data' => $this->service->list($filters, substr($start, 0, 10), substr($end, 0, 10), $auth),
             ]);
         } catch (\InvalidArgumentException $e) {
             Response::error($e->getMessage(), 422);
@@ -109,11 +114,26 @@ class ControllerCalendar
     public function destroy(string $uuid): void
     {
         try {
+            // Check if the event exists in calendar events
+            $event = $this->service->getEvent($uuid);
+            if (!$event) {
+                // Check if it's a leave application to provide a helpful error
+                $pdo = \App\Core\Database::getInstance()->getConnection();
+                $stmt = $pdo->prepare("SELECT id FROM tbl_leave_applications WHERE uuid = ? AND deleted_at IS NULL");
+                $stmt->execute([$uuid]);
+                if ($stmt->fetch()) {
+                    Response::error('This event is a leave application and cannot be deleted from the calendar.', 400);
+                    return;
+                }
+                Response::notFound('Calendar event not found');
+                return;
+            }
+
             $actorId = (int) ($_SESSION['user_id'] ?? 0);
             $ok = $this->service->delete($uuid, $actorId ?: null);
 
             if (!$ok) {
-                Response::notFound('Calendar event not found');
+                Response::error('Failed to delete calendar event', 500);
                 return;
             }
 
