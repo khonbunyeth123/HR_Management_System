@@ -7,7 +7,7 @@
             ob_start();
         ?>
             <div class="flex items-center gap-2">
-                <span class="text-[10px] font-black normal-case tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md" id="totalCount">0 Staff</span>
+                <span class="text-[10px] font-bold normal-case tracking-wider bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-md" id="totalCount">0 Staff</span>
                 <?php 
                     $label = 'Add Employee'; $type = 'primary'; $size = 'xs'; $icon = 'mdi:plus-circle'; $attr = 'onclick="openCreateModal()"'; $id = null;
                     include 'component/button.php'; 
@@ -58,15 +58,15 @@
                 <table class="w-full text-left text-[11px]">
                     <thead class="bg-slate-900 text-white sticky top-0 z-10">
                         <tr>
-                            <th class="px-3 py-2 font-black  tracking-wider">Emp ID</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Name</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Username</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Phone</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Position</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Department</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Hired</th>
-                            <th class="px-3 py-2 font-black  tracking-wider">Status</th>
-                            <th class="px-3 py-2 font-black  tracking-wider text-center">Actions</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Emp ID</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Name</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Username</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Phone</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Position</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Department</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Hired</th>
+                            <th class="px-3 py-2 font-bold tracking-wider">Status</th>
+                            <th class="px-3 py-2 font-bold tracking-wider text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="employeeTableBody" class="divide-y divide-slate-100 bg-white">
@@ -74,7 +74,7 @@
                             <td colspan="9" class="px-3 py-12 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <span class="iconify text-2xl animate-spin opacity-50" data-icon="mdi:loading"></span>
-                                    <p class="text-[10px] font-black  tracking-widest">Loading...</p>
+                                    <p class="text-[10px] font-semibold tracking-widest">Loading...</p>
                                 </div>
                             </td>
                         </tr>
@@ -102,7 +102,7 @@
             ob_start();
         ?>
             <div class="flex flex-col">
-                <h2 id="modalTitle" class="text-sm font-black text-slate-800">Add New Employee</h2>
+                <h2 id="modalTitle" class="text-sm font-bold text-slate-800">Add New Employee</h2>
                 <p class="text-[10px] text-slate-500 font-medium">Fill in the employee details below.</p>
             </div>
         <?php 
@@ -119,7 +119,7 @@
                 
                 <!-- Personal Information -->
                 <div class="space-y-3">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-indigo-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                         <span class="iconify" data-icon="mdi:account"></span>
                         Personal Information
                     </h3>
@@ -134,8 +134,8 @@
                                 class="hidden absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] flex items-center justify-center border-2 border-white hover:bg-rose-600 transition-colors">✕</button>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p id="photoFileName" class="hidden text-[10px] font-black text-indigo-600 truncate mb-0.5"></p>
-                            <p class="text-[11px] font-black text-slate-700">Profile Photo</p>
+                            <p id="photoFileName" class="hidden text-[10px] font-semibold text-indigo-600 truncate mb-0.5"></p>
+                            <p class="text-[11px] font-semibold text-slate-700">Profile Photo</p>
                             <p id="photoHint" class="text-[9px] text-slate-400 uppercase font-bold tracking-tight">JPG, PNG, WEBP — max 2 MB</p>
                             <p id="photoError" class="hidden text-[9px] text-rose-500 font-bold mt-1"></p>
                         </div>
@@ -202,7 +202,7 @@
 
                 <!-- Job Information -->
                 <div class="space-y-3">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-emerald-500 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                         <span class="iconify" data-icon="mdi:briefcase-outline"></span>
                         Job Information
                     </h3>
@@ -340,7 +340,7 @@ function statusBadge(statusId) {
     const style = styles[statusId] || 'bg-slate-50 text-slate-400 border-slate-100';
     const label = labels[statusId] || 'Unknown';
 
-    return `<span class="${style} px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">${label}</span>`;
+    return `<span class="${style} px-1.5 py-0.5 rounded text-[9px] font-bold normal-case tracking-wider border">${label}</span>`;
 }
 
 function getCurrentDateString() {
@@ -377,7 +377,7 @@ function showToast(title, message, type = 'success') {
     toast.innerHTML = `
         ${iconHtml}
         <div>
-            <p class="text-xs font-black text-slate-800">${title}</p>
+            <p class="text-xs font-semibold text-slate-800">${title}</p>
             <p class="text-[10px] text-slate-500 font-medium">${message}</p>
         </div>
     `;
@@ -540,24 +540,24 @@ function renderTable(data) {
 
         return `
         <tr class="hover:bg-slate-50 transition-colors group">
-            <td class="px-3 py-1.5 text-[10px] font-black text-slate-500 normal-case tracking-tight">${e.employee_code || '-'}</td>
+            <td class="px-3 py-1.5 text-[10px] font-medium text-slate-500 normal-case tracking-tight">${e.employee_code || '-'}</td>
             <td class="px-3 py-1.5">
                 <div class="flex items-center gap-2">
-                    <span class="font-black text-slate-700  group-hover:text-indigo-600 transition-colors">${e.full_name}</span>
+                    <span class="font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">${e.full_name}</span>
                 </div>
             </td>
-            <td class="px-3 py-1.5 text-[10px] font-bold text-slate-600 normal-case tracking-tighter">@${e.username}</td>
-            <td class="px-3 py-1.5 text-[10px] font-black text-slate-600">${e.phone || '-'}</td>
-            <td class="px-3 py-1.5 text-[10px] font-black text-slate-600 normal-case tracking-tight">${e.position}</td>
-            <td class="px-3 py-1.5 text-[10px] font-black text-slate-400 normal-case tracking-tight">${e.department}</td>
-            <td class="px-3 py-1.5 text-[9px] font-black text-slate-400 normal-case tracking-tight">${e.date_hired ?? '-'}</td>
+            <td class="px-3 py-1.5 text-[10px] font-medium text-slate-600 normal-case tracking-tight">@${e.username}</td>
+            <td class="px-3 py-1.5 text-[10px] font-medium text-slate-600">${e.phone || '-'}</td>
+            <td class="px-3 py-1.5 text-[10px] font-medium text-slate-600 normal-case tracking-tight">${e.position}</td>
+            <td class="px-3 py-1.5 text-[10px] font-medium text-slate-400 normal-case tracking-tight">${e.department}</td>
+            <td class="px-3 py-1.5 text-[9px] font-medium text-slate-400 normal-case tracking-tight">${e.date_hired ?? '-'}</td>
             <td class="px-3 py-1.5">${statusBadge(e.status_id)}</td>
             <td class="px-3 py-1.5">
                 <div class="flex gap-1 justify-center">
-                    <button type="button" class="js-edit-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 text-[9px] font-black normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}">
+                    <button type="button" class="js-edit-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 text-[9px] font-bold normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}">
                         <span class="iconify" data-icon="mdi:pencil"></span> Edit
                     </button>
-                    <button type="button" class="js-delete-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-[9px] font-black normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
+                    <button type="button" class="js-delete-employee inline-flex items-center gap-0.5 px-2 py-0.5 bg-white border border-slate-200 text-slate-600 rounded-md hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 text-[9px] font-bold normal-case tracking-wider transition-all shadow-sm active:scale-95" data-id="${encodeDataAttr(e.id)}" data-name="${encodeDataAttr(e.full_name || '')}">
                         <span class="iconify" data-icon="mdi:trash-can-outline"></span> Del
                     </button>
                 </div>
