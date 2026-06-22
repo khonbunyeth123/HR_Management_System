@@ -4,9 +4,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Default username if session not set
-$uname = $_SESSION['uname'] ?? 'User';
+// Default user info if session not set
+$uname = $_SESSION['full_name'] ?? $_SESSION['username'] ?? $_SESSION['uname'] ?? 'User';
+$role = $_SESSION['role'] ?? 'User';
+$displayName = htmlspecialchars($uname, ENT_QUOTES, 'UTF-8');
+$displayRole = htmlspecialchars($role, ENT_QUOTES, 'UTF-8');
 ?>
+
 <!-- Top Navigation -->
 <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 w-full border-b border-slate-100">
   <div class="w-full px-4">
@@ -40,15 +44,14 @@ $uname = $_SESSION['uname'] ?? 'User';
           <div
             class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-xs font-black shadow-md shadow-indigo-100">
             <?php
-            $name = htmlspecialchars($_SESSION['uname'] ?? 'User');
-            echo strtoupper(substr($name, 0, 1));
+            echo strtoupper(substr($displayName, 0, 1));
             ?>
           </div>
           <div class="flex flex-col">
             <span class="text-slate-900 text-[10px] font-black leading-none mb-0.5">
-                <?= htmlspecialchars($_SESSION['uname'] ?? 'User'); ?>
+                <?= $displayName; ?>
             </span>
-            <span class="text-slate-400 text-[9px] font-bold">Admin</span>
+            <span class="text-slate-400 text-[9px] font-bold"><?= $displayRole; ?></span>
           </div>
         </div>
 
