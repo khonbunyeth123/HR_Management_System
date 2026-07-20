@@ -115,7 +115,7 @@
 
     <!-- Footer -->
     <p class="text-center text-blue-100 mt-6 text-sm">
-        © 2025 Employee Management System. All rights reserved.
+        © 2026 Employee Management System. All rights reserved.
     </p>
 </div>
 

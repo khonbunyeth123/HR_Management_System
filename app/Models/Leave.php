@@ -207,7 +207,13 @@ class Leave {
                        WHEN l.status_id = 1 THEN 'approved'
                        WHEN l.status_id = 2 THEN 'rejected'
                        ELSE 'pending'
-                   END AS status
+                   END AS status,
+                   CASE
+                       WHEN l.status_id = 0 THEN 'pending'
+                       WHEN l.status_id = 1 THEN 'approved'
+                       WHEN l.status_id = 2 THEN 'rejected'
+                       ELSE 'pending'
+                   END AS leave_status
             FROM tbl_leave_applications l
             INNER JOIN tbl_leave_types t ON l.leave_type_id = t.id
             WHERE l.employee_id = :employee_id AND l.deleted_at IS NULL

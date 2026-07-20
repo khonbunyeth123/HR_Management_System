@@ -165,6 +165,12 @@ class LeaveService
     {
         if (!isset($input['leave_type_id']) || $input['leave_type_id'] === '') {
             $leaveTypeName = trim((string) ($input['leave_type'] ?? $input['leave_type_name'] ?? ''));
+            
+            // Map 'Personal Leave' to 'Casual Leave' if necessary
+            if (strtolower($leaveTypeName) === 'personal leave') {
+                $leaveTypeName = 'Casual Leave';
+            }
+
             if ($leaveTypeName !== '') {
                 $input['leave_type_id'] = $this->repository->getLeaveTypeIdByName($leaveTypeName);
             }
