@@ -218,6 +218,8 @@ class Router
             '/api/auth/login',
             '/api/auth/admin/login',
             '/api/auth/employee/login',
+            '/api/auth/forgot-password',
+            '/api/auth/reset-password',
             '/api/attendance/qr',
             '/api/attendance/checkin',
             '/api/employees',

@@ -283,7 +283,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                         <h2 class="text-sm font-black normal-case tracking-[0.15em] text-slate-500">Live Summary</h2>
                         <span id="eventCountBadge" class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black text-indigo-700" aria-live="polite">0 events</span>
                     </div>
-                    <div id="summaryGrid" class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <div id="summaryGrid" class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
                         <div class="rounded-2xl bg-slate-50 p-3">
                             <p class="text-[10px] font-black normal-case tracking-[0.15em] text-slate-400">Pending</p>
                             <p id="summaryPending" class="mt-2 text-2xl font-black text-slate-900">0</p>
@@ -295,10 +295,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                         <div class="rounded-2xl bg-rose-50 p-3">
                             <p class="text-[10px] font-black normal-case tracking-[0.15em] text-rose-400">Rejected</p>
                             <p id="summaryRejected" class="mt-2 text-2xl font-black text-rose-700">0</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-3">
-                            <p class="text-[10px] font-black normal-case tracking-[0.15em] text-slate-400">Cancelled</p>
-                            <p id="summaryCancelled" class="mt-2 text-2xl font-black text-slate-900">0</p>
                         </div>
                     </div>
                 </div>
@@ -524,7 +520,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         summaryPending: el('summaryPending'),
         summaryApproved: el('summaryApproved'),
         summaryRejected: el('summaryRejected'),
-        summaryCancelled: el('summaryCancelled'),
         eventCountBadge: el('eventCountBadge'),
         employeeFilter: el('employeeFilter'),
         departmentFilter: el('departmentFilter'),
@@ -805,7 +800,6 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         els.summaryPending.textContent   = summary.pending   || 0;
         els.summaryApproved.textContent  = summary.approved  || 0;
         els.summaryRejected.textContent  = summary.rejected  || 0;
-        els.summaryCancelled.textContent = summary.cancelled || 0;
     }
 
     /* ── Grouped events by date ── */

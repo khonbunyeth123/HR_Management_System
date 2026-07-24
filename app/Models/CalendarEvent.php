@@ -295,9 +295,10 @@ class CalendarEvent
             // Enterprise privacy:
             // 1. Approved (1) is visible to everyone
             // 2. Pending (0) is visible only to requester or HR/Admin
-            // 3. Rejected (2) and Cancelled (3) are hidden from calendar
-            '(la.status_id = 1' . 
-            ($isAdmin ? ' OR la.status_id = 0' : ($userId > 0 ? " OR (la.status_id = 0 AND e.user_id = $userId)" : '')) . 
+            // 3. Rejected (2) is visible to everyone
+            // 4. Cancelled (3) is visible to everyone
+            '(la.status_id = 1 OR la.status_id = 2 OR la.status_id = 3' . 
+            ($isAdmin ? ' OR la.status_id = 0' : '') . 
             ')'
         ];
         $params = [
@@ -330,7 +331,8 @@ class CalendarEvent
                     WHEN la.status_id = 0 THEN \'pending\'
                     WHEN la.status_id = 1 THEN \'approved\'
                     WHEN la.status_id = 2 THEN \'rejected\'
-                    ELSE \'cancelled\'
+                    WHEN la.status_id = 3 THEN \'cancelled\'
+                    ELSE \'unknown\'
                 END AS status,
                 CONCAT(la.start_date, \' 00:00:00\') AS start_at,
                 CONCAT(la.end_date, \' 23:59:59\') AS end_at,
@@ -959,7 +961,6 @@ class CalendarEvent
             'pending' => 0,
             'approved' => 0,
             'rejected' => 0,
-            'cancelled' => 0,
             'leave' => 0,
             'holiday' => 0,
             'shift' => 0,
