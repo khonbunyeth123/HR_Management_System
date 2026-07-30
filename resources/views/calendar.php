@@ -694,11 +694,11 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
                 <button type="button" class="action-menu-toggle inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white ${compact ? 'px-3 py-2 text-xs' : 'px-3 py-2 text-sm'} font-black text-slate-700 hover:bg-slate-50 transition" aria-expanded="false">
                     <span class="iconify" data-icon="mdi:dots-vertical" aria-hidden="true"></span>
                 </button>
-                <div class="action-menu-panel absolute right-0 top-full z-50 mt-2 hidden w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
+                <div class="action-menu-panel fixed hidden min-w-max overflow-visible rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10" style="z-index:9000;">
                     ${items.map(item => `
-                        <button type="button" class="flex w-full items-center gap-2 border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-700 last:border-b-0 hover:bg-slate-50 ${item.className || ''}" data-action="${escapeHtml(item.action)}" data-uuid="${escapeHtml(item.uuid)}">
-                            ${item.icon ? `<span class="iconify text-base ${item.iconClass || ''}" data-icon="${item.icon}" aria-hidden="true"></span>` : ''}
-                            <span>${escapeHtml(item.label)}</span>
+                        <button type="button" class="flex w-full min-w-48 items-center gap-2 border-b border-slate-100 px-4 py-3 text-left text-sm font-semibold text-slate-700 last:border-b-0 hover:bg-slate-50 whitespace-nowrap ${item.className || ''}" data-action="${escapeHtml(item.action)}" data-uuid="${escapeHtml(item.uuid)}">
+                            ${item.icon ? `<span class="iconify shrink-0 text-base ${item.iconClass || ''}" data-icon="${item.icon}" aria-hidden="true"></span>` : ''}
+                            <span class="shrink-0">${escapeHtml(item.label)}</span>
                         </button>
                     `).join('')}
                 </div>
@@ -1296,8 +1296,40 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     window.rejectLeaveRequest = rejectLeaveRequest;
 
     function closeActionMenus() {
-        document.querySelectorAll('.action-menu-panel').forEach(menu => menu.classList.add('hidden'));
+        document.querySelectorAll('.action-menu-panel').forEach(menu => {
+            menu.classList.add('hidden');
+            menu.style.left = '';
+            menu.style.top = '';
+            if (menu.__actionMenuOwner) {
+                menu.__actionMenuOwner.appendChild(menu);
+            }
+        });
         document.querySelectorAll('.action-menu-toggle').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
+    }
+
+    function positionActionMenu(toggle, panel) {
+        const gap = 8;
+        const edgePadding = 12;
+        const toggleRect = toggle.getBoundingClientRect();
+
+        panel.style.left = '0px';
+        panel.style.top = '0px';
+        panel.__actionMenuOwner = panel.__actionMenuOwner || panel.parentElement;
+        document.body.appendChild(panel);
+        panel.classList.remove('hidden');
+
+        const panelRect = panel.getBoundingClientRect();
+        const left = Math.min(
+            Math.max(edgePadding, toggleRect.right - panelRect.width),
+            window.innerWidth - panelRect.width - edgePadding
+        );
+        const openBelow = toggleRect.bottom + gap + panelRect.height <= window.innerHeight - edgePadding;
+        const top = openBelow
+            ? toggleRect.bottom + gap
+            : Math.max(edgePadding, toggleRect.top - panelRect.height - gap);
+
+        panel.style.left = `${left}px`;
+        panel.style.top = `${top}px`;
     }
 
     document.addEventListener('click', (e) => {
@@ -1308,7 +1340,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             const willOpen = panel?.classList.contains('hidden');
             closeActionMenus();
             if (panel && willOpen) {
-                panel.classList.remove('hidden');
+                positionActionMenu(toggle, panel);
                 toggle.setAttribute('aria-expanded', 'true');
             }
             return;
