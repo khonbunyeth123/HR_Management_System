@@ -507,6 +507,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         editing: null,
         filterDebounce: null,
         fetchAbort: null,
+        modalReadOnly: false,
     };
 
     /* ── Element refs ── */
@@ -540,6 +541,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         evDescription: el('evDescription'),
         targetsWrap: el('targetsWrap'),
         targetRowTemplate: el('targetRowTemplate'),
+        addTargetBtn: el('addTargetBtn'),
         saveEventBtn: el('saveEventBtn'),
         saveEventLabel: el('saveEventLabel'),
         get saveEventSpinner() { return el('saveEventSpinner'); },
@@ -1065,7 +1067,19 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         return valid;
     }
 
-    function openEventModal(event = null, startDate = null) {
+    function setModalReadOnly(readOnly) {
+        state.modalReadOnly = readOnly;
+        [els.evTitle, els.evEventType, els.evStatus, els.evStartAt, els.evEndAt, els.evDescription].forEach(input => {
+            if (input) input.disabled = readOnly;
+        });
+        els.addTargetBtn?.classList.toggle('hidden', readOnly);
+        els.saveEventBtn?.classList.toggle('hidden', readOnly);
+        els.targetsWrap.querySelectorAll('input, select, button').forEach(input => {
+            input.disabled = readOnly;
+        });
+    }
+
+    function openEventModal(event = null, startDate = null, readOnly = false) {
         state.editing = event;
         els.form.reset();
         els.targetsWrap.innerHTML = '';
@@ -1076,7 +1090,8 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         els.deleteEventBtn?.classList.add('hidden');
 
         if (event) {
-            els.modalTitle.textContent = 'Edit Event';
+            const isReadOnly = readOnly || event.source_type === 'leave';
+            els.modalTitle.textContent = isReadOnly ? 'View Event' : 'Edit Event';
             els.eventUuid.value = event.uuid;
             els.evTitle.value = event.title || '';
             els.evEventType.value = event.event_type || '';
@@ -1090,15 +1105,17 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
             if (!(event.targets||[]).length) addTargetRow();
             
             // Only show delete button for non-leave events
-            if (event.source_type !== 'leave' && canManageEvents()) {
+            if (!isReadOnly && event.source_type !== 'leave' && canManageEvents()) {
                 els.deleteEventBtn?.classList.remove('hidden');
             }
+            setModalReadOnly(isReadOnly);
         } else {
             els.modalTitle.textContent = 'New Event';
             els.eventUuid.value = '';
             const start = startDate ? new Date(`${startDate}T09:00:00`) : new Date(state.current);
             els.evStartAt.value = toDatetimeLocal(start);
             els.evEndAt.value   = toDatetimeLocal(new Date(start.getTime() + 60 * 60 * 1000));
+            setModalReadOnly(false);
         }
         // clear field errors
         els.form.querySelectorAll('.field-error').forEach(e => e.classList.add('hidden'));
@@ -1107,16 +1124,10 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         els.evTitle.focus();
     }
 
-    function openEventFromView(uuid, sourceType, isView = false) {
+    function openEventFromView(uuid, sourceType) {
         const ev = state.events.find(e => e.uuid === uuid && e.source_type === sourceType);
         if (!ev) return;
-        
-        // If it's a view action, open the modal regardless of source type.
-        // The modal content itself should handle what to display/hide based on event type.
-        openEventModal(ev); 
-        
-        // If it was meant to be an edit and is a leave, we stop it from proceeding (already handled by other logic).
-        // But for 'view', we should allow the modal to open.
+        openEventModal(ev, null, true);
     }
 
     function editEvent(uuid) {
@@ -1170,6 +1181,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
     /* ── Save event ── */
     async function saveEvent(e) {
         e.preventDefault();
+        if (state.modalReadOnly) return;
         if (!validateForm()) return;
 
         els.saveEventBtn.disabled = true;
@@ -1211,6 +1223,7 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         const labels = {
             approve: { title: 'Approve leave request', message: 'Are you sure you want to approve this leave request?', okLabel: 'Approve', okClass: 'success-btn' },
             reject: { title: 'Reject leave request', message: 'Provide a reason for rejecting this leave request.', okLabel: 'Reject', okClass: 'danger', withRemark: true },
+            reopen: { title: 'Reopen leave request', message: 'Are you sure you want to reopen this rejected leave request?', okLabel: 'Reopen', okClass: 'danger' },
             'cancel-approval': { title: 'Cancel approval', message: 'Are you sure you want to cancel this approval?', okLabel: 'Cancel approval', okClass: 'danger' },
             delete: { title: 'Delete event', message: 'This will permanently delete the event. This action cannot be undone.', okLabel: 'Delete', okClass: 'danger' },
         };
@@ -1403,7 +1416,9 @@ $currentRoleId = (int) ($_SESSION['role_id'] ?? 0);
         ['employeeFilter','departmentFilter','branchFilter','eventTypeFilter','statusFilter'].forEach(id => { el(id).value = ''; });
         loadEvents().catch(console.error);
     });
-    el('addTargetBtn').addEventListener('click', () => addTargetRow());
+    el('addTargetBtn').addEventListener('click', () => {
+        if (!state.modalReadOnly) addTargetRow();
+    });
     el('deleteEventBtn').addEventListener('click', () => deleteEvent().catch(console.error));
     el('dateJump').addEventListener('change', (e) => { state.current = new Date(`${e.target.value}T12:00:00`); loadEvents().catch(console.error); });
 

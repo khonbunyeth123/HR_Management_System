@@ -99,6 +99,11 @@ class ControllerCalendar
             $ok = $this->service->update($uuid, $input);
 
             if (!$ok) {
+                if ($this->isLeaveApplicationUuid($uuid)) {
+                    Response::error('This event is a leave application. Use the leave approval actions instead of updating it as a calendar event.', 400);
+                    return;
+                }
+
                 Response::notFound('Calendar event not found');
                 return;
             }
@@ -118,10 +123,7 @@ class ControllerCalendar
             $event = $this->service->getEvent($uuid);
             if (!$event) {
                 // Check if it's a leave application to provide a helpful error
-                $pdo = \App\Core\Database::getInstance()->getConnection();
-                $stmt = $pdo->prepare("SELECT id FROM tbl_leave_applications WHERE uuid = ? AND deleted_at IS NULL");
-                $stmt->execute([$uuid]);
-                if ($stmt->fetch()) {
+                if ($this->isLeaveApplicationUuid($uuid)) {
                     Response::error('This event is a leave application and cannot be deleted from the calendar.', 400);
                     return;
                 }
@@ -188,5 +190,13 @@ class ControllerCalendar
 
         $data = json_decode($raw, true);
         return is_array($data) ? $data : [];
+    }
+
+    private function isLeaveApplicationUuid(string $uuid): bool
+    {
+        $pdo = \App\Core\Database::getInstance()->getConnection();
+        $stmt = $pdo->prepare('SELECT id FROM tbl_leave_applications WHERE uuid = ? AND deleted_at IS NULL LIMIT 1');
+        $stmt->execute([$uuid]);
+        return (bool) $stmt->fetch();
     }
 }
