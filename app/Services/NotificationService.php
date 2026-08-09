@@ -27,13 +27,20 @@ class NotificationService
 
     public function sendCalendarEventNotification(int $employeeId, string $title, string $body, array $data = []): void
     {
-        $fcmToken = $this->getFcmToken($employeeId);
-        if (!$fcmToken) {
-            return;
-        }
+        $this->sendCalendarEventNotifications([$employeeId], $title, $body, $data);
+    }
 
+    /**
+     * Send one calendar notification to many employees, de-duplicating shared FCM tokens.
+     *
+     * @param int[] $employeeIds
+     */
+    public function sendCalendarEventNotifications(array $employeeIds, string $title, string $body, array $data = []): void
+    {
         $payload = array_merge(['type' => 'calendar_event'], $data);
-        $this->send($fcmToken, ['title' => $title, 'body' => $body], $payload);
+        foreach ($this->collectUniqueFcmTokens($employeeIds) as $fcmToken) {
+            $this->send($fcmToken, ['title' => $title, 'body' => $body], $payload);
+        }
     }
 
     public function saveFcmToken(int $employeeId, string $fcmToken): bool
@@ -42,7 +49,7 @@ class NotificationService
         $stmt = $db->prepare('UPDATE tbl_employees SET fcm_token = :fcm_token WHERE id = :id');
         return $stmt->execute([':fcm_token' => $fcmToken, ':id' => $employeeId]);
     }
-    private function getFcmToken(int $employeeId): ?string
+    protected function getFcmToken(int $employeeId): ?string
     {
         $db = \App\Core\Database::getInstance()->getConnection();
         $stmt = $db->prepare('SELECT fcm_token FROM tbl_employees WHERE id = :id LIMIT 1');
@@ -51,7 +58,27 @@ class NotificationService
         $token = $row['fcm_token'] ?? null;
         return ($token !== null && $token !== '') ? $token : null;
     }
-    private function send(string $fcmToken, array $notification, array $data = []): void
+
+    /**
+     * @param int[] $employeeIds
+     * @return string[]
+     */
+    private function collectUniqueFcmTokens(array $employeeIds): array
+    {
+        $tokens = [];
+        foreach (array_values(array_unique(array_filter(array_map('intval', $employeeIds)))) as $employeeId) {
+            $token = $this->getFcmToken($employeeId);
+            if ($token === null) {
+                continue;
+            }
+
+            $tokens[$token] = true;
+        }
+
+        return array_keys($tokens);
+    }
+
+    protected function send(string $fcmToken, array $notification, array $data = []): void
     {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) { error_log('[NotificationService] Failed to obtain FCM access token.'); return; }

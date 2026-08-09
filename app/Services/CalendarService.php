@@ -118,19 +118,17 @@ class CalendarService
             return;
         }
 
-        foreach ($recipients as $employeeId) {
-            $this->notificationService->sendCalendarEventNotification(
-                (int) $employeeId,
-                $title,
-                $body,
-                [
-                    'event_uuid' => (string) ($event['uuid'] ?? ''),
-                    'event_type' => (string) ($event['event_type'] ?? ''),
-                    'status' => (string) ($event['status'] ?? ''),
-                    'action' => $action,
-                ]
-            );
-        }
+        $this->notificationService->sendCalendarEventNotifications(
+            $recipients,
+            $title,
+            $body,
+            [
+                'event_uuid' => (string) ($event['uuid'] ?? ''),
+                'event_type' => (string) ($event['event_type'] ?? ''),
+                'status' => (string) ($event['status'] ?? ''),
+                'action' => $action,
+            ]
+        );
     }
 
     private function resolveRecipients(array $event): array

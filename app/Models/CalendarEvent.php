@@ -797,7 +797,7 @@ class CalendarEvent
         }
 
         if (array_key_exists('all_day', $data)) {
-            $payload['all_day'] = !empty($data['all_day']) ? 1 : 0;
+            $payload['all_day'] = $this->normalizeBoolean($data['all_day']);
         }
 
         if (array_key_exists('recurrence', $data) || array_key_exists('recurrence_rule', $data)) {
@@ -912,6 +912,34 @@ class CalendarEvent
 
         $timestamp = strtotime($value);
         return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
+    }
+
+    private function normalizeBoolean(mixed $value): int
+    {
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        if (is_int($value)) {
+            return $value === 0 ? 0 : 1;
+        }
+
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+            if ($normalized === '') {
+                return 0;
+            }
+
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return 1;
+            }
+
+            if (in_array($normalized, ['0', 'false', 'no', 'off'], true)) {
+                return 0;
+            }
+        }
+
+        return !empty($value) ? 1 : 0;
     }
 
     private function matchesFilters(array $event, array $filters): bool

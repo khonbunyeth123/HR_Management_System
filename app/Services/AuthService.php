@@ -238,14 +238,19 @@ class AuthService
      * Complete a password reset request.
      * Verifies the token and updates the password.
      */
-    public function resetPassword(string $email, string $token, string $password): array
+    public function resetPassword(string $email, string $token, string $password, ?string $confirmPassword = null): array
     {
         $email = trim($email);
         $token = trim($token);
         $password = trim($password);
+        $confirmPassword = $confirmPassword !== null ? trim($confirmPassword) : null;
 
         if (empty($email) || empty($token) || empty($password)) {
             return ['success' => false, 'message' => 'All fields are required.', 'code' => 400];
+        }
+
+        if ($confirmPassword !== null && $password !== $confirmPassword) {
+            return ['success' => false, 'message' => 'Passwords do not match.', 'code' => 400];
         }
 
         if (strlen($password) < 8) {

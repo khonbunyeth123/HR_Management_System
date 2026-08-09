@@ -22,9 +22,10 @@ try {
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $token = isset($_POST['token']) ? trim($_POST['token']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $confirmPassword = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : null;
 
     $authService = new AuthService();
-    $result = $authService->resetPassword($email, $token, $password);
+    $result = $authService->resetPassword($email, $token, $password, $confirmPassword);
 
     jsonResponse($result['success'], $result['message'], $result['code']);
 

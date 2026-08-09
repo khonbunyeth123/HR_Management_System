@@ -112,8 +112,11 @@ class ControllerAuth
         $email = (string) ($data['email'] ?? '');
         $token = (string) ($data['token'] ?? '');
         $password = (string) ($data['password'] ?? '');
+        $confirmPassword = array_key_exists('confirm_password', $data)
+            ? (string) $data['confirm_password']
+            : null;
         
-        $result = $this->authService->resetPassword($email, $token, $password);
+        $result = $this->authService->resetPassword($email, $token, $password, $confirmPassword);
         Response::json($result, $result['code']);
     }
 
