@@ -47,7 +47,8 @@ class ControllerAttendance
         }
 
         // 3. Process scan using the employee table primary key.
-        $result = $this->service->scan((int) $employee['id']);
+        $note = $this->normalizeNote($data['note'] ?? null);
+        $result = $this->service->scan((int) $employee['id'], null, $note);
 
         if (isset($result['error'])) {
             $this->sendJson(['success' => false, 'message' => $result['error']], 400);
@@ -113,6 +114,39 @@ class ControllerAttendance
         }
     }
 
+    public function update(string $uuid): void
+    {
+        try {
+            $payload = $this->readJsonBody();
+            $note = $this->normalizeNote($payload['note'] ?? null);
+
+            $updated = $this->attendanceModel->updateNoteByUuid(
+                $uuid,
+                $note,
+                (int) ($_SESSION['user_id'] ?? 0)
+            );
+
+            if (!$updated) {
+                $this->sendJson([
+                    'success' => false,
+                    'message' => 'Attendance record not found',
+                ], 404);
+                return;
+            }
+
+            $this->sendJson([
+                'success' => true,
+                'message' => 'Attendance note updated successfully',
+                'data' => $updated,
+            ]);
+        } catch (\Throwable $e) {
+            $this->sendJson([
+                'success' => false,
+                'message' => 'Unable to update attendance note',
+            ], 500);
+        }
+    }
+
     public function checkin(): void
     {
         $data    = $this->service->getCheckinPageData();
@@ -156,6 +190,23 @@ class ControllerAttendance
         }
 
         return null;
+    }
+
+    private function normalizeNote(mixed $note): ?string
+    {
+        $value = trim((string) ($note ?? ''));
+        return $value === '' ? null : $value;
+    }
+
+    private function readJsonBody(): array
+    {
+        $raw = file_get_contents('php://input');
+        if ($raw === false || trim($raw) === '') {
+            return [];
+        }
+
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
     }
 
     public function history(): void

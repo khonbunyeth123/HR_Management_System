@@ -14,6 +14,7 @@ class Attendance
 {
     private PDO $db;
     private ?bool $hasScanDatetime = null;
+    private ?bool $hasNoteColumnCache = null;
 
     public function __construct()
     {
@@ -58,7 +59,8 @@ class Attendance
 
         $scanDatetimeExpr = $this->scanDatetimeExpr('a');
         $statusExpr = $this->statusExpr('a');
-        $sql = "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, a.status_id, {$statusExpr} AS status, a.created_at,
+        $noteExpr = $this->noteExpr('a');
+        $sql = "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at,
                        CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name, 'scan' as record_source
                 FROM tbl_attendance_records a
                 LEFT JOIN tbl_employees e ON a.employee_id = e.id
@@ -182,12 +184,36 @@ class Attendance
         return $row ? (int) $row['id'] : null;
     }
 
+    public function updateNoteByUuid(string $uuid, ?string $note, int $updatedBy): ?array
+    {
+        if (!$this->hasNoteColumn()) {
+            return null;
+        }
+
+        $current = $this->getAttendanceByUuid($uuid);
+        if (!$current) {
+            return null;
+        }
+
+        $stmt = $this->db->prepare(
+            "UPDATE tbl_attendance_records
+             SET note = ?, updated_at = NOW(), updated_by = ?
+             WHERE uuid = ? AND deleted_at IS NULL"
+        );
+        $stmt->execute([
+            $this->normalizeNote($note),
+            $updatedBy > 0 ? $updatedBy : null,
+            $uuid,
+        ]);
+
+        return $this->getAttendanceByUuid($uuid);
+    }
+
     public function insertScan(array $data): bool
     {
-        $sql = "INSERT INTO tbl_attendance_records (uuid, employee_id, date, scan_datetime, check_time, check_type_id, status, status_id, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $columns = ['uuid', 'employee_id', 'date', 'scan_datetime', 'check_time', 'check_type_id', 'status', 'status_id', 'created_at'];
+        $placeholders = ['?', '?', '?', '?', '?', '?', '?', '?', 'NOW()'];
+        $params = [
             $data['uuid'],
             $data['employee_id'],
             $data['date'],
@@ -196,7 +222,17 @@ class Attendance
             $data['check_type_id'],
             $data['status'] ?? null,
             $data['status_id'] ?? 1
-        ]);
+        ];
+
+        if ($this->hasNoteColumn()) {
+            $columns[] = 'note';
+            $placeholders[] = '?';
+            $params[] = $this->normalizeNote($data['note'] ?? null);
+        }
+
+        $sql = 'INSERT INTO tbl_attendance_records (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')';
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function getActiveEmployees(): array
@@ -238,8 +274,9 @@ class Attendance
 
         $scanDatetimeExpr = $this->scanDatetimeExpr('a');
         $statusExpr = $this->statusExpr('a');
+        $noteExpr = $this->noteExpr('a');
         
-        $sql = "SELECT a.uuid, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, {$statusExpr} AS status, ct.name AS check_type_name
+        $sql = "SELECT a.uuid, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, {$statusExpr} AS status, {$noteExpr} AS note, ct.name AS check_type_name
                 FROM tbl_attendance_records a
                 LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
                 WHERE $where
@@ -364,5 +401,60 @@ class Attendance
         );
         $stmt->execute();
         return ((int) $stmt->fetchColumn()) > 0;
+    }
+
+    private function noteExpr(string $alias = 'tbl_attendance_records'): string
+    {
+        if ($this->hasNoteColumn()) {
+            return "{$alias}.note";
+        }
+
+        return "NULL";
+    }
+
+    private function hasNoteColumn(): bool
+    {
+        if ($this->hasNoteColumnCache !== null) {
+            return $this->hasNoteColumnCache;
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*)
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'tbl_attendance_records'
+               AND COLUMN_NAME = 'note'"
+        );
+        $stmt->execute();
+        $this->hasNoteColumnCache = ((int) $stmt->fetchColumn()) > 0;
+
+        return $this->hasNoteColumnCache;
+    }
+
+    public function getAttendanceByUuid(string $uuid): ?array
+    {
+        $scanDatetimeExpr = $this->scanDatetimeExpr('a');
+        $statusExpr = $this->statusExpr('a');
+        $noteExpr = $this->noteExpr('a');
+
+        $stmt = $this->db->prepare(
+            "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at, a.updated_at,
+                    CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name
+             FROM tbl_attendance_records a
+             LEFT JOIN tbl_employees e ON a.employee_id = e.id
+             LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
+             WHERE a.uuid = ? AND a.deleted_at IS NULL
+             LIMIT 1"
+        );
+        $stmt->execute([$uuid]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    private function normalizeNote(mixed $note): ?string
+    {
+        $value = trim((string) ($note ?? ''));
+        return $value === '' ? null : $value;
     }
 }

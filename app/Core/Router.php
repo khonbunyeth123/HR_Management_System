@@ -563,6 +563,7 @@ class Router
         return match ($action) {
             'show', 'today'                  => ['attendance.view'],
             'checkIn', 'checkOut', 'scan'    => ['attendance.update', 'attendance.create'],
+            'update'                         => ['attendance.update'],
             'history'                        => [],
             default                          => ['attendance.view'],
         };

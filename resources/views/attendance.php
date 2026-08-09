@@ -4,6 +4,7 @@
         <?php 
             $title = 'Attendance';
             $icon = 'mdi:clock-check text-indigo-500';
+            $canEditAttendanceNote = !function_exists('hasPermissionSlug') || hasPermissionSlug('attendance.update');
             ob_start();
         ?>
             <div class="flex items-center gap-2">
@@ -75,12 +76,13 @@
                             <th class="px-3 py-2 font-black normal-case tracking-wider">Time</th>
                             <th class="px-3 py-2 font-black normal-case tracking-wider">Type</th>
                             <th class="px-3 py-2 font-black normal-case tracking-wider">Status</th>
+                            <th class="px-3 py-2 font-black normal-case tracking-wider">Note</th>
                             <th class="px-3 py-2 font-black normal-case tracking-wider">Log</th>
                         </tr>
                     </thead>
                     <tbody id="attendanceTableBody" class="divide-y divide-slate-100 bg-white">
                         <tr>
-                            <td colspan="6" class="px-3 py-12 text-center text-slate-400">
+                            <td colspan="7" class="px-3 py-12 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <span class="iconify text-2xl animate-spin opacity-50" data-icon="mdi:loading"></span>
                                     <p class="text-[10px] font-black normal-case tracking-widest">Loading...</p>
@@ -280,6 +282,64 @@
     </div>
 </div>
 
+<!-- Attendance Note Modal -->
+<div id="attendanceNoteModal" class="fixed inset-0 z-[9999] hidden items-start justify-center overflow-y-auto bg-slate-900/40 backdrop-blur-sm px-4 py-6 md:items-center">
+    <div class="w-full max-w-lg">
+        <div id="attendanceNoteModalContent" class="scale-90 transform transition-transform duration-300">
+            <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl shadow-slate-950/10">
+                <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800">Edit Attendance Note</h3>
+                        <p class="text-[10px] font-medium text-slate-500">Update only the note for this scan record.</p>
+                    </div>
+                    <button onclick="closeAttendanceNoteModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:text-slate-900 transition-colors text-xs">✕</button>
+                </div>
+
+                <div class="p-4 space-y-4">
+                    <div class="grid grid-cols-2 gap-3 text-[10px]">
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            <div class="font-black uppercase tracking-[0.2em] text-slate-400">Employee</div>
+                            <div id="attendanceNoteEmployee" class="mt-1 font-bold text-slate-800">-</div>
+                        </div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            <div class="font-black uppercase tracking-[0.2em] text-slate-400">Date & Time</div>
+                            <div id="attendanceNoteDateTime" class="mt-1 font-bold text-slate-800">-</div>
+                        </div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            <div class="font-black uppercase tracking-[0.2em] text-slate-400">Type</div>
+                            <div id="attendanceNoteType" class="mt-1 font-bold text-slate-800">-</div>
+                        </div>
+                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            <div class="font-black uppercase tracking-[0.2em] text-slate-400">Status</div>
+                            <div id="attendanceNoteStatus" class="mt-1 font-bold text-slate-800">-</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="attendanceNoteInput" class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Note</label>
+                        <textarea id="attendanceNoteInput" rows="4" maxlength="1000"
+                            class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] text-slate-700 outline-none transition focus:border-indigo-200 focus:ring-2 focus:ring-indigo-100"
+                            placeholder="Add a note for this attendance record"></textarea>
+                        <p class="text-[10px] text-slate-400">Leave blank to display an em dash.</p>
+                    </div>
+
+                    <p id="attendanceNoteError" class="hidden rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-[11px] font-bold text-rose-600"></p>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50 px-4 py-3">
+                    <?php
+                        $label = 'Cancel'; $type = 'secondary'; $size = 'sm'; $attr = 'onclick="closeAttendanceNoteModal()"';
+                        include 'component/button.php';
+                        $label = 'Save Changes'; $type = 'primary'; $size = 'sm'; $icon = 'mdi:content-save-outline'; $attr = 'onclick="saveAttendanceNote()"'; $id = 'saveAttendanceNoteButton';
+                        include 'component/button.php';
+                        $label = null; $icon = null; $attr = null; $id = null;
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     #qrcode canvas, #qrcode img {
         width: 180px !important;
@@ -289,7 +349,7 @@
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>F
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
     let currentPage = 1;
     let totalPages  = 1;
@@ -298,10 +358,16 @@
     const qrLightColor = '#ffffff';
     const qrContent = 'DOORSTEP_ATTENDANCE';
     const qrcode = document.getElementById('qrcode');
+    const canEditAttendanceNote = <?= $canEditAttendanceNote ? 'true' : 'false' ?>;
     const locationState = {
         locations: [],
         currentLocation: null,
         loading: false,
+    };
+    const attendanceNoteState = {
+        uuid: null,
+        record: null,
+        saving: false,
     };
 
     let previewMap = null;
@@ -392,6 +458,42 @@
         }, 200);
     }
 
+    function openAttendanceNoteModal(record) {
+        if (!record || !record.uuid) {
+            window.Toast?.error('Record not found', 'The selected attendance record could not be loaded.');
+            return;
+        }
+
+        attendanceNoteState.uuid = String(record.uuid);
+        attendanceNoteState.record = record;
+
+        document.getElementById('attendanceNoteEmployee').textContent = record.full_name || record.emp_code || 'N/A';
+        document.getElementById('attendanceNoteDateTime').textContent = `${formatAttendanceDate(record.date)} ${record.check_time || '--:--:--'}`;
+        document.getElementById('attendanceNoteType').textContent = getAttendanceTypeLabel(record);
+        document.getElementById('attendanceNoteStatus').textContent = String(record.status || 'N/A');
+        document.getElementById('attendanceNoteInput').value = normalizeAttendanceNote(record.note) === '—' ? '' : normalizeAttendanceNote(record.note);
+        setAttendanceNoteError();
+
+        const modal = document.getElementById('attendanceNoteModal');
+        const content = document.getElementById('attendanceNoteModalContent');
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => content.classList.replace('scale-90', 'scale-100'), 10);
+    }
+
+    function closeAttendanceNoteModal() {
+        const modal = document.getElementById('attendanceNoteModal');
+        const content = document.getElementById('attendanceNoteModalContent');
+        content.classList.replace('scale-100', 'scale-90');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 200);
+    }
+
     function escapeHtml(value) {
         return String(value ?? '')
             .replace(/&/g, '&amp;')
@@ -424,6 +526,106 @@
         }
 
         return Number(num.toFixed(8)).toString();
+    }
+
+    function setAttendanceNoteError(message = '') {
+        const box = document.getElementById('attendanceNoteError');
+        if (!box) {
+            return;
+        }
+
+        const text = String(message || '').trim();
+        if (!text) {
+            box.classList.add('hidden');
+            box.textContent = '';
+            return;
+        }
+
+        box.textContent = text;
+        box.classList.remove('hidden');
+    }
+
+    function normalizeAttendanceNote(note) {
+        const normalized = String(note ?? '').trim();
+        return normalized === '' ? '—' : normalized;
+    }
+
+    function formatAttendanceDate(dateValue) {
+        if (!dateValue) {
+            return '-';
+        }
+
+        const raw = String(dateValue);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            return raw;
+        }
+
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) {
+            return raw;
+        }
+
+        return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getAttendanceTypeLabel(record) {
+        const checkTypeName = String(record?.check_type_name || '').toLowerCase();
+        const isLeave = checkTypeName === 'leave' || record?.check_time === 'Leave';
+        const isCheckIn = !isLeave && checkTypeName.includes('in');
+
+        if (isLeave) {
+            return 'Leave';
+        }
+
+        if (isCheckIn) {
+            return 'In';
+        }
+
+        return 'Out';
+    }
+
+    async function saveAttendanceNote() {
+        if (!attendanceNoteState.uuid || attendanceNoteState.saving) {
+            return;
+        }
+
+        const saveButton = document.getElementById('saveAttendanceNoteButton');
+        const noteValue = document.getElementById('attendanceNoteInput').value.trim();
+
+        attendanceNoteState.saving = true;
+        setAttendanceNoteError();
+        saveButton.disabled = true;
+        saveButton.classList.add('opacity-50', 'pointer-events-none');
+        saveButton.innerHTML = '<span class="iconify text-[14px] shrink-0 animate-spin" data-icon="mdi:loading"></span> Saving...';
+
+        try {
+            const response = await fetch(`/api/attendance/${attendanceNoteState.uuid}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ note: noteValue }),
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Unable to update attendance note');
+            }
+
+            window.Toast?.success('Success', result.message || 'Attendance note updated successfully.');
+            closeAttendanceNoteModal();
+            loadAttendance(currentPage);
+        } catch (error) {
+            setAttendanceNoteError(error.message || 'Unable to save note.');
+            window.Toast?.error('Error', error.message || 'Unable to save attendance note.');
+        } finally {
+            attendanceNoteState.saving = false;
+            saveButton.disabled = false;
+            saveButton.classList.remove('opacity-50', 'pointer-events-none');
+            saveButton.innerHTML = '<span class="iconify text-[14px] shrink-0" data-icon="mdi:content-save-outline"></span> Save Changes';
+        }
     }
 
     function normalizeCoordinatePair(rawValue) {
@@ -946,7 +1148,7 @@
                 }
             })
             .catch(err => {
-                document.getElementById("attendanceTableBody").innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-rose-500 font-medium">Failed to load records</td></tr>';
+                document.getElementById("attendanceTableBody").innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-rose-500 font-medium">Failed to load records</td></tr>';
                 window.Toast?.error("Fetch Error", "Could not load attendance data.");
             });
     }
@@ -954,7 +1156,7 @@
     function renderTable(records) {
         const tbody = document.getElementById("attendanceTableBody");
         if (!records.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-12 text-center text-slate-400 font-medium">No records matching your filters</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-12 text-center text-slate-400 font-medium">No records matching your filters</td></tr>';
             return;
         }
 
@@ -981,9 +1183,25 @@
                 ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full</span>' 
                 : `<span class="font-black text-slate-700">${rec.check_time}</span>`;
             
-            const statusBadge = rec.status_id == 1 
-                ? '<span class="bg-emerald-50 text-emerald-600 border-emerald-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Active</span>'
-                : '<span class="bg-slate-50 text-slate-400 border-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Archived</span>';
+            const statusValue = String(rec.status || '').trim();
+            const statusLower = statusValue.toLowerCase();
+            let statusBadge = '<span class="bg-slate-50 text-slate-400 border-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">-</span>';
+
+            if (statusLower === 'late') {
+                statusBadge = '<span class="bg-amber-50 text-amber-700 border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Late</span>';
+            } else if (statusLower === 'on time') {
+                statusBadge = '<span class="bg-emerald-50 text-emerald-600 border-emerald-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">On Time</span>';
+            } else if (statusLower === 'early leave') {
+                statusBadge = '<span class="bg-amber-50 text-amber-600 border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Early Leave</span>';
+            } else if (statusLower === 'overtime') {
+                statusBadge = '<span class="bg-indigo-50 text-indigo-600 border-indigo-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Overtime</span>';
+            } else if (statusValue) {
+                statusBadge = `<span class="bg-slate-50 text-slate-600 border-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">${escapeHtml(statusValue)}</span>`;
+            }
+            const noteValue = normalizeAttendanceNote(rec.note);
+            const noteDisplay = noteValue === '—'
+                ? '<span class="text-slate-300 font-black">—</span>'
+                : `<span class="inline-block max-w-[140px] truncate text-[10px] font-semibold text-slate-600" title="${escapeHtml(noteValue)}">${escapeHtml(noteValue)}</span>`;
 
             return `
             <tr class="${isLeave ? 'bg-indigo-50/20' : ''} hover:bg-slate-50 transition-colors group">
@@ -1014,12 +1232,20 @@
                 </td>
                 <td class="px-3 py-2">${statusBadge}</td>
                 <td class="px-3 py-2">
+                    <div class="flex items-center gap-2">
+                        <div class="min-w-0 max-w-[160px]">
+                            ${noteDisplay}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-2">
                     <span class="text-[9px] font-black text-slate-400 normal-case tracking-tight">
                         ${new Date(rec.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric'})}
                     </span>
                 </td>
             </tr>
         `;}).join('');
+
     }
 
     function getVisiblePages(current, total, maxButtons = 5) {
@@ -1154,6 +1380,9 @@
     document.getElementById('locationModal').addEventListener('click', (e) => {
         if (e.target.id === 'locationModal') closeLocationModal();
     });
+    document.getElementById('attendanceNoteModal').addEventListener('click', (e) => {
+        if (e.target.id === 'attendanceNoteModal') closeAttendanceNoteModal();
+    });
 
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
@@ -1169,6 +1398,11 @@
 
         if (!locationModal.classList.contains('hidden')) {
             closeLocationModal();
+        }
+
+        const attendanceNoteModal = document.getElementById('attendanceNoteModal');
+        if (!attendanceNoteModal.classList.contains('hidden')) {
+            closeAttendanceNoteModal();
         }
     });
     
