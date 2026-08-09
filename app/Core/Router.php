@@ -509,6 +509,7 @@ class Router
         return match ($controller) {
             'ControllerDashboard'  => ['dashboard.view'],
             'ControllerAttendance' => $this->permissionsForAttendanceAction($action),
+            'ControllerAttendanceLocation' => ['attendance.manage_location'],
             'ControllerEmployee'   => $this->permissionsForEmployeeAction($action),
             'ControllerLeave'      => $this->permissionsForLeaveAction($action),
             'ControllerCalendar'   => $this->permissionsForCalendarAction($action),

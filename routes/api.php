@@ -39,6 +39,13 @@ $router->post('/api/attendance/scan/',   'ControllerAttendance@scan');
 $router->get('/api/attendance/show',     'ControllerAttendance@show');
 $router->post('/api/attendance/checkin', 'ControllerAttendance@checkin');
 $router->get('/api/attendance/qr', 'ControllerAttendance@qr');
+$router->get('/api/attendance/locations', 'ControllerAttendanceLocation@index');
+$router->get('/api/attendance/locations/current', 'ControllerAttendanceLocation@index');
+$router->get('/api/attendance/locations/{id}', 'ControllerAttendanceLocation@show');
+$router->post('/api/attendance/locations', 'ControllerAttendanceLocation@store');
+$router->put('/api/attendance/locations/{id}', 'ControllerAttendanceLocation@update');
+$router->patch('/api/attendance/locations/{id}', 'ControllerAttendanceLocation@update');
+$router->delete('/api/attendance/locations/{id}', 'ControllerAttendanceLocation@destroy');
 $router->get('/attendance/checkin',  'ControllerAttendance@checkin');
 $router->post('/attendance/checkin', 'ControllerAttendance@checkin');
 
