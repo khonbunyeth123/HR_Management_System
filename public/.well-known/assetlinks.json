@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.example.hr_doorstep",
+            "sha256_cert_fingerprints": [
+                "3B:61:9A:42:0D:96:45:05:E2:D4:05:66:94:E6:B7:C7:1E:9B:DF:92:2F:42:7F:B6:53:DE:C9:F8:1E:C5:CB:AC"
+            ]
+        }
+    }
+]

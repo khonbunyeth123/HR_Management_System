@@ -162,11 +162,16 @@ class Dashboard
             return [
                 'uuid' => (string)($event['uuid'] ?? ''),
                 'title' => (string)($event['title'] ?? 'Untitled'),
-                'start' => substr((string)$event['start'], 0, 10),
-                'end' => substr((string)$event['end'], 0, 10),
+                'start' => (string)($event['start'] ?? ''),
+                'end' => (string)($event['end'] ?? ''),
+                'start_date' => (string)($event['start_date'] ?? substr((string)($event['start'] ?? ''), 0, 10)),
+                'end_date' => (string)($event['end_date'] ?? substr((string)($event['end'] ?? ''), 0, 10)),
+                'start_time' => (string)($event['start_time'] ?? ''),
+                'end_time' => (string)($event['end_time'] ?? ''),
+                'time_label' => (string)($event['time_label'] ?? ''),
                 'type' => (string)($event['leave_type'] ?? $event['event_type'] ?? 'event'),
                 'status' => (string)($event['status'] ?? 'pending'),
-                'all_day' => (bool)($event['all_day'] ?? true),
+                'all_day' => (bool)($event['all_day'] ?? $event['is_all_day'] ?? false),
             ];
         }, $result['events'] ?? []);
     }

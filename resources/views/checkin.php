@@ -97,6 +97,14 @@
                 </div>
             </div>
 
+            <div>
+                <label for="note" class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2.5 ml-1">Reason / Note</label>
+                <textarea name="note" id="note" rows="3"
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-600/10 focus:border-indigo-600 transition-all text-sm font-medium resize-none"
+                    placeholder="Required for Late or Early Leave. Leave blank for On Time."><?= htmlspecialchars($_POST['note'] ?? '') ?></textarea>
+                <p class="mt-2 ml-1 text-[10px] font-semibold text-slate-400">This reason will be saved only when the status is Late or Early Leave.</p>
+            </div>
+
             <button type="submit" 
                 <?= $slot['slot'] === 0 ? 'disabled' : '' ?>
                 class="w-full py-4.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.99] flex items-center justify-center gap-2">

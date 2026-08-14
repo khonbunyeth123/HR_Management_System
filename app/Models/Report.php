@@ -123,9 +123,9 @@ class Report
                 'actual_time'   => date('h:i A', strtotime($row['scan_datetime'])),
                 'diff'          => $diff,
                 'status'        => $status_val,
-                'late_minutes'  => in_array($status_val, ['Late', 'Overtime'], true) && $diff > 0 ? $diff : 0,
+                'late_minutes'  => $status_val === 'Late' && $diff > 0 ? $diff : 0,
                 'early_leave_minutes' => $status_val === 'Early Leave' && $diff < 0 ? abs($diff) : 0,
-                'overtime_minutes' => $status_val === 'Overtime' && $diff > 0 ? $diff : 0,
+                'overtime_minutes' => strtolower($checkType) === 'check-out 2' && $diff > 0 ? $diff : 0,
             ];
         }
 
@@ -286,19 +286,13 @@ class Report
                          AND {$scanExpr} < CONCAT({$alias}.date, ' 12:00:00')
                         THEN 'Early Leave'
                     WHEN {$alias}.check_type_id = 4
-                         AND {$scanExpr} > CONCAT({$alias}.date, ' 17:00:00')
-                        THEN 'Overtime'
-                    WHEN {$alias}.check_type_id IN (2, 4)
-                         AND {$scanExpr} < CASE WHEN {$alias}.check_type_id = 2
-                             THEN CONCAT({$alias}.date, ' 12:00:00')
-                             ELSE CONCAT({$alias}.date, ' 17:00:00')
-                         END
+                         AND {$scanExpr} < CONCAT({$alias}.date, ' 17:00:00')
                         THEN 'Early Leave'
                     ELSE 'On Time'
                 END";
 
         if ($this->hasStatusColumn()) {
-            return "COALESCE({$alias}.status, {$calculatedStatus})";
+            return "COALESCE(CASE WHEN {$alias}.status = 'Overtime' THEN 'On Time' ELSE {$alias}.status END, {$calculatedStatus})";
         }
 
         return $calculatedStatus;

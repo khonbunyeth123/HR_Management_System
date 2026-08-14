@@ -47,11 +47,23 @@ class ControllerAttendance
         }
 
         // 3. Process scan using the employee table primary key.
+        $scanAt = $this->normalizeScanAt($data['scan_at'] ?? null);
         $note = $this->normalizeNote($data['note'] ?? null);
-        $result = $this->service->scan((int) $employee['id'], null, $note);
+        $result = $this->service->scan((int) $employee['id'], $scanAt, $note);
 
         if (isset($result['error'])) {
-            $this->sendJson(['success' => false, 'message' => $result['error']], 400);
+            $payload = [
+                'success' => false,
+                'message' => $result['error'],
+            ];
+
+            foreach (['requires_note', 'scan_type', 'label', 'time', 'standard_time', 'status'] as $field) {
+                if (array_key_exists($field, $result)) {
+                    $payload[$field] = $result[$field];
+                }
+            }
+
+            $this->sendJson($payload, !empty($result['requires_note']) ? 422 : 400);
             return;
         }
 
@@ -62,6 +74,9 @@ class ControllerAttendance
             'label'          => $result['label'],
             'time'           => $result['time'],
             'standard_time'  => $result['standard_time'],
+            'status'         => $result['status'],
+            'note'           => $result['note'],
+            'requires_note'  => $result['requires_note'] ?? false,
             'employee_name'  => $employee['full_name'],
             'employee_id'    => (int) $employee['id'],
         ]);
@@ -155,11 +170,12 @@ class ControllerAttendance
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $employeeId = intval($_POST['employee_id'] ?? 0);
+            $note = $this->normalizeNote($_POST['note'] ?? null);
             if (!$employeeId) {
                 $message = 'Please select your name.';
                 $msgType = 'error';
             } else {
-                $result  = $this->service->checkin($employeeId);
+                $result  = $this->service->checkin($employeeId, $note);
                 $message = $result['error'] ?? $result['message'];
                 $msgType = $result['type'];
             }
@@ -196,6 +212,21 @@ class ControllerAttendance
     {
         $value = trim((string) ($note ?? ''));
         return $value === '' ? null : $value;
+    }
+
+    private function normalizeScanAt(mixed $scanAt): ?string
+    {
+        $value = trim((string) ($scanAt ?? ''));
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            new \DateTimeImmutable($value);
+            return $value;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function readJsonBody(): array

@@ -43,11 +43,7 @@ class AttendanceService
     }
 
     /**
-     * @param string|null $note Deprecated / ignored. Status and Note are now always
-     *                          derived automatically from the scan time by this service
-     *                          (single source of truth). Kept in the signature only for
-     *                          backward compatibility with existing callers — any value
-     *                          passed here is not persisted.
+     * @param string|null $note Optional employee reason. Required for Late / Early Leave.
      */
     public function scan(int $employeeId, ?string $scanAt = null, ?string $note = null): array
     {
@@ -66,8 +62,21 @@ class AttendanceService
             return ['error' => 'Invalid check type'];
         }
 
-        $status   = $resolved['status'];
-        $autoNote = $resolved['note'];
+        $status = $resolved['status'];
+        $requiresNote = $this->requiresReason($status);
+        $storedNote = $this->resolveStoredNote($status, $note);
+
+        if ($requiresNote && $storedNote === null) {
+            return [
+                'error' => 'A reason is required for ' . $status . '.',
+                'requires_note' => true,
+                'scan_type' => (int) $resolved['check_type_id'],
+                'label' => $checkType['name'],
+                'time' => $time,
+                'standard_time' => $checkType['standard_time'],
+                'status' => $status,
+            ];
+        }
 
         $this->model->insertScan([
             'uuid' => Uuid::v4(),
@@ -77,7 +86,7 @@ class AttendanceService
             'check_time' => $time,
             'check_type_id' => (int) $resolved['check_type_id'],
             'status' => $status,
-            'note' => $autoNote,
+            'note' => $storedNote,
         ]);
 
         return [
@@ -87,7 +96,8 @@ class AttendanceService
             'time' => $time,
             'standard_time' => $checkType['standard_time'],
             'status' => $status,
-            'note' => $autoNote,
+            'note' => $storedNote,
+            'requires_note' => $requiresNote,
         ];
     }
 
@@ -130,7 +140,8 @@ class AttendanceService
         return [
             'check_type_id' => $typeId,
             'status' => $status,
-            'note' => $this->computeNote($typeId, $time, $status),
+            'standard_time' => $this->standardTimeFor($typeId),
+            'requires_note' => $this->requiresReason($status),
         ];
     }
 
@@ -160,36 +171,30 @@ class AttendanceService
             // Check-out 1: On Time at/after standard, Early Leave before.
             2 => $this->compareTime($time, $standard) < 0 ? 'Early Leave' : 'On Time',
             // Check-in 2: On Time at/after standard, Late before (per configured rule).
-            3 => $this->compareTime($time, $standard) >= 0 ? 'On Time' : 'Late',
+            3 => $this->compareTime($time, $standard) <= 0 ? 'On Time' : 'Late',
             // Check-out 2: On Time at/after standard, Early Leave before.
             4 => $this->compareTime($time, $standard) < 0 ? 'Early Leave' : 'On Time',
             default => 'Recorded',
         };
     }
 
-    /**
-     * Automatically generates the Note for a scan based on its status.
-     * Formats: "Good", "Late X min", "Early X min".
-     */
-    private function computeNote(int $checkTypeId, string $time, string $status): string
+    private function requiresReason(string $status): bool
     {
-        if ($status === 'On Time') {
-            return 'Good';
-        }
-
-        $standard = $this->standardTimeFor($checkTypeId);
-        $minutes = $this->diffInMinutes($time, $standard);
-
-        return match ($status) {
-            'Late' => "Late {$minutes} min",
-            'Early Leave' => "Early {$minutes} min",
-            default => $status,
-        };
+        return in_array($status, ['Late', 'Early Leave'], true);
     }
 
-    private function diffInMinutes(string $timeA, string $timeB): int
+    /**
+     * Preserve the employee-entered note when available.
+     * On-time scans fall back to "Good" so the admin view has a clear default.
+     */
+    private function resolveStoredNote(string $status, ?string $note): ?string
     {
-        return (int) round(abs($this->timeToSeconds($timeA) - $this->timeToSeconds($timeB)) / 60);
+        $normalized = trim((string) ($note ?? ''));
+        if ($normalized !== '') {
+            return $normalized;
+        }
+
+        return $status === 'On Time' ? 'Good' : null;
     }
 
     private function timeToSeconds(string $time): int
@@ -216,7 +221,7 @@ class AttendanceService
         ];
     }
 
-    public function checkin(int $employeeId): array
+    public function checkin(int $employeeId, ?string $note = null): array
     {
         error_log("=== CHECKIN DEBUG === employee_id: " . $employeeId);
 
@@ -227,11 +232,16 @@ class AttendanceService
             return ['error' => 'Attendance is only allowed during office hours.', 'type' => 'warning'];
         }
 
-        $result = $this->scan($employeeId);
+        $result = $this->scan($employeeId, null, $note);
         error_log("SCAN RESULT: " . json_encode($result));
 
         if (isset($result['error'])) {
-            return ['error' => $result['error'], 'type' => 'warning'];
+            return [
+                'error' => $result['error'],
+                'type' => 'warning',
+                'requires_note' => (bool) ($result['requires_note'] ?? false),
+                'status' => $result['status'] ?? null,
+            ];
         }
 
         return [

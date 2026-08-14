@@ -60,8 +60,8 @@ class Attendance
         $scanDatetimeExpr = $this->scanDatetimeExpr('a');
         $statusExpr = $this->statusExpr('a');
         $noteExpr = $this->noteExpr('a');
-        $sql = "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at,
-                       CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name, 'scan' as record_source
+        $sql = "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time AS scan_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at,
+                       CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name, ct.standard_time AS standard_time, 'scan' as record_source
                 FROM tbl_attendance_records a
                 LEFT JOIN tbl_employees e ON a.employee_id = e.id
                 LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
@@ -276,7 +276,7 @@ class Attendance
         $statusExpr = $this->statusExpr('a');
         $noteExpr = $this->noteExpr('a');
         
-        $sql = "SELECT a.uuid, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, {$statusExpr} AS status, {$noteExpr} AS note, ct.name AS check_type_name
+        $sql = "SELECT a.uuid, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time AS scan_time, {$statusExpr} AS status, {$noteExpr} AS note, ct.name AS check_type_name, ct.standard_time AS standard_time
                 FROM tbl_attendance_records a
                 LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id
                 WHERE $where
@@ -312,15 +312,16 @@ class Attendance
 
     public function getMonthlyOvertimeHours(int $employeeId, int $month, int $year): float
     {
-        // We look for 'Overtime' status and calculate hours past 17:00:00
+        $scanDatetimeExpr = $this->scanDatetimeExpr('a');
         $stmt = $this->db->prepare("
-            SELECT scan_datetime 
-            FROM tbl_attendance_records 
-            WHERE employee_id = :employee_id 
-              AND MONTH(date) = :month 
-              AND YEAR(date) = :year 
-              AND status = 'Overtime' 
-              AND deleted_at IS NULL
+            SELECT {$scanDatetimeExpr} AS scan_datetime
+            FROM tbl_attendance_records a
+            WHERE a.employee_id = :employee_id
+              AND MONTH(a.date) = :month
+              AND YEAR(a.date) = :year
+              AND a.check_type_id = 4
+              AND {$scanDatetimeExpr} > CONCAT(a.date, ' 17:00:00')
+              AND a.deleted_at IS NULL
         ");
         $stmt->execute(['employee_id' => $employeeId, 'month' => $month, 'year' => $year]);
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -350,11 +351,7 @@ class Attendance
 
     private function statusExpr(string $alias = 'tbl_attendance_records'): string
     {
-        if ($this->hasStatusColumn()) {
-            return "{$alias}.status";
-        }
-
-        return "CASE
+        $computed = "CASE
                     WHEN {$alias}.check_type_id IN (1, 3)
                          AND {$this->scanDatetimeExpr($alias)} > CASE WHEN {$alias}.check_type_id = 1 THEN CONCAT({$alias}.date, ' 08:00:00') ELSE CONCAT({$alias}.date, ' 13:00:00') END
                         THEN 'Late'
@@ -362,13 +359,16 @@ class Attendance
                          AND {$this->scanDatetimeExpr($alias)} < CONCAT({$alias}.date, ' 12:00:00')
                         THEN 'Early Leave'
                     WHEN {$alias}.check_type_id = 4
-                         AND {$this->scanDatetimeExpr($alias)} > CONCAT({$alias}.date, ' 17:00:00')
-                        THEN 'Overtime'
-                    WHEN {$alias}.check_type_id IN (2, 4)
-                         AND {$this->scanDatetimeExpr($alias)} < CASE WHEN {$alias}.check_type_id = 2 THEN CONCAT({$alias}.date, ' 12:00:00') ELSE CONCAT({$alias}.date, ' 17:00:00') END
+                         AND {$this->scanDatetimeExpr($alias)} < CONCAT({$alias}.date, ' 17:00:00')
                         THEN 'Early Leave'
                     ELSE 'On Time'
                 END";
+
+        if ($this->hasStatusColumn()) {
+            return "COALESCE(CASE WHEN {$alias}.status = 'Overtime' THEN 'On Time' ELSE {$alias}.status END, {$computed})";
+        }
+
+        return $computed;
     }
 
     private function hasScanDatetimeColumn(): bool
@@ -438,8 +438,8 @@ class Attendance
         $noteExpr = $this->noteExpr('a');
 
         $stmt = $this->db->prepare(
-            "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at, a.updated_at,
-                    CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name
+            "SELECT a.uuid, a.employee_id, a.date, {$scanDatetimeExpr} AS scan_datetime, a.check_time AS scan_time, a.status_id, {$statusExpr} AS status, {$noteExpr} AS note, a.created_at, a.updated_at,
+                    CAST(e.id AS CHAR) AS emp_code, e.full_name, ct.name AS check_type_name, ct.standard_time AS standard_time
              FROM tbl_attendance_records a
              LEFT JOIN tbl_employees e ON a.employee_id = e.id
              LEFT JOIN tbl_check_types ct ON a.check_type_id = ct.id

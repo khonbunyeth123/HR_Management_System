@@ -217,13 +217,13 @@ class AuthService
             $this->authModel->createPasswordReset($email, $token);
 
             // Generate reset link
-            $resetLink = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]/reset-password.php?token=$token&email=" . urlencode($email);
+            $resetLink = $this->buildPasswordResetLink($token, $email);
             
             // Send the actual email
             $this->emailService->sendResetLink($email, $resetLink);
             
-            // Log for debugging
-            error_log("Password reset link sent to $email: $resetLink");
+            // Log without exposing the secret token
+            error_log("Password reset link sent to $email");
         }
 
         // Always return success for security (prevents user enumeration)
@@ -284,6 +284,62 @@ class AuthService
             'message' => 'Password has been reset successfully.',
             'code'    => 200
         ];
+    }
+
+    /**
+     * Build the reset-password URL.
+     *
+     * For mobile apps, set APP_URL to the production domain root that your
+     * Flutter app claims. Example:
+     * https://yourdomain.com
+     */
+    private function buildPasswordResetLink(string $token, string $email): string
+    {
+        $appUrl = trim((string) ($_ENV['APP_URL'] ?? getenv('APP_URL') ?? ''));
+
+        if ($appUrl !== '') {
+            $base = $this->normalizeHttpsOrigin($appUrl) . '/reset-password';
+        } else {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $base = $scheme . '://' . $host . '/reset-password.php';
+        }
+
+        return $base . '?' . http_build_query(
+            [
+                'email' => $email,
+                'token' => $token,
+            ],
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        );
+    }
+
+    /**
+     * Convert a configured URL to a bare HTTPS origin.
+     */
+    private function normalizeHttpsOrigin(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '') {
+            return '';
+        }
+
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        $parts = parse_url($url);
+        if ($parts === false || empty($parts['host'])) {
+            return rtrim(preg_replace('#^http://#i', 'https://', $url), '/');
+        }
+
+        $scheme = 'https';
+        $host = (string) $parts['host'];
+        $port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+        return $scheme . '://' . $host . $port;
     }
 
     // -----------------------------------------------------------------------

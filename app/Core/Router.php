@@ -509,7 +509,7 @@ class Router
         return match ($controller) {
             'ControllerDashboard'  => ['dashboard.view'],
             'ControllerAttendance' => $this->permissionsForAttendanceAction($action),
-            'ControllerAttendanceLocation' => ['attendance.manage_location'],
+            'ControllerAttendanceLocation' => $this->permissionsForAttendanceLocationAction($action),
             'ControllerEmployee'   => $this->permissionsForEmployeeAction($action),
             'ControllerLeave'      => $this->permissionsForLeaveAction($action),
             'ControllerCalendar'   => $this->permissionsForCalendarAction($action),
@@ -535,6 +535,9 @@ class Router
             $this->route === '/api/attendance/history'                         => 'employee',
             $this->route === '/api/leave/history'                              => 'employee',
             $this->route === '/api/employee/calendar-events'                  => 'employee',
+            // ADD THIS LINE:
+            $this->route === '/api/attendance/locations'                       => null,
+            $this->route === '/api/attendance/locations/current'               => null,
             preg_match('#^/api/employees/\d+$#', $this->route) === 1          => null,
             $this->route === '/api/leave/list'                                 => null,
             $this->route === '/api/payroll/generate'                           => 'user',
@@ -569,6 +572,15 @@ class Router
         };
     }
 
+    private function permissionsForAttendanceLocationAction(string $action): array
+    {
+        return match ($action) {
+            'index', 'show'               => [],
+            'store', 'update', 'destroy'  => ['attendance.manage_location'],
+            default                       => ['attendance.manage_location'],
+        };
+    }
+    
     private function permissionsForEmployeeAction(string $action): array
     {
         return match ($action) {

@@ -55,11 +55,11 @@ class EmailService
             
             $body = "
                 <h2>Password Reset Request</h2>
-                <p>We received a request to reset your password. Click the button below to set a new password:</p>
+                <p>We received a request to reset your password. Tap the button below to open the reset screen:</p>
                 <p style='margin: 30px 0;'>
                     <a href='{$resetLink}' style='background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Reset Password</a>
                 </p>
-                <p>Or copy and paste this link into your browser:</p>
+                <p>If the app does not open automatically, you can still use this link in your browser:</p>
                 <p><a href='{$resetLink}'>{$resetLink}</a></p>
                 <p>This link will expire in 1 hour.</p>
                 <p>If you did not request a password reset, please ignore this email.</p>

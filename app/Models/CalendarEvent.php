@@ -773,19 +773,25 @@ class CalendarEvent
         }
 
         if ($requireTitle || array_key_exists('status', $data)) {
-            $status = strtolower(trim((string) $data['status']));
+            $status = strtolower(trim((string) ($data['status'] ?? '')));
             if (!in_array($status, self::STATUSES, true)) {
                 $status = 'pending';
             }
             $payload['status'] = $status;
         }
 
-        if (array_key_exists('start_at', $data) || array_key_exists('start', $data) || $requireTitle) {
-            $payload['start_at'] = $this->normalizeDateTime((string) ($data['start_at'] ?? $data['start'] ?? ''));
+       if (array_key_exists('start_at', $data) || array_key_exists('start', $data) || $requireTitle) {
+            $rawStart = (string) ($data['start_at'] ?? $data['start'] ?? '');
+            $payload['start_at'] = $this->normalizeDateTime($rawStart);
             if ($payload['start_at'] === null) {
                 throw new \InvalidArgumentException('Start date/time is required.');
             }
+
+            if (!array_key_exists('all_day', $data) && !$this->hasTimeComponent($rawStart)) {
+                $payload['all_day'] = 1;
+            }
         }
+
         if (array_key_exists('end_at', $data) || array_key_exists('end', $data) || $requireTitle) {
             $payload['end_at'] = $this->normalizeDateTime((string) ($data['end_at'] ?? $data['end'] ?? ''));
             if ($payload['end_at'] === null) {
@@ -902,17 +908,47 @@ class CalendarEvent
             return null;
         }
 
-        $formats = ['Y-m-d\TH:i', 'Y-m-d\TH:i:s', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+        $formats = [
+            'Y-m-d\TH:i:s',   // 2026-08-15T14:00:00
+            'Y-m-d\TH:i',     // 2026-08-15T14:00
+            'Y-m-d h:i A',    // 2026-08-15 02:00 PM
+            'Y-m-d h:iA',     // 2026-08-15 02:00PM
+            'Y-m-d H:i:s',    // 2026-08-15 14:00:00
+            'Y-m-d H:i',      // 2026-08-15 14:00
+        ];
+
         foreach ($formats as $format) {
             $dt = \DateTimeImmutable::createFromFormat($format, $value);
-            if ($dt instanceof \DateTimeImmutable) {
-                return $dt->format('Y-m-d H:i:s');
+            if (!($dt instanceof \DateTimeImmutable)) {
+                continue;
             }
+
+            // Reject matches with trailing/unparsed data (e.g. "PM" left over
+            // after matching a 24-hour format) — those are false positives,
+            // not real matches, and previously caused PM times to be silently
+            // stored as AM.
+            $errors = \DateTimeImmutable::getLastErrors();
+            if ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+                continue;
+            }
+
+            return $dt->format('Y-m-d H:i:s');
         }
 
         $timestamp = strtotime($value);
         return $timestamp === false ? null : date('Y-m-d H:i:s', $timestamp);
     }
+
+    private function hasTimeComponent(string $value): bool
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return false;
+        }
+        // Matches "T14:30", " 14:30", "14:30:00" etc — a real clock time
+        return (bool) preg_match('/(T|\s)\d{1,2}:\d{2}/', $value);
+    }
+
 
     private function normalizeBoolean(mixed $value): int
     {

@@ -468,7 +468,7 @@
         attendanceNoteState.record = record;
 
         document.getElementById('attendanceNoteEmployee').textContent = record.full_name || record.emp_code || 'N/A';
-        document.getElementById('attendanceNoteDateTime').textContent = `${formatAttendanceDate(record.date)} ${record.check_time || '--:--:--'}`;
+        document.getElementById('attendanceNoteDateTime').textContent = `${formatAttendanceDate(record.date)} ${record.scan_time || record.check_time || '--:--:--'}`;
         document.getElementById('attendanceNoteType').textContent = getAttendanceTypeLabel(record);
         document.getElementById('attendanceNoteStatus').textContent = String(record.status || 'N/A');
         document.getElementById('attendanceNoteInput').value = normalizeAttendanceNote(record.note) === '—' ? '' : normalizeAttendanceNote(record.note);
@@ -1181,7 +1181,7 @@
             
             const timeDisplay = isLeave 
                 ? '<span class="flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-clock"></span>Full</span>' 
-                : `<span class="font-black text-slate-700">${rec.check_time}</span>`;
+                : `<span class="font-black text-slate-700">${rec.scan_time || rec.check_time || '--:--:--'}</span>`;
             
             const statusValue = String(rec.status || '').trim();
             const statusLower = statusValue.toLowerCase();
@@ -1193,8 +1193,6 @@
                 statusBadge = '<span class="bg-emerald-50 text-emerald-600 border-emerald-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">On Time</span>';
             } else if (statusLower === 'early leave') {
                 statusBadge = '<span class="bg-amber-50 text-amber-600 border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Early Leave</span>';
-            } else if (statusLower === 'overtime') {
-                statusBadge = '<span class="bg-indigo-50 text-indigo-600 border-indigo-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">Overtime</span>';
             } else if (statusValue) {
                 statusBadge = `<span class="bg-slate-50 text-slate-600 border-slate-100 px-1.5 py-0.5 rounded text-[9px] font-black normal-case tracking-wider border">${escapeHtml(statusValue)}</span>`;
             }

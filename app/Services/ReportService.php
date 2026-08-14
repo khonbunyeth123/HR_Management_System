@@ -71,9 +71,6 @@ class ReportService
         if ($actualTs < $standardTs) {
             return 'Early Leave';
         }
-        if ($actualTs > $standardTs) {
-            return 'Overtime';
-        }
         return 'On Time';
     }
 
@@ -104,10 +101,6 @@ class ReportService
             return 'Early Leave';
         }
 
-        if ($o2Status === 'Overtime') {
-            return 'Overtime';
-        }
-
         return 'On Time';
     }
 
@@ -131,7 +124,6 @@ class ReportService
                     case 'Late':
                     case 'Missing Checkout':
                     case 'Missing Punch':
-                    case 'Overtime':
                         $present++;
                         if ($day['isLate']) {
                             $late++;
@@ -265,9 +257,6 @@ class ReportService
             } elseif ($checkType === 'Check-out 2') {
                 $day['o2'] = $time;
                 $day['o2Note'] = $rawStatus;
-                if ($rawStatus === 'Overtime') {
-                    $day['overtime'] = $time;
-                }
             }
 
             unset($day);
@@ -385,7 +374,6 @@ class ReportService
                     case 'Late':
                     case 'Missing Checkout':
                     case 'Missing Punch':
-                    case 'Overtime':
                         $present++;
                         if ($day['isLate']) {
                             $late++;

@@ -295,10 +295,6 @@ function punchToneClass(note) {
     return { text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700' };
   }
 
-  if (normalized.includes('overtime')) {
-    return { text: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' };
-  }
-
   return { text: 'text-slate-300', badge: 'bg-slate-100 text-slate-500' };
 }
 

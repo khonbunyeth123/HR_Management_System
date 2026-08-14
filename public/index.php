@@ -49,6 +49,19 @@ if ($uri === '') $uri = '/';
 error_log("DEBUG: Resolved URI: " . $uri);
 
 // -----------------------------------------------------------------------
+// Public auth pages used by mobile deep links and email fallback
+// -----------------------------------------------------------------------
+if ($uri === '/forgot-password' || $uri === '/forgot-password/') {
+    require_once __DIR__ . '/forgot-password.php';
+    exit;
+}
+
+if ($uri === '/reset-password' || $uri === '/reset-password/') {
+    require_once __DIR__ . '/reset-password.php';
+    exit;
+}
+
+// -----------------------------------------------------------------------
 // API requests — hand off to api router (session started inside api.php)
 // -----------------------------------------------------------------------
 if (strpos($uri, '/api/') === 0) {
