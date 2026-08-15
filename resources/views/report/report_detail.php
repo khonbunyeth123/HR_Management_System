@@ -9,8 +9,8 @@
       <h1 class="text-sm font-bold text-slate-900 tracking-tight">Detailed Attendance</h1>
     </div>
     <div class="flex gap-1">
-      <button onclick="exportExcel()" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-slate-50 transition shadow-sm">EXCEL</button>
-      <button onclick="exportPDF()" class="bg-white border border-slate-200 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-slate-50 transition shadow-sm">PDF</button>
+      <button onclick="exportExcel()" class="bg-green-600 text-white border border-green-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-green-700 hover:border-green-700 transition shadow-sm">EXCEL</button>
+      <button onclick="exportPDF()" class="bg-red-600 text-white border border-red-600 text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-red-700 hover:border-red-700 transition shadow-sm">PDF</button>
     </div>
   </div>
 

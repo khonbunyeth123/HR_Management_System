@@ -30,8 +30,8 @@ class DashboardService
         return $this->model->recentLeaves($limit);
     }
 
-    public function calendarEvents(string $month): array
+    public function calendarEvents(string $month, array $auth = []): array
     {
-        return $this->model->getCalendarEvents($month);
+        return $this->model->getCalendarEvents($month, (int) ($auth['employee_id'] ?? 0), $auth);
     }
 }

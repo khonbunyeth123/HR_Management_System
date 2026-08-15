@@ -22,6 +22,7 @@ class Report
      */
     public function fetchDailyAttendance(?string $date = null): array
     {
+        $punchTimeExpr = "CASE WHEN a.check_time IS NOT NULL THEN CONCAT(a.date, ' ', a.check_time) ELSE {$this->scanDatetimeExpr('a')} END";
         $sql = "
             SELECT
                 e.id as employee_id,
@@ -29,13 +30,13 @@ class Report
                 e.username,
                 e.position,
                 e.department,
-                MAX(CASE WHEN a.check_type_id = 1 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_in_1,
+                MAX(CASE WHEN a.check_type_id = 1 THEN {$punchTimeExpr} ELSE NULL END) as check_in_1,
                 MAX(CASE WHEN a.check_type_id = 1 THEN {$this->statusExpr('a')} ELSE NULL END) as check_in_1_status,
-                MAX(CASE WHEN a.check_type_id = 2 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_out_1,
+                MAX(CASE WHEN a.check_type_id = 2 THEN {$punchTimeExpr} ELSE NULL END) as check_out_1,
                 MAX(CASE WHEN a.check_type_id = 2 THEN {$this->statusExpr('a')} ELSE NULL END) as check_out_1_status,
-                MAX(CASE WHEN a.check_type_id = 3 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_in_2,
+                MAX(CASE WHEN a.check_type_id = 3 THEN {$punchTimeExpr} ELSE NULL END) as check_in_2,
                 MAX(CASE WHEN a.check_type_id = 3 THEN {$this->statusExpr('a')} ELSE NULL END) as check_in_2_status,
-                MAX(CASE WHEN a.check_type_id = 4 THEN {$this->scanDatetimeExpr('a')} ELSE NULL END) as check_out_2,
+                MAX(CASE WHEN a.check_type_id = 4 THEN {$punchTimeExpr} ELSE NULL END) as check_out_2,
                 MAX(CASE WHEN a.check_type_id = 4 THEN {$this->statusExpr('a')} ELSE NULL END) as check_out_2_status
             FROM tbl_employees e
             LEFT JOIN tbl_attendance_records a
@@ -57,6 +58,7 @@ class Report
 
     public function fetchDetailedAttendance(string $from,string $to,?string $department = null,?string $search = null,?string $status = null): array 
     {
+                $punchTimeExpr = "CASE WHEN a.check_time IS NOT NULL THEN CONCAT(a.date, ' ', a.check_time) ELSE {$this->scanDatetimeExpr('a')} END";
                 $sql = "
                     SELECT
                         e.id            AS employee_id,
@@ -66,13 +68,13 @@ class Report
                         DAYNAME(a.date) AS day_name,
                         ct.name         AS check_type,
                         ct.standard_time,
-                        {$this->scanDatetimeExpr('a')} AS scan_datetime,
+                        {$punchTimeExpr} AS scan_datetime,
                         {$this->statusExpr('a')} AS status,
-                        TIME({$this->scanDatetimeExpr('a')}) AS check_time,
+                        TIME({$punchTimeExpr}) AS check_time,
                         TIMESTAMPDIFF(
                             MINUTE,
                             ct.standard_time,
-                            TIME({$this->scanDatetimeExpr('a')})
+                            TIME({$punchTimeExpr})
                         ) AS diff_minutes
                     FROM tbl_attendance_records a
                     JOIN tbl_employees e
@@ -134,6 +136,7 @@ class Report
 
     public function fetchAttendanceDailyRows(string $from, string $to, ?string $department = null, ?string $search = null): array
     {
+        $punchTimeExpr = "CASE WHEN a.check_time IS NOT NULL THEN CONCAT(a.date, ' ', a.check_time) ELSE {$this->scanDatetimeExpr('a')} END";
         $sql = "
             SELECT
                 e.id AS employee_id,
@@ -143,7 +146,7 @@ class Report
                 DAYNAME(a.date) AS day_name,
                 ct.name AS check_type,
                 ct.standard_time,
-                {$this->scanDatetimeExpr('a')} AS scan_datetime,
+                {$punchTimeExpr} AS scan_datetime,
                 {$this->statusExpr('a')} AS status
             FROM tbl_employees e
             LEFT JOIN tbl_attendance_records a
@@ -274,19 +277,19 @@ class Report
 
     private function statusExpr(string $alias = 'tbl_attendance_records'): string
     {
-        $scanExpr = $this->scanDatetimeExpr($alias);
+        $scanExpr = "COALESCE({$alias}.check_time, TIME({$this->scanDatetimeExpr($alias)}))";
         $calculatedStatus = "CASE
                     WHEN {$alias}.check_type_id IN (1, 3)
                          AND {$scanExpr} > CASE WHEN {$alias}.check_type_id = 1
-                             THEN CONCAT({$alias}.date, ' 08:00:00')
-                             ELSE CONCAT({$alias}.date, ' 13:00:00')
+                             THEN '08:00:00'
+                             ELSE '13:00:00'
                          END
                         THEN 'Late'
                     WHEN {$alias}.check_type_id = 2
-                         AND {$scanExpr} < CONCAT({$alias}.date, ' 12:00:00')
+                         AND {$scanExpr} < '12:00:00'
                         THEN 'Early Leave'
                     WHEN {$alias}.check_type_id = 4
-                         AND {$scanExpr} < CONCAT({$alias}.date, ' 17:00:00')
+                         AND {$scanExpr} < '17:00:00'
                         THEN 'Early Leave'
                     ELSE 'On Time'
                 END";

@@ -201,6 +201,7 @@
             const today = new Date();
             const year = this.currentDate.getFullYear();
             const month = this.currentDate.getMonth();
+            const toDateOnly = (value) => (value || '').toString().slice(0, 10);
             
             // Empty days from previous month
             for (let i = 0; i < firstDay; i++) {
@@ -210,7 +211,11 @@
             // Days of the month
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const dayEvents = this.events.filter(e => dateStr >= e.start && dateStr <= e.end);
+                const dayEvents = this.events.filter(e => {
+                    const start = toDateOnly(e.start_date || e.start);
+                    const end = toDateOnly(e.end_date || e.end || e.start_date || e.start);
+                    return dateStr >= start && dateStr <= end;
+                });
                 const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
                 
                 daysHtml += `

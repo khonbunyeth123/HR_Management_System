@@ -26,7 +26,7 @@
                         $id = null; $icon = null; // Reset
                     ?>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
                     <div class="w-40">
                         <?php 
                             $id = 'departmentFilter'; $placeholder = 'All Departments'; $label = null;
@@ -39,6 +39,14 @@
                             $id = 'positionFilter'; $placeholder = 'All Positions'; $label = null;
                             include 'component/select.php'; 
                             $id = null; $placeholder = null; // Reset
+                        ?>
+                    </div>
+                    <div class="w-40">
+                        <?php 
+                            $id = 'statusFilter'; $placeholder = 'All Statuses'; $label = null;
+                            $options = ['1' => 'Active', '2' => 'Inactive'];
+                            include 'component/select.php'; 
+                            $id = null; $placeholder = null; $options = []; // Reset
                         ?>
                     </div>
                 </div>
@@ -215,7 +223,7 @@
                             $label = 'Date Hired'; $id = 'date_hired'; $type = 'date'; $required = true;
                             include 'component/input.php';
                             $label = 'Status'; $id = 'status_id'; $required = true; $placeholder = 'Select Status';
-                            $options = ['1' => 'Active', '2' => 'Inactive', '3' => 'On Leave'];
+                            $options = ['1' => 'Active', '2' => 'Inactive'];
                             include 'component/select.php';
                             $label = null; // Reset 
                         ?>
@@ -311,6 +319,7 @@ const photoError       = document.getElementById('photoError');
 const searchInput          = document.getElementById('searchInput');
 const departmentFilter     = document.getElementById('departmentFilter');
 const positionFilter       = document.getElementById('positionFilter');
+const statusFilter         = document.getElementById('statusFilter');
 const employeeTableBody    = document.getElementById('employeeTableBody');
 const totalCount           = document.getElementById('totalCount');
 const paginationContainer  = document.getElementById('paginationContainer');
@@ -489,6 +498,7 @@ function applyFilters() {
     const search = searchInput.value.toLowerCase();
     const dept   = departmentFilter.value;
     const pos    = positionFilter.value;
+    const status = statusFilter.value;
 
     const filtered = allEmployees.filter(e => {
         const matchSearch = (e.full_name || '').toLowerCase().includes(search) ||
@@ -497,7 +507,8 @@ function applyFilters() {
                             (e.phone     || '').toLowerCase().includes(search);
         const matchDept   = !dept || e.department === dept;
         const matchPos    = !pos  || e.position   === pos;
-        return matchSearch && matchDept && matchPos;
+        const matchStatus = !status || String(e.status_id ?? '') === status;
+        return matchSearch && matchDept && matchPos && matchStatus;
     });
     console.log('applyFilters: filtered count:', filtered.length);
 
@@ -862,6 +873,7 @@ employeeTableBody.addEventListener('click', e => {
 searchInput.addEventListener('input', () => { currentPage = 1; applyFilters(); });
 departmentFilter.addEventListener('change', () => { currentPage = 1; applyFilters(); });
 positionFilter.addEventListener('change',   () => { currentPage = 1; applyFilters(); });
+statusFilter.addEventListener('change',     () => { currentPage = 1; applyFilters(); });
 
 /* ── Init ────────────────────────────────────── */
 loadEmployees();

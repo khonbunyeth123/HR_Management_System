@@ -34,8 +34,12 @@ class PermissionService
 
             if (!empty($filters['search'])) {
                 $search = "%" . $filters['search'] . "%";
-                $query .= " AND (module LIKE :search OR action LIKE :search OR description LIKE :search)";
-                $params['search'] = $search;
+                // Use distinct placeholders because PDO/MySQL can reject the same
+                // named parameter being reused multiple times in one prepared statement.
+                $query .= " AND (module LIKE :search_module OR action LIKE :search_action OR description LIKE :search_description)";
+                $params['search_module']      = $search;
+                $params['search_action']      = $search;
+                $params['search_description'] = $search;
             }
 
             if (isset($filters['status_id'])) {

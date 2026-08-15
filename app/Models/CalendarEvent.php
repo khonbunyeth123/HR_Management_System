@@ -286,7 +286,14 @@ class CalendarEvent
     private function fetchLeaveEvents(array $filters, string $start, string $end, array $auth = []): array
     {
         $userId = (int) ($auth['user_id'] ?? 0);
+        $currentEmployeeId = (int) ($auth['employee_id'] ?? 0);
         $isAdmin = (bool) ($auth['is_admin'] ?? false);
+
+        $pendingClause = $isAdmin
+            ? 'la.status_id = 0'
+            : ($currentEmployeeId > 0
+                ? '(la.status_id = 0 AND la.employee_id = :current_employee_id)'
+                : '0 = 1');
 
         $where = [
             'la.deleted_at IS NULL',
@@ -297,14 +304,16 @@ class CalendarEvent
             // 2. Pending (0) is visible only to requester or HR/Admin
             // 3. Rejected (2) is visible to everyone
             // 4. Cancelled (3) is visible to everyone
-            '(la.status_id = 1 OR la.status_id = 2 OR la.status_id = 3' . 
-            ($isAdmin ? ' OR la.status_id = 0' : '') . 
-            ')'
+            '(la.status_id = 1 OR la.status_id = 2 OR la.status_id = 3 OR ' . $pendingClause . ')'
         ];
         $params = [
             ':start_date' => $start,
             ':end_date' => $end,
         ];
+
+        if (!$isAdmin && $currentEmployeeId > 0) {
+            $params[':current_employee_id'] = $currentEmployeeId;
+        }
 
         if (!empty($filters['employee_id'])) {
             $where[] = 'la.employee_id = :employee_id';

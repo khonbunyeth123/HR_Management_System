@@ -351,15 +351,16 @@ class Attendance
 
     private function statusExpr(string $alias = 'tbl_attendance_records'): string
     {
+        $scanTimeExpr = "COALESCE({$alias}.check_time, TIME({$this->scanDatetimeExpr($alias)}))";
         $computed = "CASE
                     WHEN {$alias}.check_type_id IN (1, 3)
-                         AND {$this->scanDatetimeExpr($alias)} > CASE WHEN {$alias}.check_type_id = 1 THEN CONCAT({$alias}.date, ' 08:00:00') ELSE CONCAT({$alias}.date, ' 13:00:00') END
+                         AND {$scanTimeExpr} > CASE WHEN {$alias}.check_type_id = 1 THEN '08:00:00' ELSE '13:00:00' END
                         THEN 'Late'
                     WHEN {$alias}.check_type_id = 2
-                         AND {$this->scanDatetimeExpr($alias)} < CONCAT({$alias}.date, ' 12:00:00')
+                         AND {$scanTimeExpr} < '12:00:00'
                         THEN 'Early Leave'
                     WHEN {$alias}.check_type_id = 4
-                         AND {$this->scanDatetimeExpr($alias)} < CONCAT({$alias}.date, ' 17:00:00')
+                         AND {$scanTimeExpr} < '17:00:00'
                         THEN 'Early Leave'
                     ELSE 'On Time'
                 END";

@@ -75,8 +75,20 @@ class ControllerDashboard extends BaseController
     {
         try {
             $month = $request->query->get('month', date('Y-m'));
+            $authType = (string) ($_SESSION['auth_type'] ?? '');
             $employeeId = (int) ($_SESSION['employee_id'] ?? 0);
-            $events = $this->dashboardModel->getCalendarEvents($month, $employeeId);
+            $isAdmin = $authType === 'user'
+                && (
+                    in_array(strtolower((string) ($_SESSION['role'] ?? $_SESSION['role_name'] ?? '')), ['admin', 'hr'], true)
+                    || (int) ($_SESSION['role_id'] ?? 0) === 1
+                );
+
+            $events = $this->dashboardModel->getCalendarEvents($month, $employeeId, [
+                'auth_type' => $authType,
+                'user_id' => (int) ($_SESSION['user_id'] ?? 0),
+                'employee_id' => $employeeId,
+                'is_admin' => $isAdmin,
+            ]);
             return $this->json([
                 'success' => true,
                 'message' => 'Calendar events retrieved',
